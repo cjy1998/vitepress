@@ -21,6 +21,7 @@ export default defineConfig({
             { text: 'Vue3', link: '/vue3' },
           ]},
         { text: 'React', link: '/react' },
+        { text: '微信小程序', link: '/wechat/index.md' },
         { text: 'TypeScript', link: '/typescript' },
         { text: 'Node', link: '/node' },
         { text: 'Webpack', link: '/webpack' },
@@ -33,15 +34,15 @@ export default defineConfig({
       { text: 'Examples', link: '/markdown-examples' }
     ],
 
-    sidebar: [
-      {
-        text: 'Examples',
-        items: [
-          { text: 'Markdown Examples', link: '/markdown-examples' },
-          { text: 'Runtime API Examples', link: '/api-examples' }
-        ]
-      }
-    ],
+    // sidebar: [
+    //   {
+    //     text: 'Examples',
+    //     items: [
+    //       { text: 'Markdown Examples', link: '/markdown-examples' },
+    //       { text: 'Runtime API Examples', link: '/api-examples' }
+    //     ]
+    //   }
+    // ],
 
     socialLinks: [
       { icon: 'github', link: 'https://github.com/cjy1998' },
