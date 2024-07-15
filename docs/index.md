@@ -3,7 +3,7 @@
 layout: home
 
 hero:
-  name: "前端小站"
+  name: "知识客栈"
   text: "日常知识积累"
   tagline: My great project tagline
   actions:
