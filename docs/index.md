@@ -5,7 +5,7 @@ layout: home
 hero:
   name: "知识客栈"
   text: "日常知识积累"
-  tagline: My great project tagline
+  tagline: 不积跬步无以至千里
   actions:
     - theme: brand
       text: Markdown Examples

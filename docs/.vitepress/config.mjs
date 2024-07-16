@@ -31,9 +31,14 @@ export default defineConfig({
       
        
       ]},
-      { text: 'Examples', link: '/markdown-examples' }
+      { text: '案例', items:[
+        { text: '数据大屏', link: '/bigScreen/index.md' },
+        { text: 'H5', link: '/react' },
+        { text: '微信小程序', link: '/wechat/index.md' },
+        { text: 'Vue3后台管理系统', link: '/typescript' },
+        { text: 'React后台管理系统', link: '/node' },
+      ] }
     ],
-
     // sidebar: [
     //   {
     //     text: 'Examples',
