@@ -37,6 +37,9 @@ export default defineConfig({
         { text: '微信小程序', link: '/wechat/index.md' },
         { text: 'Vue3后台管理系统', link: '/typescript' },
         { text: 'React后台管理系统', link: '/node' },
+      ] },
+      { text: '日常积累', items:[
+        { text: '面试题', link: '/interview/index.md' },
       ] }
     ],
     // sidebar: [
