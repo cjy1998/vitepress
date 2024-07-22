@@ -12,14 +12,14 @@ export default defineConfig({
     nav: [
       { text: '前端', 
         items:[
-        // { text: 'Vue', 
-        //   items:[
-        //     { text: 'Pinia', link: '/pinia' },
-        //     { text: 'Vuex', link: '/vuex' },
-        //     { text: 'Vue-Router', link: '/vue-router' },
-        //     { text: 'VueUse', link: '/vueuse' },
-        //     { text: 'Vue3', link: '/vue3' },
-        //   ]},
+        { text: 'Vue', 
+          items:[
+            // { text: 'Pinia', link: '/pinia' },
+            // { text: 'Vuex', link: '/vuex' },
+            // { text: 'Vue-Router', link: '/vue-router' },
+            // { text: 'VueUse', link: '/vueuse' },
+            { text: 'Vue3', link: '/vue3/index' },
+          ]},
         { text: '微信小程序', link: '/wechat/index.md' },
         // { text: 'React', link: '/react' },
         // { text: 'TypeScript', link: '/typescript' },
