@@ -210,3 +210,139 @@ const edit = () => {
   name.value = "a"
 }
 ```
+## 响应式原理源码实现
+
+## computed计算属性
+计算属性就是当依赖的属性的值发生变化的时候，才会触发他的改变，如果依赖的值不发生变化，使用的是缓存中的属性值。
+1. 选项式写法
+```js
+  <template>
+  <div>
+      <input  v-model="firstName"  />
+    <input  v-model="lastName"  />
+    <h1>{{name}}</h1>
+    <button @click="edit">编辑</button>
+  </div>
+</template>
+<script setup lang="ts">
+    import {ref, computed} from 'vue'
+    let firstName = ref("张")
+    let lastName = ref("三")
+    //选项式写法，支持一个对象传入get函数以及set函数自定义操作
+    let name = computed<string>({
+      get(){
+        return firstName.value + '-' + lastName.value
+      },
+      set(newVal){
+        [firstName.value,lastName.value] = newVal.split("-")
+      }
+    })
+    const  edit = () => {
+      name.value = "chen-jian"
+    }
+  </script>
+```
+2. 函数式写法，只支持一个getter函数不允许修改值
+```js
+  let name = computed(() => {
+    return firstName.value + '-' + lastName.value
+  })
+```
+## watch和watchEffect
+watch：侦听一个或多个响应式数据源，并在数据源变化时运行一个回调函数。
+- 第一个参数监听源
+- 第二个参数是回调函数`(newVal,oldVal)`
+- 第三个参数是一个options配置项`{ immediate: true, deep: true}`
+
+watchEffect：立即执行传入的一个函数，同时响应式追踪其依赖，并在其依赖变更时重新运行该函数。如果用到message 就只会监听message 就是用到几个监听几个 而且是非惰性 会默认调用一次
+```js
+  import { ref, watch, watchEffect } from 'vue';
+
+  let count = ref(0); 
+  let count2 = ref(0); 
+  // 监听一个
+  watch(count, (newVal, oldVal) => { 
+    console.log(newVal, oldVal); 
+  }); 
+  // 监听多个
+  watch([count,count2], (newVal, oldVal) => { 
+    console.log(newVal, oldVal); 
+  }); 
+  //监听reactive对象
+  let message = reactive({
+      nav:{
+          bar:{
+              name:""
+          }
+      }
+  })
+  watch(message, (newVal, oldVal) => {
+      console.log('新的值----', newVal);
+      console.log('旧的值----', oldVal);
+  })
+  // 监听reactive单一值
+
+  let message = reactive({
+      name:"",
+      name2:""
+  })
+
+  watch(()=>message.name, (newVal, oldVal) => {
+      console.log('新的值----', newVal);
+      console.log('旧的值----', oldVal);
+  })
+  // watchEffect
+  let message = ref<string>('')
+  let message2 = ref<string>('')
+  watchEffect(() => {
+      //console.log('message', message.value);
+      console.log('message2', message2.value);
+  })
+  //清除副作用
+  //就是在触发监听之前会调用一个函数可以处理你的逻辑例如防抖
+  let message = ref<string>('')
+  let message2 = ref<string>('')
+  watchEffect((oninvalidate) => {
+      //console.log('message', message.value);
+      oninvalidate(()=>{
+          
+      })
+      console.log('message2', message2.value);
+  })
+  //停止跟踪 watchEffect 返回一个函数 调用之后将停止更新
+
+  const stop =  watchEffect((oninvalidate) => {
+      //console.log('message', message.value);
+      oninvalidate(()=>{
+  
+      })
+      console.log('message2', message2.value);
+  },{
+    //如果想在侦听器回调中能访问被 Vue 更新之后的所属组件的 DOM，你需要指明 flush: 'post',别名watchPostEffect()
+      flush:"post",
+      //还可以创建一个同步触发的侦听器，它会在 Vue 进行任何更新之前触发，别watchSyncEffect()
+      //flush: 'sync',
+      onTrigger () {
+  
+      }
+  })
+  stop()
+
+```
+## 生命周期
+组合式API 是没有 beforeCreate 和 created 这两个生命周期的。
+| 选项式api     | 组合式api |  说明 | 
+| :---         |  :----:   |   :----   |  
+| beforeCreate | Not |  在实例初始化完成并且 props 被解析后立即调用,data() 和 computed 等选项也开始进行处理。 | 
+| created      | Not  |  当这个钩子被调用时，以下内容已经设置完成：响应式数据、计算属性、方法和侦听器。然而，此时挂载阶段还未开始，因此 $el 属性仍不可用。  | 
+| beforeMount  | onBeforeMount | 组件已经完成了其响应式状态的设置，但还没有创建 DOM 节点。它即将首次执行 DOM 渲染过程。 | 
+| mounted      | onMounted     | 在组件挂载完成后执行，允许直接`DOM`访问   | 
+| beforeUpdate | onBeforeUpdate|  数据更新时调用，发生在虚拟 `DOM` 打补丁之前  | 
+| updated      | onUpdated     |   `DOM`更新后，`updated`的方法即会调用。 |
+| beforeUnmount| onBeforeUnmount| 在卸载组件实例之前调用。在这个阶段，实例仍然是完全正常的。 |
+| unmounted	   | onUnmounted  |  卸载组件实例后调用。调用此钩子时，组件实例的所有指令都被解除绑定，所有事件侦听器都被移除，所有子组件实例被卸载。  | 
+| errorCaptured | onErrorCaptured |  捕获了后代组件传递的错误时调用 | 
+| renderTracked | onRenderTracked |  注册一个调试钩子，当组件渲染过程中追踪到响应式依赖时调用。 | 
+| renderTriggered| onRenderTriggered |  注册一个调试钩子，当响应式依赖的变更触发了组件渲染时调用。 |
+| activated	     | onActivated  |  若组件实例是` <KeepAlive> `缓存树的一部分，当组件被插入到 DOM 中时调用。 |
+| deactivated    | onDeactivated | 若组件实例是 `<KeepAlive> `缓存树的一部分，当组件从 DOM 中被移除时调用。 |

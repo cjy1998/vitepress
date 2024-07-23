@@ -4,11 +4,11 @@ import { defineConfig } from 'vitepress'
 export default defineConfig({
   base: '/vitepress/',
   lang: 'zh-CN',
-  title: "知识客栈",
+  title: "知识便签",
   description: "日常知识积累",
   themeConfig: {
     // https://vitepress.dev/reference/default-theme-config
-    logo:'/logo.svg',
+    logo:'/right.png',
     nav: [
       { text: '前端', 
         items:[
@@ -22,7 +22,7 @@ export default defineConfig({
           ]},
         { text: '微信小程序', link: '/wechat/index.md' },
         // { text: 'React', link: '/react' },
-        // { text: 'TypeScript', link: '/typescript' },
+        { text: 'TypeScript', link: '/typescript/index.md' },
         // { text: 'Node', link: '/node' },
         // { text: 'Webpack', link: '/webpack' },
         // { text: 'Nuxt', link: '/nuxt' },

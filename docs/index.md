@@ -3,12 +3,16 @@
 layout: home
 
 hero:
-  name: "知识客栈"
-  text: "日常知识积累"
+  name: "保持热爱"
+  text: "兴趣是最好的老师"
   tagline: 不积跬步无以至千里
+   # 右边图片
+  image:
+    src: ./public/chuizi.png
+    alt: VitePress
   actions:
     - theme: brand
-      text: Markdown Examples
+      text: 快速导航->
       link: /markdown-examples
     - theme: alt
       text: API Examples
