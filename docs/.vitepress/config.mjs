@@ -24,10 +24,14 @@ export default defineConfig({
         // { text: 'React', link: '/react' },
         { text: 'TypeScript', link: '/typescript/index.md' },
         // { text: 'Node', link: '/node' },
-        // { text: 'Webpack', link: '/webpack' },
+        { text: '项目构建', items:[
+             // { text: 'Pinia', link: '/pinia' },
+            { text: 'webpack', link: '/construct/webpack/index' },
+            { text: 'npm', link: '/construct/npm/index' },
+        ]},
         // { text: 'Nuxt', link: '/nuxt' },
         // { text: 'Vite', link: '/vite' },
-        // { text: 'Electron', link: '/electron' },
+        { text: 'css', link: '/css/index' },
       
        
       ]},
@@ -42,15 +46,28 @@ export default defineConfig({
         { text: '面试题', link: '/interview/index.md' },
       ] }
     ],
-    // sidebar: [
-    //   {
-    //     text: 'Examples',
-    //     items: [
-    //       { text: 'Markdown Examples', link: '/markdown-examples' },
-    //       { text: 'Runtime API Examples', link: '/api-examples' }
-    //     ]
-    //   }
-    // ],
+    sidebar:{
+      '/wechat/':[
+        {
+          text: '微信小程序',
+          items:[
+            { text: '配置文件', link: '/wechat/01' },
+            { text: '样式', link: '/wechat/02' },
+            { text: '事件系统', link: '/wechat/03' },
+            { text: '运行机制和生命周期', link: '/wechat/04' },
+          ]
+        }
+      ],
+      '/construct/':[
+        {
+          text: '项目构建',
+          items:[
+            { text: 'webpack', link: '/construct/webpack/index' },
+            { text: 'npm', link: '/construct/npm/index' },
+          ]
+        }
+      ],
+    },
 
     socialLinks: [
       { icon: 'github', link: 'https://github.com/cjy1998' },

@@ -1,4 +1,4 @@
-# Vue3
+# Vue3基础
 ## Vue3新特性
 - 重写双向数据绑定
 - VDOM性能瓶颈
@@ -330,7 +330,7 @@ watchEffect：立即执行传入的一个函数，同时响应式追踪其依赖
 
 ```
 ## 生命周期
-组合式API 是没有 beforeCreate 和 created 这两个生命周期的。
+组合式API 是没有 beforeCreate 和 created 这两个生命周期的，setup去代替。
 | 选项式api     | 组合式api |  说明 | 
 | :---         |  :----:   |   :----   |  
 | beforeCreate | Not |  在实例初始化完成并且 props 被解析后立即调用,data() 和 computed 等选项也开始进行处理。 | 
@@ -346,3 +346,119 @@ watchEffect：立即执行传入的一个函数，同时响应式追踪其依赖
 | renderTriggered| onRenderTriggered |  注册一个调试钩子，当响应式依赖的变更触发了组件渲染时调用。 |
 | activated	     | onActivated  |  若组件实例是` <KeepAlive> `缓存树的一部分，当组件被插入到 DOM 中时调用。 |
 | deactivated    | onDeactivated | 若组件实例是 `<KeepAlive> `缓存树的一部分，当组件从 DOM 中被移除时调用。 |
+## 父子组件传参
+### 父组件给子组件传递参数
+```js
+// 父组件文件
+  <template>
+    <div>
+      我是父组件
+      <Children :title="name" :arr="[1.2]" />
+      <button @click="handleEdit">点击修改</button>
+    </div>
+  </template>
+  <script setup lang="ts">
+    import {ref} from "vue";
+    import Children from "./Children.vue"
+    let name = ref<string>("我是父组件传递来的值")
+    const handleEdit = () => {
+      name.value = "被修改后"
+    }
+  </script>
+```
+**子组件接收值**
+- 通过defineProps来接收，defineProps可以接收一个对象（js），也可以接收一个泛型(Ts)。
+- TS 特有的默认值方式，withDefaults是个函数也是无须引入开箱即用接受一个props函数第二个参数是一个对象设置默认值。
+
+```js
+  // 子组件文件
+<template>
+    <div>
+      我是子组件
+      {{title}}
+      {{arr}}
+    </div>
+</template>
+<script setup lang="ts">
+  //接收父组件传递过来的值defineProps
+  // const props =  defineProps({
+  //   title:{
+  //     type:String,
+  //     default:() => "默认值"
+  //   }
+  // })
+  // ts字面量形式
+  // const props = defineProps<{
+  //   title:string;
+  //   arr:number[]
+  // }>()
+  //ts定义默认值withDefaults
+  type Props = {
+    title?: string;
+    arr?:number[]
+  }
+  const props = withDefaults(defineProps<Props>(),{
+    title:"00",
+    arr:[]
+  })
+  console.log(props.title)
+</script>
+```
+### 子组件给父组件传值
+- 通过defineEmits派发事件
+```js
+  // 子组件
+  <template>
+    <div>
+      我是子组件
+      <button @click="send">给父组件传值</button>
+    </div>
+  </template>
+  <script setup lang="ts">
+     // const emits = defineEmits(['on-click'])
+     //ts
+      const emits = defineEmits<{
+        (e:"on-click",name:string):void
+      }>()
+      const send = () => {
+        emits('on-click',"我是子组件传递的值")
+      }
+  </script>
+```
+### 子组件暴露给父组件内部属性
+- 通过defineExpose暴露属性
+```js
+  // 子组件
+  <template>
+    <div>
+      我是子组件
+    </div>
+  </template>
+  <script setup lang="ts">
+   const open = () => {
+      alert("open!")
+    }
+    defineExpose({
+      open
+    });
+  </script>
+```
+- 父组件接收子组件暴露的属性
+```js
+  // 父组件
+  <template>
+    <div>
+      我是父组件
+      <Children ref="childrenRef" />
+    </div>
+ </template>
+  <script setup lang="ts">
+    import Children from "./Children.vue"
+    //注意这儿的typeof里面放的是组件名字不是ref的名字 ref的名字对应开头的变量名
+    const childrenRef = ref<InstanceType<typeof Children>>()
+    onMounted(() => {
+          // console.log(childrenRef.value.open)
+      childrenRef.value.open()
+    })
+  </script>
+```

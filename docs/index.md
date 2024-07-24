@@ -8,22 +8,30 @@ hero:
   tagline: 不积跬步无以至千里
    # 右边图片
   image:
-    src: ./public/chuizi.png
+    src: /chuizi.png
     alt: VitePress
-  actions:
-    - theme: brand
-      text: 快速导航->
-      link: /markdown-examples
-    - theme: alt
-      text: API Examples
-      link: /api-examples
+  # actions:
+  #   - theme: brand
+  #     text: 快速导航->
+  #     link: /markdown-examples
+  #   - theme: alt
+  #     text: API Examples
+  #     link: /api-examples
 
-features:
-  - title: Feature A
-    details: Lorem ipsum dolor sit amet, consectetur adipiscing elit
-  - title: Feature B
-    details: Lorem ipsum dolor sit amet, consectetur adipiscing elit
-  - title: Feature C
-    details: Lorem ipsum dolor sit amet, consectetur adipiscing elit
+# features:
+#    - icon:
+#       src: /ts.svg
+#      title: TypeScript
+#      details: Lorem ipsum...
+#    - icon:
+#       src: /vue.svg
+#      title: Vue
+#      details: Lorem ipsum...
+#    - icon:
+#       src: /ts.svg
+#       width: 50px
+#       height: 50px
+#      title: TypeScript
+#      details: Lorem ipsum...
 ---
 
