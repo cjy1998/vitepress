@@ -462,3 +462,217 @@ watchEffect：立即执行传入的一个函数，同时响应式追踪其依赖
     })
   </script>
 ```
+## 局部组件、全局组件、递归组件、动态组件
+- 局部组件
+  直接在要使用的页面引入，直接使用即可。
+  ```js
+  import Card from "@/views/Card.vue"
+  <template>
+    <div>
+      <Card />
+    </div>
+  </template>
+  ```
+- 全局组件
+  在main.ts中引入，使用app.component注册
+  ```js
+  import Card from "@/views/Card.vue"
+  app.component('Card',Card)
+  ```
+- 批量注册全局组件
+  ```js
+  // /components/index.ts
+    import type {App,Component} from 'vue'
+    import Button from "./Button/index.vue"
+    import Line from "./Line/index.vue"
+
+    const allGlobalComponents = {Button,Line}
+    export default  {
+          install(app:App) {
+              Object.keys(allGlobalComponents).forEach((key:string) => {
+                  app.component(key,allGlobalComponents[key])
+              })
+          }
+      }
+  ```
+  ```js
+  // /main.ts
+   import globalComponents from "@/components"
+   app.use(globalComponents)
+  ```
+- 递归组件
+  ```js
+  // /components/Tree/index.vue
+  <template>
+      <div class="tree" v-for="item in props.list" :key="item.name">
+        <span>{{item.name}}</span>
+        <input type="checkbox" v-model="item.checked">
+          <Tree v-if="item.children?.length" :list="item.children" />
+      </div>
+  </template>
+
+    <script setup lang="ts">
+     import {defineProps, withDefaults} from "vue";
+      // import {Tree as TreeItem} from '../Tree/index.vue'
+      const props = defineProps({
+        list:{
+          type:Array,
+          default: () => []
+        }
+      })
+    </script>
+    <style lang="scss" scoped>
+      .tree{
+        margin-left: 10px;
+      }
+    </style>
+  ```
+
+  ```js
+     <Tree :list="treelist" />
+     interface Tree {
+        name:string,
+        checked:boolean,
+        children?:Tree[]
+      }
+
+    const treelist = reactive<Tree[]>([
+      {
+        name:'1',
+        checked:false,
+        children:[
+          {
+            name:"2-1",
+            checked:false,
+            children:[
+              {
+                name:"3-1",
+                checked:false,
+                children:[]
+              },
+              {
+                name:"3-2",
+                checked:true,
+                children:[]
+              },
+              {
+                name:"3-3",
+                checked:false,
+                children:[]
+              }
+            ]
+          },
+          {
+            name:"2-2",
+            checked:false,
+            children:[
+
+            ]
+          }
+        ]
+      }
+    ])
+
+  ```
+- 动态组件
+  ```js
+  // A.vue
+  <template>
+    <div class="content">
+      A
+    </div>
+  </template>
+
+  <script setup lang="ts"></script>
+
+  <style lang="scss" scoped>
+    .content{
+      width: 100px;
+      height: 100px;
+      @include row-display{
+        flex-wrap: wrap;
+      }
+      border: 1px red solid;
+    }
+  </style>
+   // B.vue
+  <template>
+    <div class="content">
+      B
+    </div>
+  </template>
+
+  <script setup lang="ts"></script>
+
+  <style lang="scss" scoped>
+    .content{
+      width: 100px;
+      height: 100px;
+      @include row-display{
+        flex-wrap: wrap;
+      }
+      border: 1px red solid;
+    }
+  </style>
+  ```
+  ```js
+  // App.vue
+  <template>
+    <div>
+      <div class="tab">
+        <div v-for="(item,index) in coms" :key="item.name" :class="[index === active ? 'active' : '' ]" class="tab-item" @click="handleTabClick(item,index)">
+          <span>{{item.name}}</span>
+        </div>
+        <component :is="showComponent" />
+      </div>
+    </div>
+  </template>
+  <script setup lang="ts">
+    import {ref, computed, reactive} from 'vue'
+    import A from "@/components/A/index.vue"
+    import B from "@/components/B/index.vue"
+    const showComponent = ref(A)
+    const active = ref(0)
+    const coms = reactive([
+      {
+        name:'A组件',
+        com: A
+      },
+      {
+        name:'B组件',
+        com: B
+      },
+      {
+        name:'C组件',
+        com: C
+      },
+    ])
+    const handleTabClick = (item,index) => {
+      showComponent.value = item.com
+      active.value = index
+    }
+  </script>
+
+  <style lang="scss" scoped>
+    .tab{
+      width: 300px;
+      height: 200px;
+      @include row-display{
+        flex-wrap: wrap;
+      }
+      .tab-item{
+        margin: 0 10px;
+        padding: 5px 10px;
+        border: 1px black solid;
+        cursor: pointer;
+      }
+    }
+    .active {
+      color: blue;
+    }
+  </style>
+  ```
+  - 页面警告
+    ```
+    App.vue:19 [Vue warn]: Vue received a Component that was made a reactive object. This can lead to unnecessary performance overhead and should be avoided by marking the component with `markRaw` or using `shallowRef` instead of `ref`. 
+    ```
