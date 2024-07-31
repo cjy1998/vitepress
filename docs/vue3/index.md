@@ -676,3 +676,359 @@ watchEffect：立即执行传入的一个函数，同时响应式追踪其依赖
     ```
     App.vue:19 [Vue warn]: Vue received a Component that was made a reactive object. This can lead to unnecessary performance overhead and should be avoided by marking the component with `markRaw` or using `shallowRef` instead of `ref`. 
     ```
+    意思是会把组件信息也变成响应式，导致性能开销，所以需要使用`markRaw`或者`shallowRef`代替`ref`。
+    - markRaw: 将一个对象标记为不被转化为代理对象（即不具有响应式特性），返回该对象本身。
+    ```js
+       // App.vue
+    <template>
+      <div>
+        <div class="tab">
+          <div v-for="(item,index) in coms" :key="item.name" :class="[index === active ? 'active' : '' ]" class="tab-item" @click="handleTabClick(item,index)">
+            <span>{{item.name}}</span>
+          </div>
+          <component :is="showComponent" />
+        </div>
+      </div>
+    </template>
+    <script setup lang="ts">
+      import {ref, computed, reactive} from 'vue'
+      import A from "@/components/A/index.vue"
+      import B from "@/components/B/index.vue"
+      const showComponent = shallowRef(A)
+      const active = ref(0)
+      const coms = reactive([
+        {
+          name:'A组件',
+          com: markRaw(A)
+        },
+        {
+          name:'B组件',
+          com:markRaw(B)
+        },
+        {
+          name:'C组件',
+          com: markRaw(C)
+        },
+      ])
+      const handleTabClick = (item,index) => {
+        showComponent.value = item.com
+        active.value = index
+      }
+    </script>
+
+    <style lang="scss" scoped>
+      .tab{
+        width: 300px;
+        height: 200px;
+        @include row-display{
+          flex-wrap: wrap;
+        }
+        .tab-item{
+          margin: 0 10px;
+          padding: 5px 10px;
+          border: 1px black solid;
+          cursor: pointer;
+        }
+      }
+      .active {
+        color: blue;
+      }
+    </style>
+    ```
+## 插槽
+### 匿名插槽
+```js
+     <slot></slot>
+```
+### 具名插槽
+```js
+  <slot name="header"></slot>
+```
+```js
+//父组件
+   <template #header>
+      <span>具名插槽</span>
+  </template>
+// 或者
+   <template v-slot:header>
+      <span>具名插槽</span>
+  </template>
+```
+### 作用域插槽
+```js
+//子组件
+  <template>
+    <header>
+      <slot name="header" data="我是header插槽传过来的数据"></slot>
+    </header>
+
+    <section>
+      <slot :data="list"></slot>
+    </section>
+
+    <footer>
+
+    </footer>
+</template>
+
+<script setup lang="ts">
+  import {reactive} from "vue";
+
+  type names = {
+    name:string,
+    age:number
+  }
+  const  list = reactive<names[]>([
+    {
+      name:'张三',
+      age:20
+    },
+    {
+      name:'李四',
+      age:15
+    },
+    {
+      name:'王五',
+      age:16
+    }
+  ])
+ </script>
+
+<style lang="scss" scoped>
+  header{
+    height: 200px;
+    background-color: red;
+    color: #fff;
+    @include row-display;
+  }
+  section{
+    height: 500px;
+    background-color: blue;
+    color: white;
+    @include row-display;
+  }
+  footer{
+    height: 200px;
+    background-color: aqua;
+    color: blue;
+    @include row-display;
+  }
+
+</style>
+```
+
+```js
+  // 父组件
+      <Dialog>
+        <template #header="{data}">
+          <span>具名插槽</span>
+          <span>{{data}}</span>
+        </template>
+        <template #default="{data}">
+          <span>匿名插槽</span>
+          <span v-for="item in data" :key="item.age">
+            {{item.name}}-{{item.age}}
+          </span>
+        </template>
+    </Dialog>
+```
+### 动态插槽
+```js
+  <template #[slotName]>
+      <span>我在哪里？</span>
+  </template>
+
+  let slotName = ref('footer')
+```
+## 异步组件、代码分包、suspense
+### 骨架屏案例
+
+```js
+//skeleton.vue
+  <template>
+    <div class="skeleton-content">
+      <div class="skeleton-header">
+        <div class="skeleton-header-icon">
+        <div class="img"></div>
+        </div>
+        <div class="skeleton-header-name"></div>
+      </div>
+      <hr/>
+      <div class="skeleton-body"></div>
+    </div>
+  </template>
+
+  <script setup lang="ts">
+
+  </script>
+
+  <style lang="scss" scoped>
+    .skeleton-content{
+      width: 600px;
+      height: 200px;
+      padding: 20px 10px;
+      //background-color: #f5f0f0;
+      .skeleton-header{
+        width: 100%;
+        height: 50px;
+        display: flex;
+        align-items: center;
+        .img{
+          width: 50px;
+          height: 50px;
+          margin-right: 10px;
+          border-radius: 50%;
+          background-color: #f5f0f0;
+        }
+        .skeleton-header-name{
+        width: 45px;
+        height: 15px;
+        background-color: #f5f0f0;
+      }
+      }
+      .skeleton-body{
+        width: 100%;
+        height: 15px;
+        background-color: #f5f0f0;
+      }
+    }
+  </style>
+```
+
+```js
+//skeleton.vue
+ <template>
+    <div class="sync-content">
+      <div class="sync-header">
+        <div class="sync-header-icon">
+          <img :src="info.icon">
+        </div>
+        <div class="sync-header-name">{{info.name}}</div>
+      </div>
+      <hr/>
+      <div class="sync-body">{{info.content}}</div>
+    </div>
+</template>
+
+<script setup lang="ts">
+    import {reactive} from "vue";
+
+    let info = reactive({
+      // name:"张三",
+      // icon:'https://test.shwread.cn:8082/download/smgwykhserver/fc980774698b4bb9919f072002e2bbf6.jpg',
+      // content:"你还是开两端红烧鸡块回复即可很反感，返回日的可过一会日考核；看附件多亏了附近"
+    })
+    await fetch('./data.json').then( data => {
+      return data.text()
+    }).then(res => {
+      const result = JSON.parse(res)
+      info = result.data
+    })
+</script>
+
+<style lang="scss" scoped>
+  .sync-content{
+    width: 600px;
+    height: 200px;
+    padding: 20px 10px;
+    background-color: #f5f0f0;
+    .sync-header{
+      width: 100%;
+      height: 50px;
+      display: flex;
+      align-items: center;
+      img{
+        width: 50px;
+        height: 50px;
+        margin-right: 10px;
+        border-radius: 50%;
+      }
+    }
+  }
+</style>
+```
+
+```js
+  <template>
+    <div class="app1">
+      <Suspense>
+        <template #default>
+          <syncView />
+        </template>
+        <template #fallback>
+          <skeleton/>
+        </template>
+      </Suspense>
+    </div>
+</template>
+
+<script setup lang="ts">
+  import skeleton from '@/components/skeleton/index.vue'
+  import {defineAsyncComponent} from "vue";
+  const syncView = defineAsyncComponent(() => import('@/components/sync/index.vue'))
+</script>
+
+<style lang="scss" scoped>
+  .app1{
+    @include row-display;
+  }
+
+</style>
+```
+## Teleport组件
+
+ Teleport组件是一种能够将我们的模板渲染至指定的DOM节点，不受父级style、v-show等属性的影响，但data、prop数据依旧能够公用的技术，可以将子组件渲染到父组件之外的其他地方，常用于模态框、通知等场景。类似于React中的Portal技术。
+
+## keep-alive组件
+ keep-alive组件是vue内置的一个抽象组件，用于缓存不活动的组件实例，而不是销毁它们。主要用于减少组件的创建和销毁，从而提升性能。
+
+开启keep-alive 生命周期的变化
+
+- 初次进入时： `onMounted> onActivated`
+- 退出后触发 `deactivated`
+- 再次进入：只会触发 `onActivated`
+- 事件挂载的方法等，只执行一次的放在 `onMounted`中；组件每次进去执行的方法放在 `onActivated`中
+```js
+  <!-- 基本 -->
+  <keep-alive>
+    <component :is="view"></component>
+  </keep-alive>
+  
+  <!-- 多个条件判断的子组件 -->
+  <keep-alive>
+    <comp-a v-if="a > 1"></comp-a>
+    <comp-b v-else></comp-b>
+  </keep-alive>
+  
+  <!-- 和 `<transition>` 一起使用 -->
+  <transition>
+    <keep-alive>
+      <component :is="view"></component>
+    </keep-alive>
+  </transition>
+
+```
+**include 和 exclude**
+
+include 和 exclude 允许组件有条件地缓存。二者都可以用逗号分隔字符串、正则表达式或一个数组来表示。
+```js
+  <!-- 以英文逗号分隔的字符串 -->
+  <KeepAlive include="a,b">
+    <component :is="view" />
+  </KeepAlive>
+
+  <!-- 正则表达式 (需使用 `v-bind`) -->
+  <KeepAlive :include="/a|b/">
+    <component :is="view" />
+  </KeepAlive>
+
+  <!-- 数组 (需使用 `v-bind`) -->
+  <KeepAlive :include="['a', 'b']">
+    <component :is="view" />
+  </KeepAlive>
+```
+它会根据组件的 name 选项进行匹配，所以组件如果想要条件性地被 KeepAlive 缓存，就必须显式声明一个 name 选项。
+
+在 3.2.34 或以上的版本中，使用 `<script setup>` 的单文件组件会自动根据文件名生成对应的 name 选项，无需再手动声明。
+
+可以通过传入 max prop 来限制可被缓存的最大组件实例数。
