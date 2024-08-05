@@ -462,6 +462,87 @@ watchEffect：立即执行传入的一个函数，同时响应式追踪其依赖
     })
   </script>
 ```
+## 依赖注入provider/inject
+provide 可以在祖先组件中指定我们想要提供给后代组件的数据或方法，而在任何后代组件中，我们都可以使用 inject 来接收 provide 提供的数据或方法。 
+```js
+  // 祖先组件
+  <template>
+    <div class="app1">
+      <div>
+        <el-radio-group v-model="color">
+          <el-radio value="red" size="large">红色</el-radio>
+          <el-radio value="yellow" size="large">黄色</el-radio>
+        </el-radio-group>
+        <div class="color-block"></div>
+        <provideA/>
+      </div>
+
+    </div>
+  </template>
+
+  <script setup lang="ts">
+  import {provide, readonly, ref} from "vue";
+  import provideA from "@/components/provideA/index.vue"
+  const color = ref<string>('red')
+  provide("color",readonly(color) )
+  </script>
+
+  <style lang="scss" scoped>
+  .color-block{
+    width: 200px;
+    height: 200px;
+    background-color: v-bind(color);
+  }
+  </style>
+
+```
+```js
+  <template>
+      <div class="color-block">子组件</div>
+      <provideB/>
+    </template>
+
+    <script setup lang="ts">
+    import {inject} from "vue";
+    import type {Ref} from 'vue'
+    import provideB from "../provideB/index.vue"
+    const color = inject<Ref<string>>("color")
+    </script>
+
+    <style lang="scss" scoped>
+    .color-block{
+      width: 200px;
+      height: 200px;
+      background-color: v-bind(color);
+    }
+    </style>
+```
+```js
+<template>
+    <div class="color-block">孙子组件</div>
+    <el-button type="primary" @click="changeColor">改变颜色</el-button>
+  </template>
+
+  <script setup lang="ts">
+  import {inject} from "vue";
+  import type {Ref} from 'vue'
+  const color = inject<Ref<string>>("color")
+  const changeColor = () => {
+    color.value = "blue"
+  }
+  </script>
+
+  <style lang="scss" scoped>
+  .color-block{
+    width: 200px;
+    height: 200px;
+    background-color: v-bind(color);
+  }
+  </style>
+
+```
+**后代组件改变inject()接收到的值，会改变祖先组件中的值，使用readly()包裹provide()传递的值可以避免**
+
 ## 局部组件、全局组件、递归组件、动态组件
 - 局部组件
   直接在要使用的页面引入，直接使用即可。
