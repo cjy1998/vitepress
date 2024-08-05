@@ -606,3 +606,27 @@ const router = new VueRouter({
 - pushState() 通过 stateObject 参数可以添加任意类型的数据到记录中；而 hash 只可添加短字符串；
 - pushState() 可额外设置 title 属性供后续使用。
 - hash 模式下，仅 hash 符号之前的 url 会被包含在请求中，后端如果没有做到对路由的全覆盖，也不会返回 404 错误；history 模式下，前端的 url 必须和实际向后端发起请求的 url 一致，如果没有对用的路由处理，将返回 404 错误。
+
+### 如何获取页面的 hash 变化
+
+1. 监听$route 的变化
+
+```js
+// 监听,当路由发生变化的时候执行
+  watch: {
+    $route: {
+      handler: function(val, oldVal){
+        console.log(val);
+      },
+      // 深度观察监听
+      deep: true
+    }
+  }
+```
+
+2. window.location.hash 读取#值，读取来判断状态是否改变，写入时可以在不重载网页的前提下，添加一条历史访问记录。
+
+### $route和$router 的区别
+
+- $route 是路由信息对象，包括 path、params、hash、query、fullPath、name 等路由参数。
+- $router 是路由实例对象包括了路由的跳转方法，钩子函数等。
