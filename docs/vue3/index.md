@@ -542,7 +542,84 @@ provide 可以在祖先组件中指定我们想要提供给后代组件的数据
 
 ```
 **后代组件改变inject()接收到的值，会改变祖先组件中的值，使用readly()包裹provide()传递的值可以避免**
-
+## Mitt
+1. 安装
+   ```js
+    npm install mitt -S
+   ```
+2. 全局挂载
+   ```js
+    import { createApp } from 'vue'
+    import App from './App.vue'
+    import mitt from 'mitt'
+    
+    const Mit = mitt()
+    
+    //TypeScript注册
+    // 由于必须要拓展ComponentCustomProperties类型才能获得类型提示
+    declare module "vue" {
+        export interface ComponentCustomProperties {
+            $Bus: typeof Mit
+        }
+    }
+    
+    const app = createApp(App)
+    
+    //Vue3挂载全局API
+    app.config.globalProperties.$Bus = Mit
+    
+    app.mount('#app')
+   ```
+3. 使用方法通过emit派发， on 方法添加事件，off 方法移除，clear 清空所有。
+    ```js
+      <template>
+      <div>
+          <h1>我是A</h1>
+          <button @click="emit1">emit1</button>
+          <button @click="emit2">emit2</button>
+      </div>
+      </template>
+      
+      <script setup lang='ts'>
+      import { getCurrentInstance } from 'vue'
+      const instance = getCurrentInstance();
+      const emit1 = () => {
+          instance?.proxy?.$Bus.emit('on-num', 100)
+      }
+      const emit2 = () => {
+          instance?.proxy?.$Bus.emit('*****', 500)
+      }
+      </script>
+    ```
+    ```js
+        <template>
+          <div>
+              <h1>我是B</h1>
+          </div>
+      </template>
+      
+      <script setup lang='ts'>
+      import { getCurrentInstance } from 'vue'
+      const instance = getCurrentInstance()
+      instance?.proxy?.$Bus.on('on-num', (num) => {
+          console.log(num,'===========>B')
+      })
+      //监听所有事件
+      instance?.proxy?.$Bus.on('*',(type,num)=>{
+            console.log(type,num,'===========>B')
+        })
+      </script>
+    ```
+    ```js
+    //移除监听事件
+      const Fn = (num: any) => {
+          console.log(num, '===========>B')
+      }
+      instance?.proxy?.$Bus.on('on-num',Fn)//listen
+      instance?.proxy?.$Bus.off('on-num',Fn)//unListen
+    //清空所有事件
+      instance?.proxy?.$Bus.all.clear() 
+    ```
 ## 局部组件、全局组件、递归组件、动态组件
 - 局部组件
   直接在要使用的页面引入，直接使用即可。
@@ -1113,3 +1190,24 @@ include 和 exclude 允许组件有条件地缓存。二者都可以用逗号分
 在 3.2.34 或以上的版本中，使用 `<script setup>` 的单文件组件会自动根据文件名生成对应的 name 选项，无需再手动声明。
 
 可以通过传入 max prop 来限制可被缓存的最大组件实例数。
+## 自动引入插件
+**unplugin-auto-import/vite**
+1. 安装
+   ```js
+      npm i -D unplugin-auto-import
+   ```
+2. 配置
+   ```js
+    //vite.config.ts
+    import { defineConfig } from 'vite'
+    import vue from '@vitejs/plugin-vue'
+    import VueJsx from '@vitejs/plugin-vue-jsx'
+    import AutoImport from 'unplugin-auto-import/vite'
+    // https://vitejs.dev/config/
+    export default defineConfig({
+      plugins: [vue(),VueJsx(),AutoImport({
+        imports:['vue'],
+        dts:"src/auto-import.d.ts"
+      })]
+    })
+   ```
