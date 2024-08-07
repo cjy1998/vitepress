@@ -1,16 +1,38 @@
 # Vue
 
-## Options Api 和 Composition Api 的区别
+## Vue2和Vue3有什么区别？
+1. 性能优化
+   - Vue3引入了新的虚拟DOM算法，使得更新性能得到显著的提升。
+   - 静态提升：对不会变化的静态节点进行提升，减少创建和销毁的开销。
+   - 事件缓存：对事件处理函数进行缓存，提高性能。
+2. 响应式系统
+   - Vue3使用了proxy代替Vue2中的`Object.defineProperty`来实现响应式，能够更好的处理嵌套对象和数组的新增、删除操作。
+3. 组合式API（composition API）
+   - Vue3新增了setup函数，支持使用组合式API来组织代码，提高逻辑复用性和代码的可读性。
+4. 模板语法
+   - 在Vue3的模板中，可以使用多个根节点。
+5. 类型支持
+   - Vue 3 在 `TypeScript` 类型推导方面有更好的支持。
+6. 体积
+   - Vue 3 进行了更细粒度的模块拆分，使得最终打包体积更小。
+7. 生命周期
+   - 一些生命周期钩子函数名称发生了变化，例如 `beforeCreate` 和 `created` 合并为 `setup` 。 
+## Vue2和Vue3双向数据绑定的原理？
+**Vue2**
 
-### Options Api 的弊端
+Vue2采用的是基于`Object.defineProperty`的响应式系统，主要包括以下几个步骤：
+1. **初始化数据：** Vue在实例化时会遍历data对象的属性，使用`Object.defineProperty`将这些属性转化为getter和setter。
+2. **依赖收集：** 当一个属性被访问时（即调用getter），Vue会记录当前的依赖（如组件的渲染函数）。这些依赖会被添加到一个称为“依赖收集器”的数据结构中。
+3. **变化检测：** 当属性发生变化时（即调用setter）,Vue会通知所有依赖这个属性的地方（如组件），从而触发重新渲染。
 
-1. 代码逻辑会被拆分，在实现某一功能时，对应的代码逻辑会被拆分到各个属性中。
-2. 当组件变得更大、更复杂时，同一个功能得逻辑会被拆分的非常分散。
-3. 对于维护这些复杂组件的开发者来说，过于分散的逻辑代码难以阅读和理解。
+这种方式的缺点在于对数组和对象的某些变动操作（如通过索引直接修改数组元素）不太友好，需要 Vue 提供的特殊方法（如 Vue.set）来确保响应式。
 
-### Composition Api 的优点
+**Vue3**
 
-- 逻辑组织
+Vue3采用了基于`Proxy`的响应式系统，主要包括以下几个步骤：
+1. **初始化数据：** Vue在实例化时会使用`Proxy`来代理data对象，从而拦截对data对象的操作。`Proxy` 能够直接监听对象上的操作（如读、写、删除属性），不再需要单独定义 getter 和 setter。
+2. **依赖收集：** 与 Vue2 类似，Vue3 也会在属性被访问时进行依赖收集。但由于 Proxy 能够拦截所有操作，因此 Vue3 可以更加灵活和高效地管理依赖。
+3. **变化检测：** 当属性发生变化时，Proxy 能够直接捕获这个变化，并通知相关依赖，从而触发重新渲染。
 
 ## 说说 SPA 单页面的理解，它的优缺点分别是什么？
 
@@ -626,7 +648,116 @@ const router = new VueRouter({
 
 2. window.location.hash 读取#值，读取来判断状态是否改变，写入时可以在不重载网页的前提下，添加一条历史访问记录。
 
-### $route和$router 的区别
+### `$route`和`$router` 的区别
 
 - $route 是路由信息对象，包括 path、params、hash、query、fullPath、name 等路由参数。
 - $router 是路由实例对象包括了路由的跳转方法，钩子函数等。
+### vueRouter路由钩子
+1. 全局路由钩子
+   - beforeEach：全局前置守卫 进入路由之前
+   - afterEach：全局后置钩子 进入路由之后
+   - beforeResolve：全局解析守卫（2.5.0+）在beforeRouteEnter 调用之后调用
+  
+    **使用场景**
+   - beforeEach（判断是否登录了，没登录就跳转到登录页）
+    ```js
+      router.beforeEach((to, from, next) => {  
+        let ifInfo = Vue.prototype.$common.getSession('userData');  // 判断是否登录的存储信息
+        if (!ifInfo) { 
+            // sessionStorage里没有储存user信息    
+            if (to.path == '/') { 
+                //如果是登录页面路径，就直接next()      
+                next();    
+            } else { 
+                //不然就跳转到登录      
+                Message.warning("请重新登录！");     
+                window.location.href = Vue.prototype.$loginUrl;    
+            }  
+        } else {    
+            return next();  
+        }
+    })
+    ```
+   - afterEach （跳转之后滚动条回到顶部）
+    ```js
+      router.afterEach((to, from) => {  
+          // 跳转之后滚动条回到顶部  
+          window.scrollTo(0,0);
+      });
+    ```
+2. 单个路由独享钩子
+   - beforeEnter,有三个参数∶ to、from、next。
+   ```js
+    export default [    
+        {        
+            path: '/',        
+            name: 'login',        
+            component: login,        
+            beforeEnter: (to, from, next) => {          
+                console.log('即将进入登录页面')          
+                next()        
+            }    
+        }
+    ]
+   ```
+3. 组件内钩子
+   - beforeRouteUpdate:进入组件前触发。
+   - beforeRouteEnter:当前地址改变并且改组件被复用时触发，举例来说，带有动态参数的路径foo/∶id，在 /foo/1 和 /foo/2 之间跳转的时候，由于会渲染同样的foa组件，这个钩子在这种情况下就会被调用。
+   - beforeRouteLeave:离开组件被调用。
+  
+    注意点，beforeRouteEnter组件内还访问不到this，因为该守卫执行前组件实例还没有被创建，需要传一个回调给 next来访问，例如：
+    ```js
+      beforeRouteEnter(to, from, next) {      
+        next(target => {        
+            if (from.path == '/classProcess') {          
+                target.isFromProcess = true        
+            }      
+        })    
+    }
+    ```
+#### 路由钩子在生命周期函数的体现
+1. 完整的路由导航解析流程（不包括其他生命周期）
+   - 触发进入其它路由。
+   - 调用要离开路由的组件守卫beforeRouteLeave。
+   - 调用全局前置守卫beforeEach。
+   - 在重用的组件里调用beforeRouteUpdate。
+   - 调用路由独享守卫beforeEnter。
+   - 解析异步路由组件。
+   - 在将要进入的路由组件中调用beforeRouteEnter。
+   - 调用全局解析守卫 beforeResolve
+   - 导航被确认。
+   - 调用全局后置钩子的 afterEach 钩子。
+   - 触发DOM更新（mounted）。
+   - 执行beforeRouteEnter 守卫中传给 next 的回调函数
+2. 触发钩子的完整顺序
+   
+   路由导航、keep-alive和组件生命周期钩子结合起来，触发顺序。假如是从a组件离开，第一次进入b组件。
+   - beforeRouteLeave：路由组件的组件离开守卫。
+   - beforeEach：全局前置守卫，判断路由权限。
+   - beforeEnter：单个路由独享守卫。
+   - beforeRouteEnter：路由组件的组件进入守卫。
+   - beforeResolve：全局解析守卫。
+   - afterEach：全局后置钩子。
+   - beforeCreate：组件实例生命周期钩子。
+   - created：组件实例生命周期钩子。
+   - beforeMount：组件挂载前钩子。
+   - deactivated：离开缓存组件a，或者触发a的beforeDestroy和destroyed组件销毁钩子。
+   - mounted：组件挂载后钩子。
+   - activated：进入缓存组件，进入a的嵌套子组件（如果有的话）。
+   - 执行beforeRouteEnter回调函数next。
+#### vue-router中params和query的区别
+1. 显示方式
+   - params不会显示在URL地址栏中。
+   - query会以?key=value的形式在URL地址栏中显示。
+2. 路由配置
+   - params 通常在路由配置中作为路径的一部分，例如 /user/:id ，其中 :id 就是一个 params 。
+   - query 不需要在路由配置中定义，直接在跳转路由时添加。
+3. 传递方式
+   - params 是通过路由的动态部分传递的。
+   - query 是作为查询字符串传递的。
+4. 页面刷新影响
+   - 刷新页面时，params 会丢失，除非在路由配置中设置了相应的处理。
+   - 刷新页面时，query 的参数仍然存在。
+5. 用途
+   - params 适合用于表示路由的关键标识，例如用户 ID、文章 ID 等。
+   - query 更适合用于传递非关键的、可选的查询条件，如页码、排序方式等。
