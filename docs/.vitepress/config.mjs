@@ -30,6 +30,8 @@ export default defineConfig({
               // { text: 'Vuex', link: '/vuex' },
               // { text: 'Vue-Router', link: '/vue-router' },
               // { text: 'VueUse', link: '/vueuse' },
+              { text: 'React+ts', link: '/react/React/base' },
+
               { text: "Taro", link: "/react/Taro/base" },
             ],
           },
