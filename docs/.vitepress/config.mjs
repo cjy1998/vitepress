@@ -33,6 +33,16 @@ export default defineConfig({
               { text: "Taro", link: "/react/Taro/base" },
             ],
           },
+          {
+            text: "数据可视化",
+            items: [
+              // { text: 'Pinia', link: '/pinia' },
+              // { text: 'Vuex', link: '/vuex' },
+              // { text: 'Vue-Router', link: '/vue-router' },
+              // { text: 'VueUse', link: '/vueuse' },
+              { text: "Threejs", link: "/datav/Threejs/index.md" },
+            ],
+          },
           { text: "微信小程序", link: "/wechat/index.md" },
           // { text: 'React', link: '/react' },
           { text: "TypeScript", link: "/typescript/index.md" },
