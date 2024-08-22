@@ -60,6 +60,7 @@ export default defineConfig({
           // { text: 'Nuxt', link: '/nuxt' },
           // { text: 'Vite', link: '/vite' },
           { text: "css", link: "/css/index" },
+          { text: "软考", link: "/soft/index" },
         ],
       },
       {
