@@ -46,3 +46,10 @@ nrm test npm
 - nvm use `[version] [arch]` ：使用制定版本node。可指定32/64位。
 - nvm root `[path] `：设置存储不同版本node的目录。如果未设置，默认使用当前目录。
 - nvm version ：显示nvm版本。version可简化为v。
+
+## 三、--save、--save-dev、-S、-D的区别
+- --save等同于-S（添加到 package.json 文件的 dependencies）
+   生产环境中实际运行所需要的依赖包。 
+- --save-dev和-D（添加到 package.json 文件的 devDependencies）
+   开发过程中所需的工具和库，但是生产环境中不需要。通常用于安装开发工具、测试框架、构建工具等。比如，代码检查工具（如 ESLint）、测试框架（如 Jest）、构建工具（如 Webpack）等。
+  

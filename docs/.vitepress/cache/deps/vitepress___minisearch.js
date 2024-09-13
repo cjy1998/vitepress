@@ -1,4 +1,4 @@
-// node_modules/.pnpm/minisearch@https+++registry.npmmirror.com+minisearch+-+minisearch-6.3.0.tgz/node_modules/minisearch/dist/es/index.js
+// node_modules/.pnpm/registry.npmmirror.com+minisearch@6.3.0/node_modules/minisearch/dist/es/index.js
 var __assign = function() {
   __assign = Object.assign || function __assign2(t) {
     for (var s, i = 1, n = arguments.length; i < n; i++) {

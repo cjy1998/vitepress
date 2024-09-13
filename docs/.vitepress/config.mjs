@@ -30,9 +30,10 @@ export default defineConfig({
               // { text: 'Vuex', link: '/vuex' },
               // { text: 'Vue-Router', link: '/vue-router' },
               // { text: 'VueUse', link: '/vueuse' },
-              { text: 'React+ts', link: '/react/React/base' },
+              { text: "React+ts", link: "/react/React/base" },
 
               { text: "Taro", link: "/react/Taro/base" },
+              { text: "nextjs", link: "/react/nextjs/base" },
             ],
           },
           {
@@ -55,6 +56,7 @@ export default defineConfig({
               // { text: 'Pinia', link: '/pinia' },
               { text: "webpack", link: "/construct/webpack/index" },
               { text: "npm", link: "/construct/npm/index" },
+              { text: "Docker", link: "/construct/dcoker/index" },
             ],
           },
           // { text: 'Nuxt', link: '/nuxt' },
