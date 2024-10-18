@@ -227,18 +227,18 @@ export default function Layout({
 
 `layout是多个页面共享的布局，导航时，布局会保留状态、保持交互性，并且不会重新渲染。布局也可以嵌套。`
 
-- 根布局 layout(app/layout.js),适用于所有路由。此布局是必须的，并且必须包含`html`和`body`标签。**删除后本地编译后也会自动生成**
+- 根布局 `layout(app/layout.js)`,适用于所有路由。此布局是必须的，并且必须包含`html`和`body`标签。**删除后本地编译后也会自动生成**
 - 嵌套布局
-  例如，布局将与/dashboard 和/dashboard/settings 页面共享：
+  例如，布局将与`/dashboard` 和`/dashboard/settings` 页面共享：
 
-```
-app
+```bash
+ app
 │
 ├── dashboard
-│ ├── layout.jsx
-│ |── page.tsx
-| |── settings
-| | └── page.tsx
+│   ├── layout.jsx
+│   ├── page.tsx
+│   └── settings
+│       └── page.tsx
 ```
 
 ```tsx
@@ -260,7 +260,7 @@ export default function DashboardLayout({
 
 - 路由组布局
   - 使用路线组来选择将特定路线段加入或退出共享布局。
-  - 使用路由组创建多个根布局（每个根布局都必须包含 html 和 body 元素，并且删除掉 app 文件夹下的 layout 文件）。
+  - 使用路由组创建多个根布局（每个根布局都必须包含 `html` 和 `body` 元素，并且删除掉 `app` 文件夹下的 `layout` 文件）。
 
 ```
 app/
@@ -279,9 +279,9 @@ app/
 
 **注意点**
 
-- .js、.jsx、.tsx 文件拓展名均可用于布局。
-- 只有根布局可以包含<html>和<body>标签。
-- 当 layout.js 和 page.js 文件在同一个文件夹，布局将会包裹页面。
+- `.js`、`.jsx`、`.tsx` 文件拓展名均可用于布局。
+- 只有根布局可以包含`<html>`和`<body`>`标签。
+- 当 `layout.js` 和 `page.js` 文件在同一个文件夹，布局将会包裹页面。
 - 布局默认是服务器组件，可以设置为客户端组件。
 - 布局可以获取数据。但是无法在父布局及其子布局之间传递数据。
 - 布局无法访问`pathname`,但导入的客户端组件可以使用钩子访问路径名`usePathname`。
@@ -291,7 +291,7 @@ app/
 
 有两种方法可以向应用程序添加元数据
 
-1. tsx 文件中导出静态`metadata对象`或动态`generateMetadata函数`(layout.tsx 和 page.tsx)。
+1. tsx 文件中导出静态`metadata对象`或动态`generateMetadata函数`(`layout.tsx` 和 `page.tsx`)。
    - 静态元数据
    ```ts
    export const generateMetadata = ({ params }: Props): Metadata => {
