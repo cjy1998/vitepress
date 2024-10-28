@@ -53,7 +53,7 @@ export default defineConfig({
           {
             text: "项目构建",
             items: [
-              // { text: 'Pinia', link: '/pinia' },
+              { text: "Jenkins", link: "/construct/Jenkins/CICD" },
               { text: "webpack", link: "/construct/webpack/index" },
               { text: "npm", link: "/construct/npm/index" },
               { text: "Docker", link: "/construct/dcoker/index" },
