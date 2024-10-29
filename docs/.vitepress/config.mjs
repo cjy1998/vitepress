@@ -114,7 +114,7 @@ export default defineConfig({
       label: "页面导航",
     },
     footer: {
-      copyright: "Copyright © 2023 知识客栈",
+      copyright: "Copyright © 2024 知识便签",
       message: "知识是财富，分享是快乐！",
     },
     lastUpdated: {
