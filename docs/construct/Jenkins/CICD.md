@@ -254,3 +254,128 @@ CI/CD 极大地提高了软件开发的效率和质量，缩短了开发周期�
 - 点击 Credentials 的 Add 按钮，将私钥添加进去。打开后选择 Kind 为 SSH,id 和 description，username 自行填写。最后添加 Private Key，Private Key 就是我们生成的私钥。
 
   ![SSH](../../public/Snipaste_2024-10-28_16-47-01.png)
+
+- 点击 Credentials 的 Add 按钮，将私钥添加进去。打开后选择 Kind 为 SSH,id 和 description，username 自行填写。最后添加 Private Key，Private Key 就是我们生成的私钥。
+
+## 部署 Nextjs 项目进行测试
+
+- 编写 project build 流程
+
+  继续在 project configure 界面中配置 build steps, 主要是 build 镜像，然后再启动当前容器。
+
+  ```bash
+  docker -v
+  node -v
+  npm -v
+  //构建一个标签为jenkins-test的Docker镜像，. 表示Dockerfile在当前目录下
+  docker build -t jenkins-test .
+  docker stop jenkins-test || true
+  docker rm jenkins-test || true
+  //创建并运行一个新的Docker容器,-d 表示以分离模式（后台）运行容器
+  //-p 3005:80 将容器的80端口映射到宿主机的3005端口
+  //jenkins-test:latest 指定要运行的镜像
+  docker run -d --name jenkins-test -p 3005:80 jenkins-test:latest
+  ```
+
+- 更换 docker 镜像源为国内可用镜像源
+
+  ```bash
+  sudo vim  /etc/docker/daemon.json
+  ```
+
+  再该文件中添加
+
+  ```bash
+  {
+    "registry-mirrors": ["https://docker.rainbond.cc","https://hub.xdark.top"]
+  }
+  ```
+
+  重新加载 json 配置文件：
+
+  ```bash
+  sudo systemctl daemon-reload
+  ```
+
+  重启 docker 服务：
+
+  ```bash
+  sudo systemctl restart docker
+  ```
+
+  检查更换的镜像源是否生效：
+
+  ```bash
+  docker info
+  ```
+
+  如果在输出的日志中**registry-mirrors：**下看到你配置的镜像源，就代表成功了。
+
+- 然后在项目中编写 nginx.conf 和 Dockerfile、.dockerignore
+
+  ```json
+  //nginx/nginx.conf
+  events {
+      worker_connections 1024;
+  }
+
+  http {
+      include mime.types;
+      default_type application/octet-stream;
+
+      sendfile on;
+      keepalive_timeout 65;
+
+      server {
+      //指定Nginx监听80端口（HTTP）
+          listen 80;
+          server_name _;
+
+          location / {
+      //指定文档根目录为/usr/share/nginx/html，即Nginx将从这个目录提供静态文件。
+              root /usr/share/nginx/html;
+              index index.html index.htm;
+          }
+
+          error_page 500 502 503 504 /50x.html;
+          location = /50x.html {
+              root /usr/share/nginx/html;
+          }
+      }
+  }
+  ```
+
+  ```json
+  //Dockerfile
+  FROM node:18-alpine AS builder
+
+  WORKDIR /app
+  COPY package*.json ./
+  RUN npm install
+
+  COPY . .
+
+  RUN npm run build
+  # 检查输出目录内容
+  RUN ls -al /app/out
+
+  FROM nginx:stable-alpine
+
+  COPY --from=builder /app/out /usr/share/nginx/html
+  COPY --from=builder /app/nginx/nginx.conf /etc/nginx/nginx.conf
+  # 暴露 Nginx 的默认端口
+  EXPOSE 80
+
+  # 启动 Nginx
+  CMD ["nginx", "-g", "daemon off;"]
+  ```
+
+  ```json
+  //.dockerignore
+  Dockerfile.dockerignore;
+  node_modules;
+  npm - debug.log;
+  README.md.next.git;
+  ```
+
+  可以先在本地使用 Docker 打包试试，没有问题提交代码，在 Jenkins 点击构建，然后访问 http://[ip 地址]:3005，云服务器记得编辑安全组，放行 3005 端口。
