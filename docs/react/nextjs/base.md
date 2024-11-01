@@ -170,38 +170,85 @@ app/
 平行路由使用命名插槽创建。插槽使用`@文件夹名称`约定定义。
 
 ```
-app/
-│
-├── @analytics
-│ └── page.tsx
-|—— @team
-| └── register
-|—— layout.tsx
+app
+ └─ complex-dashboard
+    ├─ layout.tsx
+    ├─ page.tsx
+    ├─ @users
+    │  └─ page.tsx
+    ├─ @revenue
+    │  └─ page.tsx
+    └─ @notifications
+       └─ page.tsx
 ```
 
-插槽作为属性传递给共享的父布局，对于上面的示例，位于 app/layout.tsx 中的组件现在接受`@analytics`和`@team`插槽属性，并且可以与`children`属性并行地渲染。
+插槽作为属性传递给共享的父布局，对于上面的示例，位于 app/layout.tsx 中的组件现在接受`@users`和`@revenue`、`@notifications`插槽属性，并且可以与`children`属性并行地渲染。
 
 ```tsx
-export default function Layout({
+export default function DashboardLayout({
   children,
-  team,
-  analytics,
+  users,
+  revenue,
+  notifications,
 }: {
   children: React.ReactNode;
-  analytics: React.ReactNode;
-  team: React.ReactNode;
+  users: React.ReactNode;
+  revenue: React.ReactNode;
+  notifications: React.ReactNode;
 }) {
   return (
-    <>
+    <div>
       {children}
-      {team}
-      {analytics}
-    </>
+      <div style={{ display: "flex" }}>
+        <div style={{ display: "flex", flexDirection: "column" }}>
+          <div>{users}</div>
+          <div>{revenue}</div>
+        </div>
+        <div style={{ display: "flex", flex: 1 }}>{notifications}</div>
+      </div>
+    </div>
   );
 }
 ```
 
-**插槽不是路由片段，并且不会影响 URL 结构。**
+![image-20241101163521857](https://cdn.jsdelivr.net/gh/cjy1998/imagesbed/img/image-20241101163521857.png)
+
+**插槽不是路由片段，并且不会影响 URL 结构。**例如：在`@notifications`文件夹下新建`archived\page.tsx`
+
+```tsx
+import Card from "@/components/card";
+import Link from "next/link";
+const ArchivedNotifications = () => {
+  return (
+    <Card>
+      <div> Archived Notifications </div>
+      <Link href="/complex-dashboard">Default</Link>
+    </Card>
+  );
+};
+
+export default ArchivedNotifications;
+```
+
+修改`@notifications\page.tsx`
+
+```tsx
+import Card from "@/components/card";
+import Link from "next/link";
+
+export default function Notifications() {
+  return (
+    <Card>
+      <div>我是Notifications</div>
+      <Link href="/complex-dashboard/archived">Archived</Link>
+    </Card>
+  );
+}
+```
+
+![](https://cdn.jsdelivr.net/gh/cjy1998/imagesbed/img/chrome_0rVJggU3Dd.gif)
+
+可以看出文件结构是`complex-dashboard/@notifications/archived/page.tsx`，但是URL为`/complex-dashboard/archived`
 
 #### 并行路由相对于传统组件的优点
 
@@ -315,7 +362,7 @@ app/
        };
      };
      ```
-2.
+     2.
 
 ### title
 
