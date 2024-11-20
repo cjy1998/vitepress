@@ -1,5 +1,29 @@
 # 基础
 
+## React.js 和 Next.js 的关系
+
+- **React.js** 是一个用于构建用户界面的 JavaScript 库，由 **Facebook** 开发。它主要关注于构建单页面应用（Single Page Application, SPA）的 **前端视图层**。React 提供了组件化开发的方式，通过 **Hooks、Context API** 等特性帮助开发者构建动态、响应式的 UI。
+- **Next.js** 是基于 **React.js** 的一个框架，扩展了 React 的功能，专注于解决单页面应用（SPA）的一些问题，如 **SEO、性能优化、服务端渲染** 等。Next.js 提供了一整套构建现代 Web 应用的工具链，使得开发、构建和部署变得更加简便。
+
+### React.js 和 Next.js 的对比
+
+| 特性               | **React.js**                        | **Next.js**                                       |
+| ------------------ | ----------------------------------- | ------------------------------------------------- |
+| **架构类型**       | 前端库（Frontend Library）          | 全栈框架（Full Stack Framework）                  |
+| **路由系统**       | 需要使用第三方库（如 React Router） | 基于文件系统的内置路由                            |
+| **数据获取**       | 客户端数据获取（Client-side）       | 支持 SSR、SSG、ISR 以及 CSR                       |
+| **SEO 支持**       | 需要手动配置                        | 内置 SEO 优化（如 SSR 和静态生成）                |
+| **API 路由**       | 需要独立的后端服务                  | 内置 API 路由（可创建后端接口）                   |
+| **图片和字体优化** | 需要手动处理                        | 内置图片优化（Next Image）和字体优化（Next Font） |
+| **CSS 样式**       | 需要配置 CSS 方案                   | 内置支持 CSS、CSS Modules、Sass 等                |
+| **构建与部署**     | 需要配置 Webpack 等工具             | 内置构建工具（支持 Vercel 和其他平台的无缝部署）  |
+| **服务器组件支持** | 仅支持客户端组件                    | 支持服务器组件（React Server Components）         |
+
+### 适合场景
+
+- **React.js** 更适合用于构建 **单页面应用（SPA）**，专注于前端界面的开发。它适合前端开发者希望构建完全自定义的应用时使用。
+- **Next.js** 更适合构建 **全栈应用（Full Stack Application）** 和 **高性能网站**，尤其是需要 **SEO 优化** 和 **服务端渲染** 的项目。它对开发者更友好，提供了开箱即用的解决方案，是开发企业级应用、博客、电子商务网站的理想选择。
+
 ## 创建项目
 
 ```bash
@@ -29,7 +53,7 @@
 - 每个对应路由的文件必须命名为 page.js 或 page.tsx。
 - 每个文件夹对应浏览器 URL 中的一个路径段。
 
-### 搭建一个简单的路由`/home`
+### 1. 搭建一个简单的路由`/home`
 
 1. 删除`app`文件夹下所有文件
 2. 在`app`文件夹下新建`home`文件夹，并新建文件`page.tsx`
@@ -42,7 +66,7 @@ export default function Home() {
 
 3. 运行程序，浏览器打开`http://localhost:3000/home`
 
-### 嵌套路由
+### 2. 嵌套路由
 
 ```
 app/
@@ -53,7 +77,29 @@ app/
 │ └── page.tsx 对应url:/blog
 ```
 
-### 动态路由
+#### 2.1 路由通配符
+
+`Next.js 还支持路由通配符来匹配更复杂的 URL 结构。通配符用三个点...表示。`
+
+- **嵌套路由：**可以使用通配符创建嵌套路由。例如，pages/blog/[[...slug]].js 可以匹配/blog、/blog/2024、/blog/2024/09、/blog/2024/09/13 等多层级的 URL。
+
+```tsx
+export default function Docs({ params }: { params: { slug: string[] } }) {
+  const { slug } = params;
+  if (slug.length === 2) {
+    return (
+      <h1>
+        Viewing docs for feature {slug[0]} and concept {slug[1]}
+      </h1>
+    );
+  } else if (slug.length === 1) {
+    return <h1>Viewing docs for feature {slug[0]}</h1>;
+  }
+  return <h1>Docs home page</h1>;
+}
+```
+
+### 3. 动态路由
 
 `可以将文件夹名称括在方括号中来创建动态路由[id]，id作为prop传递给layout、page、route和generateMetadata`
 
@@ -82,29 +128,7 @@ export default function ProductDetail({
 }
 ```
 
-#### 路由通配符
-
-`Next.js 还支持路由通配符来匹配更复杂的 URL 结构。通配符用三个点...表示。`
-
-- **嵌套路由：**可以使用通配符创建嵌套路由。例如，pages/blog/[[...slug]].js 可以匹配/blog、/blog/2024、/blog/2024/09、/blog/2024/09/13 等多层级的 URL。
-
-```tsx
-export default function Docs({ params }: { params: { slug: string[] } }) {
-  const { slug } = params;
-  if (slug.length === 2) {
-    return (
-      <h1>
-        Viewing docs for feature {slug[0]} and concept {slug[1]}
-      </h1>
-    );
-  } else if (slug.length === 1) {
-    return <h1>Viewing docs for feature {slug[0]}</h1>;
-  }
-  return <h1>Docs home page</h1>;
-}
-```
-
-### not-found.js
+### 4. not-found.js
 
 “未找到” 文件用于在路由段内抛出 “notFound” 函数时呈现用户界面。除了提供自定义用户界面外，Next.js 对于流式响应将返回 “200” 的 HTTP 状态码，对于非流式响应将返回 “404”。
 
@@ -139,13 +163,13 @@ export default function ReviewDetil({
 }
 ```
 
-### 私有文件夹
+### 5. 私有文件夹
 
 `_folder下划线开头的文件夹属于私有文件夹，一般存放工具函数`
 
 **如果一般的路由文件夹需要\_开头，可以使用`%5F`进行转码**
 
-### 路由组
+### 6. 路由组
 
 **使用`(folderName)`的方式创建路由组,就是将业务逻辑相关的路由放在一个文件夹下，但是 url 中不体现该文件夹。例如：注册、登录、忘记密码**
 
@@ -161,11 +185,11 @@ app/
 | | └── page.tsx 对应url:/register
 ```
 
-### 平行路由
+### 7. 平行路由
 
-平行路由允许同时或有条件地在同一个布局中呈现一个或多个页面。它们对于应用程序中高度动态的部分非常有用，例如仪表盘和社交网站上的提要。
+​		平行路由允许同时或有条件地在同一个布局中呈现一个或多个页面。它们对于应用程序中高度动态的部分非常有用，例如仪表盘和社交网站上的提要。
 
-#### 插槽
+#### 7.1 插槽
 
 平行路由使用命名插槽创建。插槽使用`@文件夹名称`约定定义。
 
@@ -250,7 +274,50 @@ export default function Notifications() {
 
 可以看出文件结构是`complex-dashboard/@notifications/archived/page.tsx`，但是URL为`/complex-dashboard/archived`
 
-#### 并行路由相对于传统组件的优点
+不能在同一路由下有单独的静态和动态插槽，如果一个插槽是动态的，其他插槽是静态的，那么当用户刷新页面时如果插槽下没有default.js文件就会返回404页面。还看上边的案例就行：
+
+```
+//没有default.js文件
+complex-dashboard
+├─ layout.tsx
+├─ page.tsx
+├─ @users
+│  └─ page.tsx
+├─ @revenue
+│  └─ page.tsx
+└─ @notifications
+   ├─ page.tsx
+   └─ archived
+      └─ page.tsx
+```
+
+![chrome_jPTahR5XSI](https://cdn.jsdelivr.net/gh/cjy1998/imagesbed/img/chrome_jPTahR5XSI.gif)
+
+​	 
+
+```
+//有default.js文件
+complex-dashboard
+├─ default.tsx
+├─ layout.tsx
+├─ page.tsx
+├─ @users
+│  ├─ default.tsx
+│  └─ page.tsx
+├─ @revenue
+│  ├─ default.tsx
+│  └─ page.tsx
+└─ @notifications
+   ├─ page.tsx
+   └─ archived
+      └─ page.tsx
+```
+
+![chrome_JLrcr8Y89H](https://cdn.jsdelivr.net/gh/cjy1998/imagesbed/img/chrome_JLrcr8Y89H.gif)
+
+default.js文件的作用就是在初始加载或整页重新加载期间呈现为不匹配插槽的回退。
+
+#### 7.2 并行路由相对于传统组件的优点
 
 1. 增强用户体验
 
@@ -269,6 +336,68 @@ export default function Notifications() {
 - 缓存策略
   - 由于并行路由的独立性，可以为每个路由制定独立的缓存策略。对于不经常变化的内容，可以进行更长期的缓存，提高页面的加载速度。
   - 例如，在一个博客应用中，文章列表可以缓存较长时间，而文章详情页面可以根据文章的更新频率进行适当的缓存设置。
+
+###  8. 拦截路由
+
+​		在 Next.js 中，拦截路由（Intercepting Routes）是一个用于处理复杂路由逻辑的特性，可以帮助开发者根据特定条件或状态动态地修改路由行为。这种机制使得在渲染某些页面或组件之前，开发者能够进行预处理，从而控制用户的导航体验。
+
+#### 8.1 定义拦截路由
+
+使用`(.)folder`约定定义拦截路由
+
+```
+app
+├─ f1
+│  ├─ page.tsx
+│  ├─ f2
+│  │  └─ page.tsx
+└─ ─ (.)f2
+     └─ page.tsx
+```
+
+```tsx
+//f1
+import Link from "next/link";
+
+const F1 = () => {
+  return (
+    <div className="">
+      F1{" "}
+      <div>
+        <Link href="/f1/f2">导航到F2</Link>
+      </div>
+    </div>
+  );
+};
+
+export default F1;
+```
+
+```tsx
+//f2
+const F2 = () => {
+  return <div className="">F2</div>;
+};
+
+export default F2;
+```
+
+```tsx
+//(.)f2
+const InterceptedF2 = () => {
+  return <div className="">(.)InterceptedF2</div>;
+};
+
+export default InterceptedF2;
+```
+
+| (.)      | 匹配**同一级别的**路由片段        |
+| -------- | --------------------------------- |
+| (..)     | 匹配**上一级**的路由片段          |
+| (..)(..) | 匹配**上两级**的路由片段          |
+| (...)    | 匹配**根** `app` 目录中的路由片段 |
+
+
 
 ## Layouts
 
@@ -362,11 +491,10 @@ app/
        };
      };
      ```
-     2.
 
-### title
+2. title
 
-**可以是字符串也可以是对象**
+​	**可以是字符串也可以是对象**
 
 ```ts
 import { Metadata } from "next";

@@ -5,11 +5,13 @@ layout: home
 hero:
   name: "保持热爱"
   text: "兴趣是最好的老师"
-  tagline: 不积跬步无以至千里
-   # 右边图片
+  tagline:
+    不积跬步无以至千里
+    # 右边图片
   image:
     src: /chuizi.png
     alt: VitePress
+
   # actions:
   #   - theme: brand
   #     text: 快速导航->
@@ -17,7 +19,6 @@ hero:
   #   - theme: alt
   #     text: API Examples
   #     link: /api-examples
-
 # features:
 #    - icon:
 #       src: /ts.svg
@@ -35,3 +36,29 @@ hero:
 #      details: Lorem ipsum...
 ---
 
+<div style="display: flex; justify-content: center; flex-wrap: wrap; gap: 20px; margin-top:80px">
+  <Card to="/vitepress/react/nextjs/index">
+    <template #icon>
+      <img src="https://cdn.jsdelivr.net/gh/cjy1998/imagesbed/img/next.png" alt="Nextjs" />
+    </template>
+    <template #title>Nextjs</template>
+  </Card>
+  <Card to="/article-2">
+    <template #icon>
+      <img src="https://cdn.jsdelivr.net/gh/cjy1998/imagesbed/img/typescript.png" alt="TypeScript" />
+    </template>
+    <template #title>TypeScript</template>
+  </Card>
+   <Card to="/vitepress/interview/index">
+    <template #icon>
+      <img src="https://cdn.jsdelivr.net/gh/cjy1998/imagesbed/img/mianshi.png" alt="面试题" />
+    </template>
+    <template #title>面试题</template>
+  </Card>
+  <Card to="/article-2">
+    <template #icon>
+      <img src="https://cdn.jsdelivr.net/gh/cjy1998/imagesbed/img/react.png" alt="React" />
+    </template>
+    <template #title>React</template>
+  </Card>
+</div>
