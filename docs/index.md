@@ -55,7 +55,7 @@ hero:
     </template>
     <template #title>面试题</template>
   </Card>
-  <Card to="/article-2">
+  <Card to="/vitepress/react/React/base">
     <template #icon>
       <img src="https://cdn.jsdelivr.net/gh/cjy1998/imagesbed/img/React-blue.png" alt="React" />
     </template>
