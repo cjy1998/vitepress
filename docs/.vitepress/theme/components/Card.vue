@@ -3,13 +3,15 @@
     <div class="card-icon">
       <slot name="icon"></slot>
     </div>
-    <div class="card-title">
+    <div :class="isDark ? 'card-title card-title-dark' : 'card-title'">
       <slot name="title">Default Title</slot>
     </div>
   </a>
 </template>
 
 <script>
+import { useData } from "vitepress";
+// const { isDark } = useData();
 export default {
   name: "Card",
   props: {
@@ -17,6 +19,11 @@ export default {
       type: String,
       required: true,
     },
+  },
+  data() {
+    return {
+      isDark: useData().isDark,
+    };
   },
 };
 </script>
@@ -47,5 +54,8 @@ export default {
   font-size: 24px;
   font-weight: bold;
   color: #333;
+}
+.card-title-dark {
+  color: #fff;
 }
 </style>

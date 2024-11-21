@@ -45,19 +45,19 @@ hero:
   </Card>
   <Card to="/article-2">
     <template #icon>
-      <img src="https://cdn.jsdelivr.net/gh/cjy1998/imagesbed/img/typescript.png" alt="TypeScript" />
+      <img src="https://cdn.jsdelivr.net/gh/cjy1998/imagesbed/img/typescript-blue.png" alt="TypeScript" />
     </template>
     <template #title>TypeScript</template>
   </Card>
    <Card to="/vitepress/interview/index">
     <template #icon>
-      <img src="https://cdn.jsdelivr.net/gh/cjy1998/imagesbed/img/mianshi.png" alt="面试题" />
+      <img src="https://cdn.jsdelivr.net/gh/cjy1998/imagesbed/img/mianshilogo.png" alt="面试题" />
     </template>
     <template #title>面试题</template>
   </Card>
   <Card to="/article-2">
     <template #icon>
-      <img src="https://cdn.jsdelivr.net/gh/cjy1998/imagesbed/img/react.png" alt="React" />
+      <img src="https://cdn.jsdelivr.net/gh/cjy1998/imagesbed/img/React-blue.png" alt="React" />
     </template>
     <template #title>React</template>
   </Card>
