@@ -124,5 +124,23 @@ export default defineConfig({
         timeStyle: "medium",
       },
     },
+    markdown: {
+      config: (md) => {
+        md.use(wordCountPlugin);
+      },
+    },
   },
 });
+// 自定义字数统计插件
+function wordCountPlugin(md) {
+  md.core.ruler.push("word_count", (state) => {
+    state.tokens.forEach((token) => {
+      if (token.type === "inline") {
+        const text = token.content;
+        const wordCount = text.replace(/\s+/g, "").length; // 去除空格统计字数
+        token.meta = token.meta || {};
+        token.meta.wordCount = wordCount;
+      }
+    });
+  });
+}

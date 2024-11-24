@@ -176,7 +176,7 @@ export default function Docs({ params }: { params: { slug: string[] } }) {
 
 ### 3. 动态路由
 
-`可以将文件夹名称括在方括号中来创建动态路由[id]，id作为prop传递给layout、page、route和generateMetadata`
+1.  `可以将文件夹名称括在方括号中来创建动态路由[id]，id作为prop传递给layout、page、route和generateMetadata`
 
 ```
 app/
@@ -203,6 +203,33 @@ export default function ProductDetail({
 }
 ```
 
+2.  \[...folderName]
+
+   在命名文件夹的时候，如果你在方括号内添加省略号，比如 `[...folderName]`，这表示捕获所有后面所有的路由片段。
+
+   也就是说，`app/shop/[...slug]/page.js`会匹配 `/shop/clothes`，也会匹配 `/shop/clothes/tops`、`/shop/clothes/tops/t-shirts`等等。
+
+   ```tsx
+   // app/shop/[...slug]/page.js
+   export default function Page({ params }) {
+     return <div>My Shop: {JSON.stringify(params)}</div>
+   }
+   ```
+
+   当你访问 `/shop/a`的时候，`params` 的值为 `{ slug: ['a'] }`。
+
+   当你访问 `/shop/a/b`的时候，`params` 的值为 `{ slug: ['a', 'b'] }`。
+
+   当你访问 `/shop/a/b/c`的时候，`params` 的值为 `{ slug: ['a', 'b', 'c'] }`。
+
+3. \[\[...folderName]
+
+   **在命名文件夹的时候，如果你在双方括号内添加省略号，比如 `[[...folderName]]`，这表示可选的捕获所有后面所有的路由片段。**
+
+   也就是说，`app/shop/[[...slug]]/page.js`会匹配 `/shop`，也会匹配 `/shop/clothes`、 `/shop/clothes/tops`、`/shop/clothes/tops/t-shirts`等等。
+
+   它与上一种的区别就在于，不带参数的路由也会被匹配（就比如 `/shop`）
+
 ### 5. 私有文件夹
 
 `_folder下划线开头的文件夹属于私有文件夹，一般存放工具函数`
@@ -212,6 +239,8 @@ export default function ProductDetail({
 ### 6. 路由组
 
 **使用`(folderName)`的方式创建路由组,就是将业务逻辑相关的路由放在一个文件夹下，但是 url 中不体现该文件夹。例如：注册、登录、忘记密码**
+
+1. 按逻辑分组
 
 ```
 app/
@@ -224,6 +253,30 @@ app/
 | |── register
 | | └── page.tsx 对应url:/register
 ```
+
+2. 创建不同布局
+
+   **借助路由组，即便在同一层级，也可以创建不同的布局：**
+
+   ![image-20241124223635145](https://cdn.jsdelivr.net/gh/cjy1998/imagesbed/img/image-20241124223635145.png)
+
+   在这个例子中，`/account` 、`/cart`、`/checkout` 都在同一层级。但是 `/account`和 `/cart`使用的是 `/app/(shop)/layout.js`布局和`app/layout.js`布局，`/checkout`使用的是 `app/layout.js`
+
+3. 创建多个根布局
+
+   ![image-20241124223733217](https://cdn.jsdelivr.net/gh/cjy1998/imagesbed/img/image-20241124223733217.png)
+
+   创建多个根布局，你需要删除掉 `app/layout.js` 文件，然后在每组都创建一个 `layout.js`文件。创建的时候要注意，因为是根布局，所以要有 `<html>` 和 `<body>` 标签。
+
+   这个功能很实用，比如你将前台购买页面和后台管理页面都放在一个项目里，一个 C 端，一个 B 端，两个项目的布局肯定不一样，借助路由组，就可以轻松实现区分。
+
+   注意：
+
+   1.  路由组的命名除了用于组织之外并无特殊意义。它们不会影响 URL 路径。
+   2.  注意不要解析为相同的 URL 路径。举个例子，因为路由组不影响 URL 路径，所以  `(marketing)/about/page.js`和 `(shop)/about/page.js`都会解析为 `/about`，这会导致报错。
+   3.  创建多个根布局的时候，因为删除了顶层的 `app/layout.js`文件，访问 `/`会报错，所以`app/page.js`需要定义在其中一个路由组中。
+   4.  跨根布局导航会导致页面完全重新加载，就比如使用 `app/(shop)/layout.js`根布局的 `/cart` 跳转到使用 `app/(marketing)/layout.js`根布局的 `/blog` 会导致页面重新加载（full page load）。
+   5.  当定义多个根布局的时候，使用 `app/not-found.js`会出现问题。具体参考 [《Next.js v14 如何为多个根布局自定义不同的 404 页面？竟然还有些麻烦！欢迎探讨》](https://juejin.cn/post/7351321244125265930)
 
 ### 7. 平行路由
 
@@ -501,64 +554,6 @@ app/
 - 布局无法访问`pathname`,但导入的客户端组件可以使用钩子访问路径名`usePathname`。
 - 布局无法访问其自身下方的路由段。要访问所有路由段，可以在客户端组件中使用`useSelectedLayoutSegment`或`useSelectedLayoutSegments`
 
-## 元数据
-
-有两种方法可以向应用程序添加元数据
-
-1. tsx 文件中导出静态`metadata对象`或动态`generateMetadata函数`(`layout.tsx` 和 `page.tsx`)。
-
-   - 静态元数据
-
-   ```ts
-   export const generateMetadata = ({ params }: Props): Metadata => {
-     return {
-       title: `Product ${params.productId}`,
-     };
-   };
-   ```
-
-   - 动态元数据
-     ```ts
-     export const generateMetadata = async ({
-       params,
-     }: Props): Promise<Metadata> => {
-       const title = await new Promise((resolve) => {
-         setTimeout(() => {
-           resolve(`iPhone ${params.productId}`);
-         }, 1000);
-       });
-       return {
-         title: `Product ${title}`,
-       };
-     };
-     ```
-
-2. title
-
- **可以是字符串也可以是对象**
-
-```ts
-import { Metadata } from "next";
-export const metadata: Metadata = {
-  title: {
-    default: "Next.js Tutorial - Codevolution",
-    absolute: "",
-    template: "%s | Codevolution",
-  },
-};
-```
-
-- `absolute`,在子页面设置`title`的`absolute`后，子页面的标题将会忽略父页面中`title.template`。
-- 子页面如果未定义`title`则采取父页面中`title.default`
-- `title.template`可用于在子路由段`titles`中定义添加前缀或后缀。
-
-## 链接和导航
-
-- 使用`<Link>`组件。
-- 使用`useRouter`钩子(客户端组件)
-- 使用`redirect`函数（服务端组件）
-- 使用原生`History API`
-
 ## Templates
 
 模板与布局类似，它们包装了子布局或页面。与跨路由持久化并保持状态的布局不同，模板在导航时会为每个子项创建一个新实例。这意味着，当用户在共享模板的路由之间导航时，会安装子项的新实例，重新创建 DOM 元素，客户端组件中不会保留状态，并且会重新同步效果。
@@ -759,3 +754,224 @@ export default async function Profile({ params }) {
 ```
 
 注意：当 `app/not-found.js` 和路由组一起使用的时候，可能会出现问题。
+
+## 元数据
+
+有两种方法可以向应用程序添加元数据
+
+1. tsx 文件中导出静态`metadata对象`或动态`generateMetadata函数`(`layout.tsx` 和 `page.tsx`)。
+
+   - 静态元数据
+
+   ```ts
+   export const generateMetadata = ({ params }: Props): Metadata => {
+     return {
+       title: `Product ${params.productId}`,
+     };
+   };
+   ```
+
+   - 动态元数据
+     ```ts
+     export const generateMetadata = async ({
+       params,
+     }: Props): Promise<Metadata> => {
+       const title = await new Promise((resolve) => {
+         setTimeout(() => {
+           resolve(`iPhone ${params.productId}`);
+         }, 1000);
+       });
+       return {
+         title: `Product ${title}`,
+       };
+     };
+     ```
+
+2. title
+
+ **可以是字符串也可以是对象**
+
+```ts
+import { Metadata } from "next";
+export const metadata: Metadata = {
+  title: {
+    default: "Next.js Tutorial - Codevolution",
+    absolute: "",
+    template: "%s | Codevolution",
+  },
+};
+```
+
+- `absolute`,在子页面设置`title`的`absolute`后，子页面的标题将会忽略父页面中`title.template`。
+- 子页面如果未定义`title`则采取父页面中`title.default`
+- `title.template`可用于在子路由段`titles`中定义添加前缀或后缀。
+
+## 链接和导航
+
+1. 使用`<Link>`组件。
+
+2. 使用`useRouter`钩子(客户端组件)
+
+3. 使用`redirect`函数（服务端组件）
+
+4. 使用原生`History API`
+
+### `<Link>`组件
+
+Next.js 的`<Link>`组件是一个拓展了原生 HTML `<a>` 标签的内置组件，用来实现预获取（prefetching） 和客户端路由导航。这是 Next.js 中路由导航的推荐方式。
+
+#### 基本使用
+
+```tsx
+import Link from 'next/link'
+ 
+export default function Page() {
+  return <Link href="/dashboard">Dashboard</Link>
+}
+```
+
+#### 动态渲染
+
+```tsx
+import Link from 'next/link'
+ 
+export default function PostList({ posts }) {
+  return (
+    <ul>
+      {posts.map((post) => (
+        <li key={post.id}>
+          <Link href={`/blog/${post.slug}`}>{post.title}</Link>
+        </li>
+      ))}
+    </ul>
+  )
+}
+```
+
+#### 获取当前路径名` usePathname()`
+
+```tsx
+'use client'
+ 
+import { usePathname } from 'next/navigation'
+import Link from 'next/link'
+
+export function Navigation({ navLinks }) {
+  const pathname = usePathname()
+ 
+  return (
+    <>
+      {navLinks.map((link) => {
+        const isActive = pathname === link.href
+ 
+        return (
+          <Link
+            className={isActive ? 'text-blue' : 'text-black'}
+            href={link.href}
+            key={link.name}
+          >
+            {link.name}
+          </Link>
+        )
+      })}
+    </>
+  )
+}
+```
+
+#### 跳转行为设置
+
+App Router 的默认行为是滚动到新路由的顶部，或者在前进后退导航时维持之前的滚动距离。
+
+如果你想要禁用这个行为，你可以给 `<Link>` 组件传递一个 `scroll={false}`属性，或者在使用 `router.push`和 `router.replace`的时候，设置 `scroll: false`：
+
+```tsx
+// next/link
+<Link href="/dashboard" scroll={false}>
+  Dashboard
+</Link>
+```
+
+```tsx
+// useRouter
+import { useRouter } from 'next/navigation'
+ 
+const router = useRouter()
+ 
+router.push('/dashboard', { scroll: false })
+```
+
+### useRouter()
+
+只能在客户端组件中使用
+
+```tsx
+'use client'
+ 
+import { useRouter } from 'next/navigation'
+ 
+export default function Page() {
+  const router = useRouter()
+ 
+  return (
+    <button type="button" onClick={() => router.push('/dashboard')}>
+      Dashboard
+    </button>
+  )
+}
+```
+
+### redirect函数
+
+服务端组件可以直接使用 redirect 函数
+
+```tsx
+import { redirect } from 'next/navigation'
+ 
+async function fetchTeam(id) {
+  const res = await fetch('https://...')
+  if (!res.ok) return undefined
+  return res.json()
+}
+ 
+export default async function Profile({ params }) {
+  const team = await fetchTeam(params.id)
+  if (!team) {
+    redirect('/login')
+  }
+ 
+  // ...
+}
+```
+
+### History API
+
+通常与 usePathname（获取路径名的 hook） 和 useSearchParams（获取页面参数的 hook） 一起使用。
+
+比如用 pushState 对列表进行排序：
+
+```tsx
+'use client'
+ 
+import { useSearchParams } from 'next/navigation'
+ 
+export default function SortProducts() {
+  const searchParams = useSearchParams()
+ 
+  function updateSorting(sortOrder) {
+    const params = new URLSearchParams(searchParams.toString())
+    params.set('sort', sortOrder)
+    window.history.pushState(null, '', `?${params.toString()}`)
+  }
+ 
+  return (
+    <>
+      <button onClick={() => updateSorting('asc')}>Sort Ascending</button>
+      <button onClick={() => updateSorting('desc')}>Sort Descending</button>
+    </>
+  )
+}
+```
+
+
+
