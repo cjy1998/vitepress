@@ -315,3 +315,513 @@ async function findAllUser() {
 ]
 ```
 
+### 一对多
+
+```ts
+//一个用户多篇文章
+model User {
+  id             String @id @default(cuid())
+  email          String @unique()
+  hashedPassword String
+  posts          Post[]
+}
+
+model Post {
+  id        String   @id @default(cuid())
+  title     String
+  slug      String   @unique
+  content   String
+  //？表示该字段是可选的
+  published Boolean? @default(false)
+  updatedAt DateTime @updatedAt
+  createdAt DateTime @default(now())
+  author     User    @relation(fields: [authorId], references: [id])
+  authorId    String
+}
+```
+
+### 多对多
+
+```ts
+//多个用户多篇文章
+model User {
+  id             String @id @default(cuid())
+  email          String @unique()
+  hashedPassword String
+  posts          Post[]
+}
+
+model Post {
+  id        String   @id @default(cuid())
+  title     String
+  slug      String   @unique
+  content   String
+  //？表示该字段是可选的
+  published Boolean? @default(false)
+  updatedAt DateTime @updatedAt
+  createdAt DateTime @default(now())
+  author     User[]
+}
+```
+
+### 一对一
+
+```ts
+//一个用户一篇文章
+model User {
+  id             String @id @default(cuid())
+  email          String @unique()
+  hashedPassword String
+  posts          Post?
+}
+
+model Post {
+  id        String   @id @default(cuid())
+  title     String
+  slug      String   @unique
+  content   String
+  //？表示该字段是可选的
+  published Boolean? @default(false)
+  updatedAt DateTime @updatedAt
+  createdAt DateTime @default(now())
+  author     User    @relation(fields: [authorId], references: [id])
+  authorId    String  @unique
+}
+```
+
+## 一图搞懂Prisma在应用中所处位置
+
+![image-20241126152037553](https://cdn.jsdelivr.net/gh/cjy1998/imagesbed/img/image-20241126152037553.png)
+
+## 在项目中集成Prisma
+
+1. 下载依赖
+
+   ```bash
+   npm i prisma --save-dev
+   ```
+
+2. 初始化`Prisma`
+
+   ```bash
+   npx prisma init --datasource-provider sqlite
+   ```
+
+3. 在`schema.prisma`文件中添加模型
+
+   ```ts
+   model Post {
+     id        String   @id @default(cuid())
+     title     String
+     content   String
+     //？表示该字段是可选的
+     published Boolean? @default(false)
+     updatedAt DateTime @updatedAt
+     createdAt DateTime @default(now())
+   }
+   
+   ```
+
+4. 运行`npx prisma db push`
+
+- **同步 Prisma 数据模型**：
+
+  - 将 `schema.prisma` 中定义的模型直接推送到数据库。
+
+  - 如果数据库中不存在表，会创建表。
+
+  - 如果表已经存在，会根据模型更新表结构（但不会删除已有数据）。
+
+- **适合场景**：
+
+  - 开发阶段快速更新数据库结构。
+
+  - 临时修改数据库结构。
+
+- **不适合生产环境**：
+  - 它不会生成迁移文件，因此不适合生产环境的数据库管理。
+
+![image-20241126170636488](https://cdn.jsdelivr.net/gh/cjy1998/imagesbed/img/image-20241126170636488.png)
+
+5. 运行`npx prisma studio`命令可以打开一个数据库视图，新增一条数据。
+
+6. 新建`/lib/db.ts`文件
+
+   [详见]: https://www.prisma.io/docs/orm/more/help-and-troubleshooting/help-articles/nextjs-prisma-client-dev-practices	"详见"
+
+   
+
+   ```ts
+   import { PrismaClient } from '@prisma/client'
+   
+   const prismaClientSingleton = () => {
+       return new PrismaClient()
+   }
+   
+   declare const globalThis: {
+       prismaGlobal: ReturnType<typeof prismaClientSingleton>;
+   } & typeof global;
+   
+   const prisma = globalThis.prismaGlobal ?? prismaClientSingleton()
+   
+   export default prisma
+   
+   if (process.env.NODE_ENV !== 'production') globalThis.prismaGlobal = prisma
+   ```
+
+7. 查询`post`所有数据
+
+   ```tsx
+   import ThemeToggleButton from "@/components/ThemeToggleButton";
+   import prisma from "@/lib/db";
+   import Link from "next/link";
+   export default async function Home() {
+     const posts = await prisma.post.findMany();
+     const postsCount = await prisma.post.count();
+     return (
+       <div className="w-screen h-screen flex flex-col items-center  bg-white dark:bg-black sm:py-5 py-2">
+         <ThemeToggleButton />
+         <h1 className="text-blue-400">All POST({postsCount})</h1>
+         {posts.map((item, index) => {
+           return (
+             <Link href={`/posts/${item.id}`} key={index}>
+               <p className="text-yellow-400">{item.title}</p>
+             </Link>
+           );
+         })}
+       </div>
+     );
+   }
+   ```
+
+8. 查询详情
+
+   ```tsx
+   import prisma from "@/lib/db";
+   
+   const PagesDetail = async ({ params }: { params: { id: string } }) => {
+     const detail = await prisma.post.findUnique({ where: { id: params.id } });
+     return <div className="">{detail?.content}</div>;
+   };
+   
+   export default PagesDetail;
+   ```
+
+9. 在数据库文件中添加` slug`字段 添加`@unique` 确保该字段的值是唯一的，否则会报错。
+
+   ```ts
+   model Post {
+     id        String   @id @default(cuid())
+     title     String
+     slug      String   @unique
+     content   String
+     //？表示该字段是可选的
+     published Boolean? @default(false)
+     updatedAt DateTime @updatedAt
+     createdAt DateTime @default(now())
+   }
+   ```
+
+   运行`npx prisma db push`命令，注意：此命令会导致数据会丢失
+
+   ![image-20241127152858518](https://cdn.jsdelivr.net/gh/cjy1998/imagesbed/img/image-20241127152858518.png)
+
+10. 详情页面根据`slug`查询详情
+
+    ```tsx
+    import prisma from "@/lib/db";
+    
+    const PagesDetail = async ({ params }: { params: { slug: string } }) => {
+      const detail = await prisma.post.findUnique({
+        where: { slug: decodeURIComponent(params.slug) },
+      });
+      return (
+        <div className="flex flex-col items-center p-2 sm:p-5">
+          <div className="text-2xl font-bold">{detail?.title}</div>
+          <div className="text-sm p-5">{detail?.content}</div>
+        </div>
+      );
+    };
+    
+    export default PagesDetail;
+    ```
+
+11. 其他一些操作
+
+    ```tsx
+     const posts = await prisma.post.findMany({
+         //过滤出已发布的文章
+        where: { published: true },
+     	//按照创建时间降序    
+        orderBy: {
+          createdAt: "desc",
+        },
+         //要返回的字段
+        select: {
+          id: true,
+          slug: true,
+          title: true,
+        },
+        take: 2, // 获取前 2 条记录
+      	skip: 0, // 从第 0 条开始，不跳过任何记录
+      });
+    ```
+
+    分页：https://www.prisma.io/docs/orm/prisma-client/queries/pagination
+
+12. 添加文章
+
+    ```tsx
+    import { createPost } from "../action/action";
+    const addPost = () => {
+      return (
+        <div className="flex flex-col items-center pt-10">
+          <span className="text-2xl font-bold">添加</span>
+          <form action={createPost} className="flex flex-col gap-5 py-5">
+            <input
+              type="text"
+              name="title"
+              placeholder="Title"
+              className="px-2 py-1 rounded-sm border"
+            />
+            <textarea
+              name="content"
+              rows={5}
+              placeholder="Conent"
+              className="px-2 py-1 rounded-sm border"
+            />
+            <button
+              type="submit"
+              className="bg-blue-500 py-2 text-white rounded-sm"
+            >
+              提交
+            </button>
+          </form>
+        </div>
+      );
+    };
+    
+    export default addPost;
+    ```
+
+13. 编辑文章
+
+    ```tsx
+    ```
+
+    
+
+14. 删除文章
+
+    ```tsx
+    // remmoveBtn
+    "use client";
+    import { IoIosCloseCircle } from "react-icons/io";
+    import { deletePost } from "@/app/action/action";
+    const RemoveBtn = ({ id }: { id: string }) => {
+      const handleRemove = async () => {
+        await deletePost(id);
+      };
+    
+      return (
+        <IoIosCloseCircle
+          onClick={handleRemove}
+          className="text-[#C20E4D] cursor-pointer"
+        />
+      );
+    };
+    
+    export default RemoveBtn;
+    
+    ```
+
+15. `action`文件
+
+    ```ts
+    //action/action.ts
+    "use server"
+    import prisma from "@/lib/db"
+    import { revalidatePath } from "next/cache"
+    import { redirect } from "next/navigation"
+    
+    export async function createPost(formData: FormData) {
+        await prisma.post.create({
+            data: {
+                title: formData.get("title") as string,
+                content: formData.get("content") as string,
+                slug: formData.get("title") as string
+            }
+        })
+        revalidatePath("/")
+        redirect('/')
+    }
+    export async function editPost(formData: FormData, id: string) {
+        await prisma.post.update({
+            where: { id },
+            data: {
+                title: formData.get("title") as string,
+                content: formData.get("content") as string,
+                slug: formData.get("title") as string
+            }
+        })
+        revalidatePath("/")
+        redirect('/')
+    
+    }
+    export async function deletePost(id: string) {
+        await prisma.post.delete({ where: { id } })
+        revalidatePath("/")
+    }
+    ```
+
+16. 一对多关系
+
+    ```ts
+    model User {
+      id             String @id @default(cuid())
+      email          String @unique()
+      hashedPassword String
+      posts          Post[]
+    }
+    
+    model Post {
+      id        String   @id @default(cuid())
+      title     String
+      slug      String   @unique
+      content   String
+      //？表示该字段是可选的
+      published Boolean? @default(false)
+      updatedAt DateTime @updatedAt
+      createdAt DateTime @default(now())
+      author     User    @relation(fields: [authorId], references: [id])
+      authorId    String
+    }
+    ```
+
+    更新数据库`npx prisma db push`
+
+17. 添加一条试试
+
+    ```ts
+    export async function createPost(formData: FormData) {
+        await prisma.post.create({
+            data: {
+                title: formData.get("title") as string,
+                content: formData.get("content") as string,
+                slug: formData.get("title") as string,
+                author: {
+                    connect: {
+                        email: "1404340013@qq.com"
+                    }
+                }
+            }
+        })
+        revalidatePath("/")
+        redirect('/')
+    }
+    ```
+
+18. 初始化数据
+
+    ```ts
+    // /prisma/seed.ts
+    import { Prisma, PrismaClient } from '@prisma/client'
+    const prisma = new PrismaClient()
+    const initialPosts: Prisma.PostCreateInput[] = [
+        {
+            title: "post 1",
+            slug: "post-1",
+            content: "个人皇家公馆热加工戈培尔工卡让娃",
+            author: {
+                connectOrCreate: {
+                    where: {
+                        email: "18839362311@163.com"
+                    },
+                    create: {
+                        email: "18839362311@163.com",
+                        hashedPassword: "flefhjkhfjkhjjk"
+                    }
+                }
+            }
+        }
+    ]
+    
+    async function main() {
+        console.log("start seeding...");
+        for (const post of initialPosts) {
+            const newPost = await prisma.post.create({
+                data: post
+            })
+            console.log(`"new postid"${newPost.id}`);
+    
+        }
+        console.log("seeding finish");
+    }
+    main()
+        .then(async () => {
+            await prisma.$disconnect()
+        })
+        .catch(async (e) => {
+            console.error(e)
+            await prisma.$disconnect()
+            process.exit(1)
+        })
+    ```
+
+    
+
+19. 在`package.json`中添加命令行
+
+    ```js
+      "prisma": {
+        "seed": "ts-node --compiler-options {\"module\":\"CommonJS\"} prisma/seed.ts"
+      },
+    ```
+
+    下载依赖`npm i ts-node -D`
+
+    执行`npx prisma db seed`命令
+
+20. 捕获错误信息
+
+    ```ts
+    export async function createPost(formData: FormData) {
+        try {
+            await prisma.post.create({
+                data: {
+                    title: formData.get("title") as string,
+                    content: formData.get("content") as string,
+                    slug: formData.get("title") as string,
+                    author: {
+                        connect: {
+                            email: "18839362311@163.com"
+                        }
+                    }
+                }
+            })
+        } catch (error) {
+            if (error instanceof Prisma.PrismaClientKnownRequestError)
+                // console.log(error);
+    
+                switch (error.code) {
+                    case 'P2002':
+                        console.log("Unique constraint failed on the {constraint}");
+                        break;
+                    default:
+                        break;
+                }
+            console.log("出错啦");
+        }
+    
+        revalidatePath("/")
+        redirect('/')
+    }
+    ```
+
+    其它错误码文档
+
+    https://www.prisma.io/docs/orm/reference/error-reference#p1012
+
+21. 数据库迁移`npx prisma migrate dev`
+
+    

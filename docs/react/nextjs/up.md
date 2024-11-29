@@ -406,3 +406,315 @@ export async function GET() {
 }
 ```
 
+## 中间件
+
+使用中间件，可以拦截并控制应用的所有请求和响应。
+
+比如可以基于传入的请求，重写、重定向、修改请求或响应头、甚至直接相应内容。比较常见的应用就是鉴权，在打开页面渲染具体内容前，先判断用户是否登录，如果未登录，则跳转到登录页面。
+
+### 定义
+
+在根目录创建一个名为`middleware.ts`的文件：
+
+```ts
+// middleware.ts
+import { NextResponse } from 'next/server'
+ 
+// 中间件可以是 async 函数，如果使用了 await
+export function middleware(request) {
+  return NextResponse.redirect(new URL('/', request.url))
+}
+
+// 设置匹配路径
+export const config = {
+    matcher: '/blog/:path*'
+}
+```
+
+注意：这里说的项目根目录指的是和 `pages` 或 `app` 同级。但如果项目用了 `src`目录，则放在 `src`下。
+
+在这个例子中，我们通过 `config.matcher`设置中间件生效的路径，在 `middleware`函数中设置中间件的逻辑，作用是将 `/blog`、`/blog/xxx`、`/blog/xxx/xxx` 这样的的地址统一重定向到 `/`，效果如下：
+
+![chrome_2A8MEA6AGx](https://cdn.jsdelivr.net/gh/cjy1998/imagesbed/img/chrome_2A8MEA6AGx.gif)
+
+![image-20241126110951544](https://cdn.jsdelivr.net/gh/cjy1998/imagesbed/img/image-20241126110951544.png)
+
+### 设置匹配路径
+
+#### matcher配置项
+
+```ts
+export const config = {
+    matcher: '/blog/:path*'
+}
+```
+
+`matcher` 不仅支持字符串形式，也支持数组形式，用于匹配多个路径：
+
+```ts
+export const config = {
+    matcher: ['/blog/:path*','/products/:path*']
+}
+```
+
+ `:path*` 的用法来自于  [path-to-regexp](https://github.com/pillarjs/path-to-regexp) 这个库，它的作用就是将 `/user/:name`这样的路径字符串转换为正则表达式。
+
+path-to-regexp 通过在参数名前加一个冒号来定义**命名参数**（Named Parameters），matcher 支持命名参数，比如 `/about/:path`匹配 `/about/a`和 `/about/b`，但是不匹配 `/about/a/c`
+
+注：实际测试的时候，`/about/:path` 并不能匹配 `/about/xxx`，只能匹配 `/about`，如果要匹配 `/about/xxx`，需要写成 `/about/:path/`
+
+命名参数的默认匹配逻辑是 `[^/]+`，但你也可以在命名参数后加一个括号，在其中自定义命名参数的匹配逻辑，比如 `/about/icon-:foo(\\d+).png` 匹配 `/about/icon-1.png`，但不匹配 `/about/icon-a.png`。
+
+命名参数可以使用修饰符，其中 `*` 表示 0 个或 1 个或多个，`?`表示 0 个或 1 个，`+`表示 1 个或多个，比如
+
+*   `/about/:path*` 匹配 `/about`、`/about/xxx`、`/about/xxx/xxx`
+*   `/about/:path?` 匹配 `/about`、`/about/xxx`
+*   `/about/:path+` 匹配 `/about/xxx`、`/about/xxx/xxx`
+
+也可以在圆括号中使用标准的正则表达式，比如`/about/(.*)` 等同于 `/about/:path*`，比如 `/(about|settings)` 匹配 `/about` 和 `/settings`，不匹配其他的地址。`/user-(ya|yu)`匹配 `/user-ya`和 `/user-yu`。
+
+```ts
+export const config = {
+  matcher: [
+    /*
+     * 匹配所有的路径除了以这些作为开头的：
+     * - api (API routes)
+     * - _next/static (static files)
+     * - _next/image (image optimization files)
+     * - favicon.ico (favicon file)
+     */
+    '/((?!api|_next/static|_next/image|favicon.ico).*)',
+  ],
+}
+```
+
+路径必须以 `/`开头。`matcher` 的值必须是常量，这样可以在构建的时候被静态分析。使用变量之类的动态值会被忽略。
+
+matcher 的强大可远不止正则表达式，matcher 还可以判断查询参数、cookies、headers：
+
+```ts
+export const config = {
+  matcher: [
+    {
+      source: '/api/*',
+      has: [
+        { type: 'header', key: 'Authorization', value: 'Bearer Token' },
+        { type: 'query', key: 'userId', value: '123' },
+      ],
+      missing: [{ type: 'cookie', key: 'session', value: 'active' }],
+    },
+  ],
+}
+```
+
+在这个例子中，不仅匹配了路由地址，还要求 header 的 Authorization 必须是 Bearer Token，查询参数的 userId 为 123，且 cookie 里的 session 值不是 active。
+
+#### 条件语句
+
+```ts
+import { NextResponse } from 'next/server'
+ 
+export function middleware(request) {
+  if (request.nextUrl.pathname.startsWith('/about')) {
+    return NextResponse.rewrite(new URL('/about-2', request.url))
+  }
+ 
+  if (request.nextUrl.pathname.startsWith('/dashboard')) {
+    return NextResponse.rewrite(new URL('/dashboard/user', request.url))
+  }
+}
+```
+
+### 中间件逻辑
+
+#### 如何读取和设置Cookies
+
+对于传入的请求和返回的响应，`NextRequest`和`NextResponse`都提供了`get`、`getAll`、`set`和 `delete`方法处理 cookies，可以用 `has`检查 cookie 或者 `clear`删除所有的 cookies。
+
+```ts
+import { NextResponse } from 'next/server'
+ 
+export function middleware(request) {
+  // 假设传入的请求 header 里 "Cookie:nextjs=fast"
+  let cookie = request.cookies.get('nextjs')
+  console.log(cookie) // => { name: 'nextjs', value: 'fast', Path: '/' }
+  const allCookies = request.cookies.getAll()
+  console.log(allCookies) // => [{ name: 'nextjs', value: 'fast' }]
+ 
+  request.cookies.has('nextjs') // => true
+  request.cookies.delete('nextjs')
+  request.cookies.has('nextjs') // => false
+ 
+  // 设置 cookies
+  const response = NextResponse.next()
+  response.cookies.set('vercel', 'fast')
+  response.cookies.set({
+    name: 'vercel',
+    value: 'fast',
+    path: '/',
+  })
+  cookie = response.cookies.get('vercel')
+  console.log(cookie) // => { name: 'vercel', value: 'fast', Path: '/' }
+  
+  // 响应 header 为 `Set-Cookie:vercel=fast;path=/test`
+  return response
+}
+```
+
+调用了 `NextResponse.next()` 这个方法，这个方法专门用在 middleware 中，毕竟我们写的是中间件，中间件进行一层处理后，返回的结果还要在下一个逻辑中继续使用，此时就需要返回 `NextResponse.next()`。
+
+#### 如何读取和设置headers
+
+```ts
+// middleware.js 
+import { NextResponse } from 'next/server'
+ 
+export function middleware(request) {
+  //  clone 请求标头
+  const requestHeaders = new Headers(request.headers)
+  requestHeaders.set('x-hello-from-middleware1', 'hello')
+ 
+  // 你也可以在 NextResponse.rewrite 中设置请求标头
+  const response = NextResponse.next({
+    request: {
+      // 设置新请求标头
+      headers: requestHeaders,
+    },
+  })
+ 
+  // 设置新响应标头 `x-hello-from-middleware2`
+  response.headers.set('x-hello-from-middleware2', 'hello')
+  return response
+}
+```
+
+#### CORS
+
+实际开发中的例子
+
+```ts
+import { NextResponse } from 'next/server'
+ 
+const allowedOrigins = ['https://acme.com', 'https://my-app.org']
+ 
+const corsOptions = {
+  'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
+  'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+}
+ 
+export function middleware(request) {
+  // Check the origin from the request
+  const origin = request.headers.get('origin') ?? ''
+  const isAllowedOrigin = allowedOrigins.includes(origin)
+ 
+  // Handle preflighted requests
+  const isPreflight = request.method === 'OPTIONS'
+ 
+  if (isPreflight) {
+    const preflightHeaders = {
+      ...(isAllowedOrigin && { 'Access-Control-Allow-Origin': origin }),
+      ...corsOptions,
+    }
+    return NextResponse.json({}, { headers: preflightHeaders })
+  }
+ 
+  // Handle simple requests
+  const response = NextResponse.next()
+ 
+  if (isAllowedOrigin) {
+    response.headers.set('Access-Control-Allow-Origin', origin)
+  }
+ 
+  Object.entries(corsOptions).forEach(([key, value]) => {
+    response.headers.set(key, value)
+  })
+ 
+  return response
+}
+ 
+export const config = {
+  matcher: '/api/:path*',
+}
+```
+
+#### 直接响应
+
+```ts
+import { NextResponse } from 'next/server'
+import { isAuthenticated } from '@lib/auth'
+
+export const config = {
+  matcher: '/api/:function*',
+}
+ 
+export function middleware(request) {
+  // 鉴权判断
+  if (!isAuthenticated(request)) {
+    // 返回错误信息
+    return new NextResponse(
+      JSON.stringify({ success: false, message: 'authentication failed' }),
+      { status: 401, headers: { 'content-type': 'application/json' } }
+    )
+  }
+}
+```
+
+### 执行顺序
+
+在Nextjs中，有很多地方都可以设置路由的响应，比如`next.config.js`中可以设置，中间件中可以设置，具体的路由中也可以设置，所以要注意它们的执行顺序：
+
+1.  `headers`（`next.config.js`）
+2.  `redirects`（`next.config.js`）
+3.  中间件 (`rewrites`, `redirects` 等)
+4.  `beforeFiles` (`next.config.js`中的`rewrites`)
+5.  基于文件系统的路由 (`public/`, `_next/static/`, `pages/`, `app/` 等)
+6.  `afterFiles` (`next.config.js`中的`rewrites`)
+7.  动态路由 (`/blog/[slug]`)
+8.  `fallback`中的 (`next.config.js`中的`rewrites`)
+
+注： `beforeFiles` 顾名思义，在基于文件系统的路由之前，`afterFiles`顾名思义，在基于文件系统的路由之后，`fallback`顾名思义，垫底执行。
+
+### 中间件相关配置项
+
+`skipMiddlewareUrlNormalize`和`skipTrailingSlashRedirect`，用来处理一些特殊的情况。
+
+#### skipTrailingSlashRedirect
+
+它指的是放在 URL 末尾的正斜杠，举个例子: `www.yauyjs.com/users/`地址中最后一个斜杠就是尾部斜杠。
+
+一般来说，尾部斜杠用于区分目录还是文件，有尾部斜杠，表示目录，没有尾部斜杠，表示文件。
+
+从 URL 的角度来看，`/users/`和 `/users`是两个地址，不过通常我们都会做重定向。比如你在 `Next.js `中访问 `/about/`它会自动重定向到 `/about`，URL 也会变为 `/about`。
+
+**`skipTrailingSlashRedirect`** 顾名思义，跳过尾部斜杠重定向，当你设置 `skipTrailingSlashRedirect`为 true 后，假设再次访问 `/about/`，URL 依然会是 `/about/`。
+
+```ts
+// next.config.js
+module.exports = {
+  skipTrailingSlashRedirect: true,
+}
+```
+
+#### skipMiddlewareUrlNormalize
+
+```ts
+// next.config.js
+module.exports = {
+  skipMiddlewareUrlNormalize: true,
+}
+```
+
+```ts
+// middleware.js
+export default async function middleware(req) {
+  const { pathname } = req.nextUrl
+ 
+  // GET /_next/data/build-id/hello.json
+ 
+  console.log(pathname)
+  // 如果设置为 true，值为：/_next/data/build-id/hello.json
+  // 如果没有配置，值为： /hello
+}
+```
+
+设置 **skipMiddlewareUrlNormalize** 为 true 后，可以获取路由原始的地址，常用于国际化场景中。
