@@ -1,4 +1,185 @@
 # javaScript
+
+## Proxy
+
+`Proxy` 是 ES6 中引入的一种强大的 JavaScript 特性，用于创建一个对象的代理，以自定义对该对象的基本操作（如读取、写入、删除等）。它是 Vue3 响应式系统的核心，解决了 Vue2 中 `Object.defineProperty` 的诸多限制。
+
+### 基本概念
+
+`Proxy`对象允许你在目标对象执行操作时，通过一个**拦截器（handler）**来定义自定义行为。
+
+```js
+const proxy = new Proxy(target, handler);
+```
+
+### 常见的拦截操作（捕获器）
+
+1. `get`捕获器
+
+   拦截属性读取操作（如 `proxy.property` 或 `proxy[property]`）。
+
+   ```js
+   const target = { name: "张三" };
+   const proxy = new Proxy(target, {
+     get(target, property) {
+       if (property === "name") {
+         return "李四";
+       }
+     },
+   });
+   console.log(proxy.name);
+   ```
+
+2. `set`捕获器
+
+   拦截属性写入操作（如 `proxy.property = value`）。
+
+   ```js
+   const target = { name: "张三", age: 30 };
+   const proxy = new Proxy(target, {
+     set(target, property, value) {
+       if (property === "age") {
+         target[property] = value + 1;
+         return true; // 表示赋值成功
+       }
+     },
+   });
+   proxy.age = 30;
+   console.log(proxy);
+   ```
+
+3. `deleteProperty` 捕获器
+
+   拦截删除操作（如 `delete proxy.property`）。
+
+   ```js
+   const target = { name: "张三", age: 30 };
+   const proxy = new Proxy(target, {
+     deleteProperty(target, property) {
+       delete target[property];
+     },
+   });
+   delete proxy.age;
+   console.log(proxy);
+   ```
+
+4. `has` 捕获器
+
+   拦截 `in` 操作符（如 `property in proxy`）。
+
+   ```js
+   const target = { visible: true };
+   const proxy = new Proxy(target, {
+     has(target, property) {
+       console.log(`检查属性：${property}`);
+       return property in target;
+     }
+   });
+   
+   console.log("visible" in proxy); // 输出 "检查属性：visible" 和 true
+   
+   ```
+
+5. `ownKeys` 捕获器
+
+   ```js
+   const target = { a: 1, b: 2 };
+   const proxy = new Proxy(target, {
+     ownKeys(target) {
+       console.log("获取属性键");
+       return Object.keys(target).filter(key => key !== "b");
+     }
+   });
+   console.log(Object.keys(proxy)); // 输出 "获取属性键" 和 ["a"]
+   ```
+
+6. 其它捕获器
+
+   - **`apply`**：拦截函数调用（如 `proxy()`）。
+   - **`construct`**：拦截构造函数调用（如 `new proxy()`）。
+   - **`defineProperty`** 和 **`getOwnPropertyDescriptor`**：拦截属性定义和描述符操作。
+
+### 应用场景
+
+1. vue3的响应式系统
+
+   Vue3 利用 `Proxy` 实现数据的响应式跟踪：
+
+   - 通过 `get` 捕获读取操作，追踪依赖。
+   - 通过 `set` 捕获写入操作，通知视图更新。
+
+   示例（简化版响应式实现）：
+
+   ```js
+   const reactive = (target) => {
+     return new Proxy(target, {
+       get(target, property) {
+         console.log(`读取属性：${property}`);
+         return target[property];
+       },
+       set(target, property, value) {
+         console.log(`更新属性：${property} = ${value}`);
+         target[property] = value;
+         return true;
+       }
+     });
+   };
+   
+   const state = reactive({ count: 0 });
+   console.log(state.count); // 输出 "读取属性：count" 和 0
+   state.count = 1;          // 输出 "更新属性：count = 1"
+   ```
+
+2. 数据验证
+
+   使用 `Proxy` 验证对象的属性值是否符合要求：
+
+   ```js
+   const validator = (target, schema) => {
+     return new Proxy(target, {
+       set(target, property, value) {
+         if (!schema[property](value)) {
+           throw new Error(`Invalid value for ${property}`);
+         }
+         target[property] = value;
+         return true;
+       }
+     });
+   };
+   
+   const user = validator(
+     {},
+     {
+       name: (val) => typeof val === "string",
+       age: (val) => typeof val === "number" && val >= 0
+     }
+   );
+   
+   user.name = "John"; // 正常
+   user.age = 25;      // 正常
+   // user.age = -5;   // 抛出错误
+   
+   ```
+
+3. 防止非法访问
+
+   可以用 `Proxy` 拦截未授权的属性访问：
+
+   ```js
+   const privateData = { secret: "hidden" };
+   const proxy = new Proxy(privateData, {
+     get(target, property) {
+       if (property === "secret") {
+         throw new Error("Unauthorized access");
+       }
+       return target[property];
+     }
+   });
+   
+   // console.log(proxy.secret); // 抛出错误
+   
+   ```
+
 ## 求两个数组的交集
 ### 方法一：使用filter和includes
 ```js
@@ -93,8 +274,8 @@ increment();
     result[1](); // 10
    ```
    可以看到，每个函数并不像我们期待的那样 result[0]() 打印 0，result[1]() 打印 1，以此类推。
-因为 var 声明的 i 不只是属于当前的每一次循环，甚至不只是属于当前的 for 循环,因为没有块级作用域，变量 i 被提升到了函数 foo 的作用域中。所以每个函数的作用域链中都保存着同一个变量 i，而当我们执行数组中的子函数时，此时 foo 内部的循环已经结束，此时 i = 10，所以每个函数调用都会打印 10。
-接下来我们对 for 循环内部添加一层即时函数（又叫立即执行函数 IIFE），形成一个新的闭包环境，这样即时函数内部就保存了本次循环的 i，所以再次执行数组中子函数时，结果就像我们期望的那样 result[0]() 打印 0，result[1]()打印 1 …
+   因为 var 声明的 i 不只是属于当前的每一次循环，甚至不只是属于当前的 for 循环,因为没有块级作用域，变量 i 被提升到了函数 foo 的作用域中。所以每个函数的作用域链中都保存着同一个变量 i，而当我们执行数组中的子函数时，此时 foo 内部的循环已经结束，此时 i = 10，所以每个函数调用都会打印 10。
+   接下来我们对 for 循环内部添加一层即时函数（又叫立即执行函数 IIFE），形成一个新的闭包环境，这样即时函数内部就保存了本次循环的 i，所以再次执行数组中子函数时，结果就像我们期望的那样 result[0]() 打印 0，result[1]()打印 1 …
 ```js
 function foo(){
     var result = [];
@@ -144,7 +325,7 @@ function foo(){
     function Singleton(){
       this.data = 'singleton';
     }
-
+   
     Singleton.getInstance = (function () {
       var instance;
         
@@ -157,12 +338,12 @@ function foo(){
         }
       }
     })();
-
+   
     var sa = Singleton.getInstance();
     var sb = Singleton.getInstance();
     console.log(sa === sb); // true
     console.log(sa.data); // 'singleton'
-
+   
    ```
 5. 模拟私有属性
    javascript 没有 java 中那种 public private 的访问权限控制，对象中的所用方法和属性均可以访问，这就造成了安全隐患，内部的属性任何开发者都可以随意修改。虽然语言层面不支持私有属性的创建，但是我们可以用闭包的手段来模拟出私有属性
@@ -179,29 +360,29 @@ function foo(){
         };
       };
     }
-
+   
     var obj = getGeneratorFunc()();
     obj.getName(); // John
     obj.getAge(); // 22
     obj._age; // undefined
-
+   
    ```
    ### 缺点
    ```js
     function foo() {
       var a = 2;
-
+   
       function bar() {
         console.log( a );
       }
-
+   
       return bar;
     }
-
+   
     var baz = foo();
-
+   
     baz(); // 这就形成了一个闭包
-
+   
    ```
    javascript 内部的垃圾回收机制用的是引用计数收集：即当内存中的一个变量被引用一次，计数就加一。垃圾回收机制会以固定的时间轮询这些变量，将计数为 0 的变量标记为失效变量并将之清除从而释放内存。
    上述代码中，理论上来说， foo 函数作用域隔绝了外部环境，所有变量引用都在函数内部完成，foo 运行完成以后，内部的变量就应该被销毁，内存被回收。然而闭包导致了全局作用域始终存在一个 baz 的变量在引用着 foo 内部的 bar 函数，这就意味着 foo 内部定义的 bar 函数引用数始终为 1，垃圾运行机制就无法把它销毁。更糟糕的是，bar 有可能还要使用到父作用域 foo 中的变量信息，那它们自然也不能被销毁… JS 引擎无法判断你什么时候还会调用闭包函数，只能一直让这些数据占用着内存。
@@ -218,7 +399,7 @@ function foo(){
     let fn2Child = fn2()
     fn2Child()
     fn2Child = null
-
+   
    ```
    ## 垃圾回收机制
    在 JavaScript 中，垃圾回收机制是自动管理内存的重要部分，其主要目的是回收不再使用的内存空间，以提高程序的性能和避免内存泄漏。
