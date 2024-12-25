@@ -158,12 +158,12 @@ SPA（single-page application）仅在 web 页面初始化加载相应的 HTML�
 
 组合式 API 是没有 beforeCreate 和 created 这两个生命周期的，setup 去代替。
 | 选项式 api | 组合式 api | 说明 |
-| :--- | :----: | :---- |  
+| :--- | :----: | :---- |
 | beforeCreate | Not | 在实例初始化完成并且 props 被解析后立即调用,data() 和 computed 等选项也开始进行处理。 |
 | created | Not | 当这个钩子被调用时，以下内容已经设置完成：响应式数据、计算属性、方法和侦听器。然而，此时挂载阶段还未开始，因此 $el 属性仍不可用。 |
-| beforeMount | onBeforeMount | 组件已经完成了其响应式状态的设置，但还没有创建 DOM 节点。它即将首次执行 DOM 渲染过程。 |
+| beforeMount | onBeforeMount | 组件已经完成了其响应式状态的设置，虚拟DOM已经创建完成，但还没有创建真实DOM 节点。它即将首次执行 DOM 渲染过程。 |
 | mounted | onMounted | 在组件挂载完成后执行，允许直接`DOM`访问 |
-| beforeUpdate | onBeforeUpdate| 数据更新时调用，发生在虚拟 `DOM` 打补丁之前 |
+| beforeUpdate | onBeforeUpdate| 数据更新发生前、也就是响应式数据发生更新、虚拟DOM重新渲染之前被触发调用，发生在虚拟 `DOM` 打补丁之前，在此处修改数据不会造成重新渲染。 |
 | updated | onUpdated | `DOM`更新后，`updated`的方法即会调用。 |
 | beforeUnmount| onBeforeUnmount| 在卸载组件实例之前调用。在这个阶段，实例仍然是完全正常的。 |
 | unmounted | onUnmounted | 卸载组件实例后调用。调用此钩子时，组件实例的所有指令都被解除绑定，所有事件侦听器都被移除，所有子组件实例被卸载。 |
