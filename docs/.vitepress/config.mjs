@@ -87,7 +87,10 @@ export default defineConfig({
       },
       {
         text: "日常积累",
-        items: [{ text: "面试题", link: "/interview/index.md" }],
+        items: [
+          { text: "面试题", link: "/everyday/interview/index.md" },
+          { text: "小技巧", link: "/everyday/skill/index.md" },
+        ],
       },
     ],
     sidebar: {
