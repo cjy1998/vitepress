@@ -10,52 +10,52 @@
   - 无法侦听对象的新增/删除属性，对于对象的动态属性，需要使用 `$set` 或 `Vue.set` 来触发更新。
   - 无法直接侦听数组的索引变化或通过直接赋值更新数组的某个值。
   - 性能：由于需要递归劫持每个对象的属性，在处理深层嵌套对象时性能可能受到影响。
-- 编译性能：vue2在解析模版时性能较好，但是生成的渲染函数不是最优。
+- 编译性能：vue2 在解析模版时性能较好，但是生成的渲染函数不是最优。
 
 #### vue3
 
-- 响应式实现：采用了ES6的`Proxy`对象，解决了vue2的响应式局限性：
+- 响应式实现：采用了 ES6 的`Proxy`对象，解决了 vue2 的响应式局限性：
   - 支持动态属性追踪（例如新增、删除对象的属性）。
   - 支持数组索引更新，例如`arr[0] = 'new value'` 能够被追踪。
 - 打包体积和渲染速度
-  - vue3打包体积比vue2小（基础库减少了大约10%）。
+  - vue3 打包体积比 vue2 小（基础库减少了大约 10%）。
   - 渲染速度提升，尤其是在复杂应用中表现更加高效。
-- 静态提升：Vue3会在编译时将模版中的静态内容提升到渲染函数外部，避免每次渲染都重新创建静态节点。
+- 静态提升：Vue3 会在编译时将模版中的静态内容提升到渲染函数外部，避免每次渲染都重新创建静态节点。
 
-### 	2.Composition API
+### 2.Composition API
 
-#### 	vue2（options API）
+#### vue2（options API）
 
-​	Vue2 使用 Options API 将功能分散到 `data`、`methods`、`computed` 等块中。当一个组件功能复杂时，不同功能的逻辑可能分散在不同选项中，导致代码难以阅读和维护。	
+​ Vue2 使用 Options API 将功能分散到 `data`、`methods`、`computed` 等块中。当一个组件功能复杂时，不同功能的逻辑可能分散在不同选项中，导致代码难以阅读和维护。
 
-#### 	vue3(Composition API)
+#### vue3(Composition API)
 
-​	在 `setup` 中组织所有功能逻辑，让逻辑更加集中，便于复用和管理。更易于将逻辑提取到独立的函数中，通过自定义钩子 (`useXXX`) 实现逻辑复用。			
+​ 在 `setup` 中组织所有功能逻辑，让逻辑更加集中，便于复用和管理。更易于将逻辑提取到独立的函数中，通过自定义钩子 (`useXXX`) 实现逻辑复用。
 
 - Vue3 引入了新的虚拟 DOM 算法，使得更新性能得到显著的提升。
 - 静态提升：对不会变化的静态节点进行提升，减少创建和销毁的开销。
 - 事件缓存：对事件处理函数进行缓存，提高性能。
 
-### 	3.组件特性
+### 3.组件特性
 
-#### 	vue2
+#### vue2
 
 - 组件必须有单一根节点。
-- 缺乏内置功能处理DOM渲染位置（如模态框）。
+- 缺乏内置功能处理 DOM 渲染位置（如模态框）。
 
-#### 	vue3
+#### vue3
 
 - **Fragments**：支持返回多个根节点，减少无意义的包裹元素。
 - **Teleport**：允许将组件的 DOM 渲染到指定的目标节点（如 `body`）。
 - **Suspense**：支持异步组件的加载状态管理，为开发异步加载提供了更好的支持。
 
-###  4.TypeScript支持
+### 4.TypeScript 支持
 
-​	vue2对TypeScript支持有限，需要依赖第三方库或手动配置类型。Vue3 是用 TypeScript 重写的，原生支持更好的类型推断。
+​ vue2 对 TypeScript 支持有限，需要依赖第三方库或手动配置类型。Vue3 是用 TypeScript 重写的，原生支持更好的类型推断。
 
-### 	5.生命周期
+### 5.生命周期
 
-​	一些生命周期钩子函数名称发生了变化，例如 `beforeCreate` 和 `created` 合并为 `setup` 。
+​ 一些生命周期钩子函数名称发生了变化，例如 `beforeCreate` 和 `created` 合并为 `setup` 。
 
 ## Vue2 和 Vue3 双向数据绑定的原理？
 
@@ -161,9 +161,9 @@ SPA（single-page application）仅在 web 页面初始化加载相应的 HTML�
 | :--- | :----: | :---- |
 | beforeCreate | Not | 在实例初始化完成并且 props 被解析后立即调用,data() 和 computed 等选项也开始进行处理。 |
 | created | Not | 当这个钩子被调用时，以下内容已经设置完成：响应式数据、计算属性、方法和侦听器。然而，此时挂载阶段还未开始，因此 $el 属性仍不可用。 |
-| beforeMount | onBeforeMount | 组件已经完成了其响应式状态的设置，虚拟DOM已经创建完成，但还没有创建真实DOM 节点。它即将首次执行 DOM 渲染过程。 |
+| beforeMount | onBeforeMount | 组件已经完成了其响应式状态的设置，虚拟 DOM 已经创建完成，但还没有创建真实 DOM 节点。它即将首次执行 DOM 渲染过程。 |
 | mounted | onMounted | 在组件挂载完成后执行，允许直接`DOM`访问 |
-| beforeUpdate | onBeforeUpdate| 数据更新发生前、也就是响应式数据发生更新、虚拟DOM重新渲染之前被触发调用，发生在虚拟 `DOM` 打补丁之前，在此处修改数据不会造成重新渲染。 |
+| beforeUpdate | onBeforeUpdate| 数据更新发生前、也就是响应式数据发生更新、虚拟 DOM 重新渲染之前被触发调用，发生在虚拟 `DOM` 打补丁之前，在此处修改数据不会造成重新渲染。 |
 | updated | onUpdated | `DOM`更新后，`updated`的方法即会调用。 |
 | beforeUnmount| onBeforeUnmount| 在卸载组件实例之前调用。在这个阶段，实例仍然是完全正常的。 |
 | unmounted | onUnmounted | 卸载组件实例后调用。调用此钩子时，组件实例的所有指令都被解除绑定，所有事件侦听器都被移除，所有子组件实例被卸载。 |
@@ -273,10 +273,10 @@ nextTick 是典型的将底层 JavaScript 执行原理应用到具体案例中�
     <aa-input v-model="aa"></aa-input>
     // 等价于
     <aa-input v-bind:value="aa" v-on:input="aa=$event.target.value"></aa-input>
-   
+
     // 子组件：
     <input v-bind:value="aa" v-on:input="onmessage"></aa-input>
-   
+
     props:{value:aa,}
     methods:{
         onmessage(e){
@@ -307,7 +307,7 @@ Flux 架构主要有四个组成部分：
 - view：视图，根据 store 中的数据渲染生成页面，与 store 之间存在发布订阅关系。
 - action：一种描述动作行为的数据对象，通常会包含动作类型 type 和需要传递的参数 payload 等属性。
 - dispatcher：调度器，接收 action 分发至 store。
-  ![Flux架构](../public/flux.png)
+  ![Flux架构](../../public/flux.png)
 
 整个数据的流动关系为：
 
@@ -323,7 +323,7 @@ vuex 和 pinia 大体上沿用 Flux 的思想，并针对 Vue 框架单独进行
 
 ### Vuex
 
-![Vuex](../public/vuex.png)
+![Vuex](../../public/vuex.png)
 
 - state: 整个应用的状态管理单例，等效于 Vue 组件中的 data，对应了 Flux 架构中的 store。
 - getter: 可以由 state 中的数据派生而成，等效于 Vue 组件中的计算属性。它会自动收集依赖，以实现计算属性的缓存。(从 Vue 3 开始，getter 的结果不会像计算属性那样缓存)

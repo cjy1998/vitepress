@@ -114,6 +114,26 @@ export default defineConfig({
           ],
         },
       ],
+      "/vue3/": [
+        {
+          text: "Vue3",
+          items: [
+            { text: "基础知识", link: "/vue3/index" },
+            { text: "开发规范", link: "/vue3/vue3开发规范" },
+          ],
+        },
+      ],
+      "/nextjs/": [
+        {
+          text: "Nextjs",
+          items: [
+            { text: "基础知识1", link: "/react/nextjs/base" },
+            { text: "基础知识2", link: "/react/nextjs/up" },
+            { text: "Auth.js", link: "/react/nextjs/NextAuth" },
+            { text: "设置PostgreSQL数据库", link: "/react/nextjs/PostgreSQL" },
+          ],
+        },
+      ],
     },
 
     socialLinks: [
