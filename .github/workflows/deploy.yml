@@ -36,9 +36,9 @@ jobs:
         run: |
           ls -la docs/.vitepress/dist  # 如果目录不存在，此步骤会报错
       - uses: actions/configure-pages@v2
-      - uses: actions/upload-pages-artifact@v2
+      - uses: actions/upload-pages-artifact@v3
         with:
           path: docs/.vitepress/dist
       - name: Deploy
         id: deployment
-        uses: actions/deploy-pages@v2
+        uses: actions/deploy-pages@v4
