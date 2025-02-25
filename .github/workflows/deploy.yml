@@ -32,9 +32,13 @@ jobs:
       - name: Build
         run: pnpm run docs:build
       - uses: actions/configure-pages@v2
-      - uses: actions/upload-pages-artifact@v1
+      - name: Create tarball
+        run: tar cvf artifact.tar.gz -C docs/.vitepress/dist .
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
         with:
-          path: docs/.vitepress/dist
+          name: github-pages
+          path: artifact.tar.gz
       - name: Deploy
         id: deployment
         uses: actions/deploy-pages@v1
