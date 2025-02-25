@@ -243,7 +243,7 @@ export default function ProductDetail({
 
    当你访问 `/shop/a/b/c`的时候，`params` 的值为 `{ slug: ['a', 'b', 'c'] }`。
 
-3. \[\[...folderName]
+3. \[\[...folderName]]
 
    **在命名文件夹的时候，如果你在双方括号内添加省略号，比如 `[[...folderName]]`，这表示可选的捕获所有后面所有的路由片段。**
 
