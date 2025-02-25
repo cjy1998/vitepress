@@ -123,7 +123,7 @@ export default defineConfig({
           ],
         },
       ],
-      "/nextjs/": [
+      "/react/nextjs/": [
         {
           text: "Nextjs",
           items: [
