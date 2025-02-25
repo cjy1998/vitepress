@@ -31,6 +31,10 @@ jobs:
       - run: pnpm install --no-frozen-lockfile
       - name: Build
         run: pnpm run docs:build
+        # 验证产物目录是否存在
+      - name: Check artifact directory
+        run: |
+          ls -la docs/.vitepress/dist  # 如果目录不存在，此步骤会报错
       - uses: actions/configure-pages@v2
       - uses: actions/upload-artifact@v4
         with:
