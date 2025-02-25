@@ -1,48 +1,40 @@
 name: Deploy
 
 on:
+  # Runs on pushes targeting the default branch
   push:
     branches: ["main"]
+
+  # Allows you to run this workflow manually from the Actions tab
   workflow_dispatch:
 
 jobs:
   deploy:
     runs-on: ubuntu-latest
     permissions:
-      pages: write      # 必须的 Pages 写入权限
-      id-token: write   # 必须的身份验证权限
+      pages: write
+      id-token: write
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
     steps:
-      # 1. 升级 checkout 到 v4
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v3
         with:
           fetch-depth: 0
-
-      # 2. pnpm 安装（保持原样）
       - uses: pnpm/action-setup@v2
         with:
           version: 7
-
-      # 3. 升级 setup-node 到 v4
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v3
         with:
-          node-version: 20  # 建议升级到 Node.js 18/20（LTS）
+          node-version: 16
           cache: pnpm
-
       - run: pnpm install --no-frozen-lockfile
-
       - name: Build
         run: pnpm run docs:build
-
-      # 4. 升级所有 Pages 相关 Actions 到 v2
       - uses: actions/configure-pages@v2
-
-      - uses: actions/upload-pages-artifact@v2  # 升级到 v2
+      - uses: actions/upload-artifact@v4
         with:
           path: docs/.vitepress/dist
-
       - name: Deploy
         id: deployment
-        uses: actions/deploy-pages@v2  # 升级到 v2
+        uses: actions/deploy-pages@v1
