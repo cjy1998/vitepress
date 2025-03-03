@@ -188,7 +188,127 @@ urlpatterns = [
 
    1. `request.headers`
    2. `request.META`
+   3. 获取自定义请求头`request.META.get("HTTP_****")` 或`request.headers.get("***")`
 
    `headers`简化了 HTTP 头访问，而`META`提供更底层的元数据。
 
+   常见请求头
+
+   | SERVER_NAME     | 服务端系统名称                      |
+   | --------------- | ----------------------------------- |
+   | REMOTE_ADDR     | 客户端所在的 IP 地址                |
+   | SERVER_PORT     | 服务端的运行端口                    |
+   | SERVER_SOFTWARE | 服务端运行 web 服务器的软件打印信息 |
+   | PATH_INFO       | 客户端本次请求时的 url 路径         |
+
 4. 上传文件
+
+```python
+@require_http_methods(["POST"])
+def upload(request):
+    import os
+    # __file__ 魔术变量，写在哪里，就代表哪个文件
+    for file in request.FILES.getlist('avatar'):
+        # 保存在当前文件下
+        # with open(f"{os.path.dirname(__file__)}/{file.name}","wb") as f:
+        #   保存在根目录
+          with open(f"./{file.name}", 'wb') as f:
+            f.write(file.read())
+    return HttpResponse("上传成功！！！")
+```
+
+`request.FILES`只能接收`post`请求发送的文件
+
+#### 响应
+
+##### 视图响应数据
+
+1. 返回 HTML 数据
+
+   ```python
+   from django.http import HttpResponse
+   def returnhtml(request):
+       return HttpResponse("<h1>文本<h1/>", content_type='text/html',status=200,headers={'token':'bear 125465464'})
+   ```
+
+2. 返回 Json 数据
+
+3. ```python
+   from django.http import JsonResponse
+   def returnjson(request):
+       data = {
+           'name': '1234',
+           'age': 15
+       }
+       arr = [
+           {
+               'name': '张三',
+               'age': 15
+           },
+           {
+               'name': '李四',
+               'age': 19
+           }
+       ]
+       #JsonResponse并不直接支持列表转换成json格式，需要关闭安全检测，把safe参数的值设置为false
+       return JsonResponse(arr,safe=False)
+   ```
+
+4. 返回图片格式信息
+
+   图片、压缩包、视频等文件也可以。
+
+   ```python
+   def retunfile(request):
+       with open("./logo.svg", 'rb') as f:
+           img = f.read()
+       return HttpResponse(content=img,content_type='image/svg+xml')
+   ```
+
+5. 自定义响应头
+
+   ```python
+   def setresponseheaders(request):
+       response = HttpResponse("ok!!!")
+       response['company'] = 'test'
+       return response
+   ```
+
+##### 页面跳转
+
+- 站内跳转
+
+  1. 首先在总路由文件定义`namespace`
+
+     ```python
+     path('user/', include(user_urls, namespace='user')),
+     ```
+
+  2. 在子应用路由文件中定义`app_name`和`name`
+
+     ```python
+     app_name = 'user'
+     urlpatterns = [
+         path('returnhtml',user_views.returnhtml,name='returnhtml')
+     ]
+     ```
+
+  3. 使用`redirect`进行跳转
+
+     ```python
+     def redirectin(request):
+         return  redirect("user:returnhtml")
+     ```
+
+- 站外跳转
+
+  ```python
+  @require_http_methods(["GET"])
+  def redirecturl(request):
+      url = "http://www.baidu.com/"
+      # 原理
+      # response = HttpResponse(status=301)
+      # response['location'] = url
+      # return response
+      return HttpResponseRedirect(url)
+  ```
