@@ -312,3 +312,216 @@ def upload(request):
       # return response
       return HttpResponseRedirect(url)
   ```
+
+### 会话控制技术
+
+ 会话控制技术，主要作用是**为了识别和记录用户在web应用中的身份行为和操作历史**
+
+实现会话控制的几种技术类型：
+
+| 特性         | Cookie               | Session                 | Token（如 JWT）          |
+| :----------- | :------------------- | :---------------------- | :----------------------- |
+| **存储位置** | 客户端（浏览器）     | 服务端                  | 客户端（LocalStorage等） |
+| **安全性**   | 依赖 Cookie 安全标志 | 依赖 Session ID 安全性  | 依赖签名/加密机制        |
+| **扩展性**   | 适用传统服务         | 服务器需存储会话数据    | 适合分布式系统           |
+| **跨域支持** | 需配置 `SameSite` 等 | 依赖 Cookie 或 URL 传递 | 可轻松跨域               |
+| **数据大小** | 有大小限制（~4KB）   | 无限制（服务端存储）    | 可较大，但影响请求头大小 |
+
+#### 典型工作流程示例
+
+1. **Cookie + Session**：
+   - 用户登录 → 服务器创建 Session → 返回 Session ID 通过 Cookie 存储。
+   - 后续请求携带 Session ID → 服务器验证 Session 有效性。
+2. **Token（JWT）**：
+   - 用户登录 → 服务器生成 JWT（含用户信息） → 返回给客户端。
+   - 客户端存储 Token → 后续请求在 `Authorization` 头中携带 Token。
+   - 服务器验证签名和过期时间 → 无需查询数据库。
+
+------
+
+#### 如何选择？
+
+- **传统 Web 应用**：Cookie + Session（简单易用）。
+- **前后端分离/移动端**：Token（无状态、跨域友好）。
+- **高安全性场景**：结合 HTTPS、HttpOnly Cookie 和短期 Token。
+
+
+
+
+
+## 数据库
+
+### 配置数据库连接
+
+在`settings.py` 中保存了数据库的连接配置信息，Django 默认初始配置使用`sqlite`数据库。
+
+使用Django的数据库操作，主要分为以下步骤：
+
+1. 在`settings.py`配置数据库连接信息。
+2. 在目标子应用的`models.py`中定义模型类。
+3. 生成数据库迁移文件并执行迁移文件。
+4. 通过模型类对象提供的方法或属性完成数据表的增删改查操作。
+
+#### 配置mysql 数据库
+
+1. 安装驱动
+
+   ```python
+    pip install PyMySQL
+   ```
+
+2. 在django 的主应用目录下的`_init_.py`文件中添加如下语句：
+
+   ```python
+   # 让mysql以mysqldb的方式来对接orm
+   from pymysql import install_as_MySQLdb
+   install_as_MySQLdb()
+   ```
+
+3. 在`settings.py`配置数据库连接信息
+
+   ```python
+   DATABASES = {
+       'default': {
+           'ENGINE': 'django.db.backends.mysql',
+           'HOST': '127.0.0.1',
+           'PORT': '3306',
+           'NAME': 'school',
+           'USER': 'root',
+           'PASSWORD': 'cjy19980128',
+           #数据库连接池配置，主要是为了节省连接数据库的开销，临时存储数据库连接对象
+           'POOL_OPTIONS': {
+               'POOL_SIZE': 10,
+               'MAX_OVERFLOW': 30,
+           }
+   
+       }
+   }
+   ```
+
+#### 定义模型类
+
+- 模型类被定义在**子应用/models.py**文件中。
+- 模型类必须直接或者间接继承于django.db.models.Model类
+
+### ORM框架
+
+ORM（Object-Relational Mapping，对象关系映射）是一种编程技术，用于在**面向对象编程语言**和**关系型数据库**之间建立桥梁，让开发者能用面向对象的方式操作数据库，而无需直接编写复杂的 SQL 语句。
+
+------
+
+#### 核心思想
+
+将数据库中的 **表（Table）** 映射为程序中的 **类（Class）**，表中的每一行数据（记录）映射为类的 **对象（Object）**，表中的字段（列）映射为对象的 **属性（Property）**。开发者通过操作对象，间接完成对数据库的增删改查。
+
+------
+
+#### ORM 的核心组成部分
+
+1. **模型类（Model Class）**
+   定义一个类，对应数据库中的一张表。例如，`User` 类对应 `users` 表，类的属性（如 `id`、`name`）对应表的字段。
+
+2. **映射配置（Mapping Configuration）**
+   通过配置文件或注解（Annotation）定义类与表、属性与字段的对应关系。例如：
+
+   ```python
+   # Django ORM 示例
+   class User(models.Model):
+       name = models.CharField(max_length=100)
+       age = models.IntegerField()
+   ```
+
+3. **查询接口（Query Interface）**
+   提供面向对象的 API 代替 SQL。例如：
+
+   ```java
+   // Hibernate (Java) 示例
+   List<User> users = session.createQuery("FROM User WHERE age > 18").list();
+   ```
+
+4. **事务管理（Transaction Management）**
+   封装数据库事务的提交、回滚操作，确保数据一致性。
+
+5. **数据库连接池（Connection Pool）**
+   管理数据库连接，提升性能。
+
+------
+
+#### 常见 ORM 框架
+
+- **Java**: Hibernate、MyBatis（半自动 ORM）、JPA（规范，Hibernate 是其实现）
+- **Python**: Django ORM、SQLAlchemy
+- **Ruby**: ActiveRecord（Rails 内置）
+- **C#**: Entity Framework
+
+------
+
+#### ORM 的优缺点
+
+##### 优点
+
+1. **提高开发效率**
+   避免手写 SQL，减少重复代码。
+2. **代码可维护性**
+   用面向对象思维设计数据模型，代码更直观。
+3. **数据库兼容性**
+   更换数据库（如 MySQL → PostgreSQL）时，只需修改配置，无需重写 SQL。
+4. **防 SQL 注入**
+   通过参数化查询自动处理输入，提升安全性。
+
+##### 缺点
+
+1. **性能损耗**
+   复杂查询可能生成低效 SQL，需手动优化。
+2. **学习成本**
+   需要掌握 ORM 的查询语法和配置规则。
+3. **复杂场景受限**
+   如多表关联查询、存储过程、复杂聚合操作，可能仍需手写 SQL。
+
+------
+
+#### ORM 适用场景
+
+- **快速开发**：适合 CRUD（增删改查）为主的业务系统（如后台管理、电商平台）。
+- **中小型项目**：数据模型相对简单，ORM 能显著提升效率。
+- **团队协作**：统一数据操作规范，减少 SQL 风格差异。
+
+------
+
+#### 示例：Django ORM 操作数据库
+
+```python
+# 定义模型
+class Book(models.Model):
+    title = models.CharField(max_length=200)
+    publish_date = models.DateField()
+
+# 插入数据
+book = Book(title="Python编程", publish_date="2023-10-01")
+book.save()
+
+# 查询数据
+books = Book.objects.filter(publish_date__year=2023)
+
+# 更新数据
+book.title = "Python入门到精通"
+book.save()
+
+# 删除数据
+book.delete()
+```
+
+------
+
+#### 总结
+
+ORM 是面向对象与关系数据库之间的“翻译器”，简化了数据库操作，但需权衡其便利性与性能成本。对于复杂场景，可以结合原生 SQL 或使用“混合模式”（如 MyBatis 的动态 SQL）。
+
+### 数据库基本操作
+
+### 数据库进阶操作
+
+### 关联模型
+
+### 模型管理器
+
