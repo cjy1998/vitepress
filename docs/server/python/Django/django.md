@@ -402,7 +402,51 @@ def upload(request):
 #### 定义模型类
 
 - 模型类被定义在**子应用/models.py**文件中。
+
 - 模型类必须直接或者间接继承于django.db.models.Model类
+
+  ```python
+  from django.db import models
+  
+  # Create your models here.
+  class Student(models.Model):
+      # django模型不需要自己单独声明主键，模型会自动创建主键 ID，在代码中直接可以通过模型对象.id或者模型对象.pk就可以调用主键。
+      STATUS_CHOICES = (
+          # (数据库值，程序显示给外界看的文本)
+          (0,"正常"),
+          (1,"未入学"),
+          (2,"已毕业")
+      )
+      # django模型不需要自己单独声明主键，模型会自动创建主键 ID，在代码中直接可以通过模型对象.id或者模型对象.pk就可以调用主键。
+      name = models.CharField(max_length=15,db_index=True,verbose_name="姓名")
+      age = models.IntegerField(default=0,verbose_name="年龄")
+      sex = models.BooleanField(default=True,verbose_name="性别")
+      phone = models.CharField(max_length=20,unique=True,verbose_name="手机号码")
+      classmate = models.CharField(max_length=50,db_column="class",default="",verbose_name="班级编号")
+      description = models.TextField(null=True,verbose_name="个性签名")
+      status  = models.IntegerField(choices=STATUS_CHOICES,default=0,verbose_name="学生状态") 
+  
+      class Meta:
+          db_table = 'student'
+          verbose_name = "学生信息"
+          verbose_name_plural = verbose_name
+  
+      def __str__(self):
+          return self.name
+  ```
+
+- 字段选项
+
+  [https://docs.djangoproject.com/zh-hans/4.2/ref/models/fields/#model-field-types]: 
+
+#### 迁移数据库
+
+```bash
+ python manage.py makemigrations
+ python manage.py migrate  
+```
+
+
 
 ### ORM框架
 
@@ -512,6 +556,101 @@ book.delete()
 ```
 
 ------
+
+#### 简单的增删改查
+
+```python
+import json
+
+from django.http import JsonResponse
+from django.shortcuts import render
+from django.views import View
+# 1.先导入模型
+from . import models
+
+# Create your views here.
+
+class StudentView(View):
+    def get(self, request):
+        """
+        第一种方式
+        """
+        object_list = models.Student.objects.all()
+        # student_list = []
+        # for student in object_list:
+        #     student_list.append({
+        #         "id": student.id,
+        #         "name": student.name,
+        #         "age": student.age,
+        #         "sex": student.sex,
+        #         "classmate": student.classmate,
+        #         "description": student.description,
+        #         "created_time": student.created_time,
+        #         "updated_time": student.updated_time,
+        #     })
+        # print(student_list)
+        student = object_list[0]
+        #获取模型对象的字段属性
+        print(student.id,student.pk) #获取主键
+        print(student.name,student.description) #获取其他属性
+        print(student.created_time.strftime("%Y-%m-%d %H:%M:%S")) #获取日期格式化内容
+       # 当字段声明中，使用 choices 可选值选项以后，在模型对象里边就可以通过get_<字段名>_display() 来获取当前选项的文本提示
+        print(student.status,student.get_status_display())
+        """
+        第二种
+        """
+        # student_list = models.Student.objects.all().values()
+        # return JsonResponse(list(student_list), safe=False)
+        return JsonResponse({}, safe=False)
+
+
+    def post(self, request):
+        # print(request.body.decode())
+        # data = request.body.decode()
+        # models.Student.objects.create(data=data)
+        #
+        # return JsonResponse(data, status=201)
+        try:
+            # 解析 JSON 数据
+            raw_data = request.body.decode()
+            data = json.loads(raw_data)
+
+            # 创建学生对象（注意字段对应）
+            student = models.Student.objects.create(
+                name=data.get('name'),
+                age=data.get('age', 0),  # 默认值处理
+                sex=data.get('sex', True),
+                phone=data.get('phone'),
+                classmate=data.get('classmate', ''),  # 注意模型中的 db_column="class"
+                description=data.get('description', None),
+                status=data.get('status', 0)
+            )
+
+            # 返回创建的对象数据
+            return JsonResponse({
+                'id': student.id,
+                'name': student.name,
+                'age': student.age,
+                'phone': student.phone,
+                'status': student.get_status_display(),  # 显示 choice 的文本
+                'created_time': student.created_time.isoformat()
+            }, status=201)
+
+        except json.JSONDecodeError:
+            return JsonResponse({'error': 'Invalid JSON format'}, status=400)
+        except Exception as e:
+            return JsonResponse({'error': str(e)}, status=400)
+
+    def put(self, request):
+        data = {}
+        return JsonResponse(data, status=201)
+
+    def delete(self, request):
+        data = {}
+        return JsonResponse(data, status=204)
+```
+
+
 
 #### 总结
 
