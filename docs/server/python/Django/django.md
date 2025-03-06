@@ -1,3 +1,7 @@
+---
+outline: deep
+---
+
 ## 项目结构
 
 ```
@@ -315,17 +319,17 @@ def upload(request):
 
 ### 会话控制技术
 
- 会话控制技术，主要作用是**为了识别和记录用户在web应用中的身份行为和操作历史**
+会话控制技术，主要作用是**为了识别和记录用户在 web 应用中的身份行为和操作历史**
 
 实现会话控制的几种技术类型：
 
-| 特性         | Cookie               | Session                 | Token（如 JWT）          |
-| :----------- | :------------------- | :---------------------- | :----------------------- |
-| **存储位置** | 客户端（浏览器）     | 服务端                  | 客户端（LocalStorage等） |
-| **安全性**   | 依赖 Cookie 安全标志 | 依赖 Session ID 安全性  | 依赖签名/加密机制        |
-| **扩展性**   | 适用传统服务         | 服务器需存储会话数据    | 适合分布式系统           |
-| **跨域支持** | 需配置 `SameSite` 等 | 依赖 Cookie 或 URL 传递 | 可轻松跨域               |
-| **数据大小** | 有大小限制（~4KB）   | 无限制（服务端存储）    | 可较大，但影响请求头大小 |
+| 特性         | Cookie               | Session                 | Token（如 JWT）           |
+| :----------- | :------------------- | :---------------------- | :------------------------ |
+| **存储位置** | 客户端（浏览器）     | 服务端                  | 客户端（LocalStorage 等） |
+| **安全性**   | 依赖 Cookie 安全标志 | 依赖 Session ID 安全性  | 依赖签名/加密机制         |
+| **扩展性**   | 适用传统服务         | 服务器需存储会话数据    | 适合分布式系统            |
+| **跨域支持** | 需配置 `SameSite` 等 | 依赖 Cookie 或 URL 传递 | 可轻松跨域                |
+| **数据大小** | 有大小限制（~4KB）   | 无限制（服务端存储）    | 可较大，但影响请求头大小  |
 
 #### 典型工作流程示例
 
@@ -337,7 +341,7 @@ def upload(request):
    - 客户端存储 Token → 后续请求在 `Authorization` 头中携带 Token。
    - 服务器验证签名和过期时间 → 无需查询数据库。
 
-------
+---
 
 #### 如何选择？
 
@@ -345,24 +349,20 @@ def upload(request):
 - **前后端分离/移动端**：Token（无状态、跨域友好）。
 - **高安全性场景**：结合 HTTPS、HttpOnly Cookie 和短期 Token。
 
-
-
-
-
 ## 数据库
 
 ### 配置数据库连接
 
 在`settings.py` 中保存了数据库的连接配置信息，Django 默认初始配置使用`sqlite`数据库。
 
-使用Django的数据库操作，主要分为以下步骤：
+使用 Django 的数据库操作，主要分为以下步骤：
 
 1. 在`settings.py`配置数据库连接信息。
 2. 在目标子应用的`models.py`中定义模型类。
 3. 生成数据库迁移文件并执行迁移文件。
 4. 通过模型类对象提供的方法或属性完成数据表的增删改查操作。
 
-#### 配置mysql 数据库
+#### 配置 mysql 数据库
 
 1. 安装驱动
 
@@ -370,7 +370,7 @@ def upload(request):
     pip install PyMySQL
    ```
 
-2. 在django 的主应用目录下的`_init_.py`文件中添加如下语句：
+2. 在 django 的主应用目录下的`_init_.py`文件中添加如下语句：
 
    ```python
    # 让mysql以mysqldb的方式来对接orm
@@ -394,7 +394,7 @@ def upload(request):
                'POOL_SIZE': 10,
                'MAX_OVERFLOW': 30,
            }
-   
+
        }
    }
    ```
@@ -403,11 +403,11 @@ def upload(request):
 
 - 模型类被定义在**子应用/models.py**文件中。
 
-- 模型类必须直接或者间接继承于django.db.models.Model类
+- 模型类必须直接或者间接继承于 django.db.models.Model 类
 
   ```python
   from django.db import models
-  
+
   # Create your models here.
   class Student(models.Model):
       # django模型不需要自己单独声明主键，模型会自动创建主键 ID，在代码中直接可以通过模型对象.id或者模型对象.pk就可以调用主键。
@@ -424,41 +424,39 @@ def upload(request):
       phone = models.CharField(max_length=20,unique=True,verbose_name="手机号码")
       classmate = models.CharField(max_length=50,db_column="class",default="",verbose_name="班级编号")
       description = models.TextField(null=True,verbose_name="个性签名")
-      status  = models.IntegerField(choices=STATUS_CHOICES,default=0,verbose_name="学生状态") 
-  
+      status  = models.IntegerField(choices=STATUS_CHOICES,default=0,verbose_name="学生状态")
+
       class Meta:
           db_table = 'student'
           verbose_name = "学生信息"
           verbose_name_plural = verbose_name
-  
+
       def __str__(self):
           return self.name
   ```
 
 - 字段选项
 
-  [https://docs.djangoproject.com/zh-hans/4.2/ref/models/fields/#model-field-types]: 
+  [https://docs.djangoproject.com/zh-hans/4.2/ref/models/fields/#model-field-types]:
 
 #### 迁移数据库
 
 ```bash
  python manage.py makemigrations
- python manage.py migrate  
+ python manage.py migrate
 ```
 
-
-
-### ORM框架
+### ORM 框架
 
 ORM（Object-Relational Mapping，对象关系映射）是一种编程技术，用于在**面向对象编程语言**和**关系型数据库**之间建立桥梁，让开发者能用面向对象的方式操作数据库，而无需直接编写复杂的 SQL 语句。
 
-------
+---
 
 #### 核心思想
 
 将数据库中的 **表（Table）** 映射为程序中的 **类（Class）**，表中的每一行数据（记录）映射为类的 **对象（Object）**，表中的字段（列）映射为对象的 **属性（Property）**。开发者通过操作对象，间接完成对数据库的增删改查。
 
-------
+---
 
 #### ORM 的核心组成部分
 
@@ -489,7 +487,7 @@ ORM（Object-Relational Mapping，对象关系映射）是一种编程技术，�
 5. **数据库连接池（Connection Pool）**
    管理数据库连接，提升性能。
 
-------
+---
 
 #### 常见 ORM 框架
 
@@ -498,7 +496,7 @@ ORM（Object-Relational Mapping，对象关系映射）是一种编程技术，�
 - **Ruby**: ActiveRecord（Rails 内置）
 - **C#**: Entity Framework
 
-------
+---
 
 #### ORM 的优缺点
 
@@ -522,7 +520,7 @@ ORM（Object-Relational Mapping，对象关系映射）是一种编程技术，�
 3. **复杂场景受限**
    如多表关联查询、存储过程、复杂聚合操作，可能仍需手写 SQL。
 
-------
+---
 
 #### ORM 适用场景
 
@@ -530,7 +528,7 @@ ORM（Object-Relational Mapping，对象关系映射）是一种编程技术，�
 - **中小型项目**：数据模型相对简单，ORM 能显著提升效率。
 - **团队协作**：统一数据操作规范，减少 SQL 风格差异。
 
-------
+---
 
 #### 示例：Django ORM 操作数据库
 
@@ -555,7 +553,7 @@ book.save()
 book.delete()
 ```
 
-------
+---
 
 #### 简单的增删改查
 
@@ -650,8 +648,6 @@ class StudentView(View):
         return JsonResponse(data, status=204)
 ```
 
-
-
 #### 总结
 
 ORM 是面向对象与关系数据库之间的“翻译器”，简化了数据库操作，但需权衡其便利性与性能成本。对于复杂场景，可以结合原生 SQL 或使用“混合模式”（如 MyBatis 的动态 SQL）。
@@ -663,4 +659,3 @@ ORM 是面向对象与关系数据库之间的“翻译器”，简化了数据�
 ### 关联模型
 
 ### 模型管理器
-
