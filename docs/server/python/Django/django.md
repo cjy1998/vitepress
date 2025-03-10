@@ -887,6 +887,111 @@ ORM 是面向对象与关系数据库之间的“翻译器”，简化了数据�
 
 ### 数据库进阶操作
 
+#### 过滤条件
+
+- **filter**：过滤出符合条件的多个结果
+
+- **exclude**：排除掉符合条件的多个结果，与`filter`相反
+
+- **get**：过滤单一结果，结果不是一个会报错
+
+  ```python
+  #单表过滤
+  #此处的运算符是django的ORM提供的英文单词运算符，与python的运算符不一样，例如ORM 的大于是gt，大于等于是gte
+  模型类.objects.filter(属性名称__=值)
+  
+  #多表过滤
+  模型类.objects.filter(外键属性名称__外键模型的属性名称__运算符=值)
+  ```
+
+  **运算符**
+
+  1. 相等 `exact` 等同于 `=`
+
+  2. 模糊查询 
+
+     `contains`：是否包含
+
+     ```python
+     class StusView(View):
+         def get(self, request):
+             name = request.GET.get('name')
+             obj_list = models.Student.objects.filter(name__contains=name)
+             stu_list = []
+             for obj in obj_list:
+                 stu_list.append({
+                     "id": obj.id,
+                     "name": obj.name,
+                     "age": obj.age,
+                     "classmate": obj.classmate,
+                     "description": obj.description,
+                     "status": obj.status,
+                     "phone": obj.phone,
+                 })
+     
+             print(stu_list)
+             return JsonResponse({'code': 200, 'mes': '成功','data':stu_list}, status=200)
+     ```
+
+     `startswith`:以什么开头
+
+     ```python
+     # 模糊查询 以什么开头
+     obj_list = models.Student.objects.filter(name__startswith=name)
+     ```
+
+     `endswith`:什么结尾
+
+     ```python
+     # 以什么结尾
+     obj_list = models.Student.objects.filter(name__endswith=name)
+     ```
+
+  3. 空查询 `isnull`
+
+     ```python
+      obj_list = models.Student.objects.filter(description__isnull=True)
+     ```
+
+  4. 范围查询
+
+     `in`:是否包含在范围内
+
+     ```python
+       obj_list = models.Student.objects.filter(classmate__in=['c101','c102','c103'])     
+     ```
+
+  5. 取值范围
+
+     `range`:设置开始值与结束值范围，进行数值判断，符合范围的数据被查询出来。不仅可以设置数值范围，也可以设置时间范围。
+
+     ```python
+       obj_list = models.Student.objects.filter(created_time__range=('2025-03-05','2025-03-08'))
+     ```
+
+  6. 比较查询
+
+     - `gt`大于
+     - `gte`大于等于
+     - `lt`小于
+     - `lte`小于等于
+
+  7. 日期查询
+
+  8. F对象
+
+  9. Q对象
+
+#### 结果排序
+
+#### 限制查询
+
+#### 聚合分组
+
+#### 原生查询
+
+#### 多库共存
+
 ### 关联模型
 
 ### 模型管理器
