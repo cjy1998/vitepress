@@ -975,14 +975,62 @@ ORM 是面向对象与关系数据库之间的“翻译器”，简化了数据�
      - `gte`大于等于
      - `lt`小于
      - `lte`小于等于
+     - 不等于运算符使用`exclude()`过滤器
 
   7. 日期查询
 
+     1. django的ORM中提供了许多方法用于进行日期的查询过滤，例如：`year` `month` `day` `week_day` `hour` `minute` `second` 都可以对日期时间类型的属性进行运算。
+     2. 要进行日期时间的过滤查询，必须保证python 代码中使用的时间时区与mysql 数据库中的时间时区是对应的。
+     3. 时间范围查询，先把字符转转换为时间戳。
+
   8. F对象
+
+     主要用于在 SQL 语句中针对字段之间的值进行比较的查询。
+
+     ```python
+      def post(self, request):
+             student = models.Student.objects.filter(created_time=F('updated_time')).values("name","created_time","updated_time")
+     
+             return JsonResponse({'code': 200,'data':  list(student)}, status=200)
+     ```
 
   9. Q对象
 
+     多个过滤器逐个调用表示逻辑与关系，同sql 语句中where 部分的and 关键字。
+
+     例如：
+
+     ```python
+       def get(self, request):
+             name = request.GET.get('name')
+             phone = request.GET.get('phone')
+             obj_list = models.Student.objects.filter(name=name).filter(phone=phone).values()
+             return JsonResponse({'code': 200,'data':list(obj_list)}, status=200)
+     ```
+
+     如果需要实现逻辑或or 的查询，需要使用Q()对象结合｜运算符。
+
+     ```python
+       obj_list = models.Student.objects.filter(Q(name='p1')|Q(name='p2')).values()
+     ```
+
 #### 结果排序
+
+`order_by`：升序（ASC）数值从小到大；降序（DESC）数值从大到小。 
+
+```python
+ obj_list = models.Student.objects.filter(Q(classmate='c101') | Q(classmate='c102') | Q(classmate='c103')).order_by('age').values()
+```
+
+```python
+#降序 -age
+obj_list = models.Student.objects.filter(Q(classmate='c101') | Q(classmate='c102') | Q(classmate='c103')).order_by('-age').values()
+```
+
+多字段排序：
+
+- 多字段升序：order_by('字段名','字段名')  优先级从左往右
+- 多字段降序：order_by('-classmate','-age')
 
 #### 限制查询
 
