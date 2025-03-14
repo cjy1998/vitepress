@@ -66,13 +66,15 @@ export default defineConfig({
         ],
       },
       {
-        text: "服务端",
+        text: "后端",
         items: [
           { text: "Prisma", link: "/server/database/prisma/base.md" },
-          // { text: 'H5', link: '/react' },
-          // { text: '微信小程序', link: '/wechat/index.md' },
-          // { text: 'Vue3后台管理系统', link: '/typescript' },
-          // { text: 'React后台管理系统', link: '/node' },
+          {
+            text: "python",
+            items: [
+              { text: "Django", link: "/server/python/Django/django.md" },
+            ],
+          },
         ],
       },
       {
