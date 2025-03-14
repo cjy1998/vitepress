@@ -718,3 +718,46 @@ export default async function middleware(req) {
 ```
 
 设置 **skipMiddlewareUrlNormalize** 为 true 后，可以获取路由原始的地址，常用于国际化场景中。
+
+## 数据获取
+
+### 服务端使用fetch
+
+Next.js 拓展了原生的 [fetch Web API](https://developer.mozilla.org/zh-CN/docs/Web/API/Fetch_API)，可以为**服务端的每个请求**配置缓存（caching）和重新验证（ revalidating）行为。
+
+可以在**服务端组件、路由处理程序、Server Actions** 中搭配 `async`/`await` 语法使用 fetch。
+
+```js
+// app/page.js
+async function getData() {
+  const res = await fetch('https://jsonplaceholder.typicode.com/todos')
+  if (!res.ok) {
+    // 由最近的 error.js 处理
+    throw new Error('Failed to fetch data')
+  }
+  return res.json()
+}
+
+export default async function Page() {
+  const data = await getData()
+  return <main>{JSON.stringify(data)}</main>
+}
+```
+
+### 默认缓存
+
+```js
+// fetch 的 cache 选项用于控制该请求的缓存行为
+// 默认就是 'force-cache'
+fetch('https://...', { cache: 'force-cache' })
+```
+
+但这些情况默认不会自动缓存：
+
+1. 在 Server Action 中使用的时候
+2. 在定义了非 GET 方法的路由处理程序中使用的时候
+
+### 重新验证
+
+**在 Next.js 中，清除数据缓存并重新获取最新数据的过程就叫做重新验证（Revalidation）。**
+
