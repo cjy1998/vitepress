@@ -1,5 +1,5 @@
 ---
- outline: deep
+     outline: deep
 ---
 
 ## 项目结构
@@ -439,11 +439,10 @@ def upload(request):
 
   [https://docs.djangoproject.com/zh-hans/4.2/ref/models/fields/#model-field-types]:
 
-#### 迁移数据库
+#### 迁移数据库   
 
 ```bash
  python manage.py makemigrations
- python manage.py migrate
 ```
 
 ### ORM 框架
@@ -1034,12 +1033,442 @@ obj_list = models.Student.objects.filter(Q(classmate='c101') | Q(classmate='c102
 
 #### 限制查询
 
+ORM中针对查询结果的数量限制，提供了一个查询集对象[QuerySet]。这个QuerySet是ORM中针对查询结果进行临时保存数据的一个容器对象，可以通过了解**QuerySet**达到**查询优化**的目的，也或者**限制查询结果数量**的作用。
+
+##### 查询集QuerySet
+
+查询集，也称查询结果集、`QuerySet`，表示从数据库中获取的对象集合。
+
+当调用如下ORM提供的过滤方法时，Django会返回查询集（不是简单的列表）。
+
+- all()：返回所有数据。
+- filter()：返回满足条件的数据。filter会默认调用all方法。
+- exclude()：返回满足条件之外的数据集。`exclude`会默认调用all 方法。
+- order_by()：对结果进行排序。order_by 会默认调用all 方法。
+
+**判断某一个查询集中是否有数据：**
+
+- `exists()`: 判断查询集中是否有数据，如果有则返回True，没有则返回False。
+- `values()`: 把结果集中的模型对象转换成`字典`，并可以设置转换的字段列表，达到减少内存损耗，提高性能。
+- `values_list()`: 把结果集中的模型对象转换成**列表**，并可以设置转换的字段列表（元祖），达到减少内存损耗，提高性能。
+
+**`QuerySet`的两大特性**
+
+**1. 惰性执行（Lazy Loading）**
+
+**特性**：QuerySet 的查询操作**不会立即执行**，而是延迟到真正需要数据时才向数据库发送请求。
+**原理**：
+
+- 当你通过 `filter()`、`exclude()`、`annotate()` 等方法链式构建查询时，Django 只会记录这些操作，**不会生成或执行 SQL**。
+- 只有在以下情况发生时，才会触发真正的数据库查询（称为 **"Evaluation"**）：
+  - 遍历 QuerySet（如 `for obj in queryset`）
+  - 强制转换（如 `list(queryset)`）
+  - 切片（如 `queryset[5:10]`）
+  - 调用 `len()`、`exists()`、`count()` 等方法
+
+```python
+# 此时未执行任何 SQL
+queryset = Book.objects.filter(title__contains="Django")
+
+# 添加更多过滤条件（依然不会执行 SQL）
+queryset = queryset.exclude(publish_year__lt=2020)
+
+# 真正触发 SQL 执行（遍历时）
+for book in queryset:
+    print(book.title)
+```
+
+**优势**：
+
+- **减少冗余查询**：避免中间步骤生成无效 SQL。
+- **灵活组合查询**：可动态拼接条件，最后生成最优 SQL。
+
+**2. 缓存机制（Caching）**
+
+**特性**：QuerySet **第一次被求值时会将结果缓存**，后续重复使用同一 QuerySet 时直接读取缓存，避免重复查询数据库。
+**原理**：
+
+- 第一次遍历或强制求值时，Django 会执行 SQL 并将结果存储在 QuerySet 的缓存中。
+- 后续对同一 QuerySet 的操作（如再次遍历）会直接使用缓存，**不再访问数据库**。
+
+```python
+# 第一次遍历：执行 SQL 并缓存结果
+books = Book.objects.all()
+print([book.title for book in books])  # 触发数据库查询
+
+# 第二次遍历：直接读取缓存，无 SQL
+print([book.price for book in books])  # 无数据库查询
+```
+
+**注意**：
+
+- 如果中途修改 QuerySet（如新增过滤条件），会**清空缓存**并重新生成 SQL。
+- 缓存是**基于 QuerySet 实例**的，不同 QuerySet 实例不共享缓存。
+
+**优势**：
+
+- **避免重复查询**：对同一 QuerySet 多次操作时节省数据库开销。
+
+##### 限制结果数量
+
+django中还可以对查询集QuerySet进行**取下标*或切片操作，等同于SQL中的limit和offset字句**。
+
+注意：QuerySet不是真正的列表，所以它不支持负数索引。
+
+**对查询集进行切片后返回一个新的查询集，但还是不会立即执行查询。**
+
+如果获取一个对象，直接使用[0]，等同于[0:1].get()，但是如果没有数据，[0]引发`IndexError异常`，[0:1].get()如果没有数据引发`DoesNotExist异常`
+
 #### 聚合分组
+
+在 Django 中，**聚合函数（Aggregation）** 用于对数据库中的数据进行统计和计算（如求和、平均值、最大值、最小值等）。Django 的 ORM 通过 `django.db.models` 模块提供了丰富的聚合函数，结合 `aggregate()` 和 `annotate()` 方法，可以高效地完成复杂的数据分析操作。
+
+------
+
+##### **核心聚合函数**  
+
+Django 内置了以下常用聚合函数，可直接从 `django.db.models` 导入：
+
+| 聚合函数                        | 说明                                                       |
+| :------------------------------ | :--------------------------------------------------------- |
+| `Count(field, distinct=False)`  | 统计数量（`distinct=True` 表示去重计数）。                 |
+| `Sum(field)`                    | 对字段值求和。                                             |
+| `Avg(field)`                    | 计算字段的平均值。                                         |
+| `Max(field)`                    | 取字段的最大值。                                           |
+| `Min(field)`                    | 取字段的最小值。                                           |
+| `StdDev(field, sample=False)`   | 计算标准差（`sample=True` 为样本标准差，默认总体标准差）。 |
+| `Variance(field, sample=False)` | 计算方差（`sample=True` 为样本方差，默认总体方差）。       |
+
+##### **两种聚合方法**
+
+**1. `aggregate()`：全局聚合**
+
+- **作用**：对整个 `QuerySet` 进行聚合计算，返回一个包含聚合结果的**字典**。
+
+- **适用场景**：统计全表数据的总和、平均值等。
+
+- **语法**
+
+  ```python
+  from django.db.models import Sum, Avg
+  
+  result = Model.objects.aggregate(
+      别名1=聚合函数(字段名),
+      别名2=聚合函数(字段名),
+  )
+  ```
+
+**示例**：统计所有书籍的总价格和平均价格
+
+```python
+from django.db.models import Sum, Avg
+
+# 查询结果：{'total_price': 1000, 'avg_price': 50}
+Book.objects.aggregate(
+    total_price=Sum('price'),
+    avg_price=Avg('price')
+)
+```
+
+------
+
+#### **2. `annotate()`：分组聚合**
+
+- **作用**：为 `QuerySet` 中的每个对象添加聚合结果（类似 SQL 的 `GROUP BY`）。
+
+- **适用场景**：按某个字段分组统计（如统计每个分类的商品数量）。
+
+- **语法**：
+
+  ```python
+  Model.objects.values('分组字段').annotate(
+      别名=聚合函数(字段名)
+  )
+  ```
+
+**示例**：统计每个作者的书籍数量
+
+```python
+from django.db.models import Count
+# 按 author 分组，统计每个作者的书籍数量
+# 结果：[{'author': 'Alice', 'book_count': 3}, {'author': 'Bob', 'book_count': 5}]
+Author.objects.values('name').annotate(
+    book_count=Count('book')
+)
+```
 
 #### 原生查询
 
+执行原生SQL语句，在django中我们可以自己引入pymysql执行SQL，也可以调用ORM提供的raw方法来执行SQL语句。
+
+如果使用raw方法执行SQL语句，则返回结果是QuerySet，这个返回结果在操作字段时，会有额外的性能损耗。
+
 #### 多库共存
 
+##### 1. 配置多数据库
+
+在 `settings.py` 中定义多个数据库连接。例如，配置一个默认数据库和一个名为 `secondary` 的数据库：
+
+```python
+DATABASES = {
+    'default': {
+        'ENGINE': 'django.db.backends.mysql',
+        'NAME': 'default_db',
+        'USER': 'user',
+        'PASSWORD': 'password',
+        'HOST': 'localhost',
+        'PORT': '3306',
+    },
+    'secondary': {
+        'ENGINE': 'django.db.backends.postgresql',
+        'NAME': 'secondary_db',
+        'USER': 'user',
+        'PASSWORD': 'password',
+        'HOST': 'localhost',
+        'PORT': '5432',
+    }
+}
+```
+
+------
+
+##### 2. 手动选择数据库
+
+在查询时通过 `using()` 方法显式指定数据库：
+
+```python
+# 向 secondary 数据库写入数据
+User.objects.using('secondary').create(name='Alice')
+
+# 从 secondary 数据库读取数据
+users = User.objects.using('secondary').all()
+```
+
+------
+
+##### 3. 数据库路由（自动选择数据库）
+
+编写路由类（如 `routers.py`），定义读写规则：
+
+```python
+# routers.py
+class SecondaryRouter:
+    """
+    将特定模型的操作路由到 secondary 数据库。
+    """
+    def db_for_read(self, model, **hints):
+        if model._meta.app_label == 'myapp':
+            return 'secondary'
+        return None  # 其他情况由默认路由处理
+
+    def db_for_write(self, model, **hints):
+        if model._meta.app_label == 'myapp':
+            return 'secondary'
+        return None
+
+    def allow_relation(self, obj1, obj2, **hints):
+        # 允许跨数据库关联（根据需求调整）
+        return None
+
+    def allow_migrate(self, db, app_label, model_name=None, **hints):
+        # 控制迁移操作的目标数据库
+        if app_label == 'myapp':
+            return db == 'secondary'
+        return None
+```
+
+在 `settings.py` 中注册路由：
+
+```python
+DATABASE_ROUTERS = ['path.to.routers.SecondaryRouter']
+```
+
+------
+
+##### 4. 迁移多数据库
+
+为不同数据库执行迁移命令：
+
+```python
+# 迁移 default 数据库
+python manage.py migrate
+
+# 迁移 secondary 数据库
+python manage.py migrate --database=secondary
+```
+
+------
+
+##### 5. 事务处理
+
+Django 默认不支持跨数据库事务，需分开处理：
+
+```python
+from django.db import transaction
+
+# 在 default 数据库的事务
+with transaction.atomic(using='default'):
+    User.objects.create(name='Bob')
+
+# 在 secondary 数据库的事务
+with transaction.atomic(using='secondary'):
+    LogEntry.objects.create(action='update')
+```
+
+------
+
+##### 6. 动态切换数据库
+
+在视图或中间件中根据请求动态切换：
+
+```python
+class DBRouterMiddleware:
+    def __init__(self, get_response):
+        self.get_response = get_response
+
+    def __call__(self, request):
+        # 根据请求参数动态选择数据库
+        if request.user.is_premium:
+            request.db = 'secondary'
+        else:
+            request.db = 'default'
+        response = self.get_response(request)
+        return response
+
+# 在视图中使用
+def my_view(request):
+    User.objects.using(request.db).filter(...)
+```
+
+------
+
+##### 7. 自动生成模型
+
+从特定数据库生成模型：
+
+```python
+python manage.py inspectdb --database=secondary > secondary_models.py
+```
+
+------
+
+##### 注意事项
+
+1. **模型归属**：通过 `app_label` 或路由规则确保模型与数据库对应。
+2. **跨数据库关联**：默认不支持跨数据库外键，需通过 `db_constraint=False` 或手动处理。
+3. **性能**：避免频繁跨库查询，可能影响性能。
+
 ### 关联模型
+
+关联模型实际上就是ORM提供给开发者使用用于操作多表数据的功能，因为多个表之间存在的关联关系，往往都是基于建库建表之初的实体关系分析（ER图）和范式理论梳理出来的。
+
+构建数据库和构建数据表：实体、属性、关系。
+
+实体：在现实世界中，客观存在的能够被区分的人事物或集体概念。
+
+属性：具有描述性、修饰性的词语，用于描述实体的特征。
+
+#### 一对一
+
+| 选项                     | 作用描述                                          | 应用场景示例                                                 | 注意事项                                                     |
+| :----------------------- | :------------------------------------------------ | :----------------------------------------------------------- | ------------------------------------------------------------ |
+| **`models.CASCADE`**     | 删除父对象时，**级联删除**所有关联的子对象。      | 用户（父）删除后，其所有文章（子）一并删除。                 | 谨慎使用，可能导致意外数据丢失。                             |
+| **`models.DO_NOTHING`**  | 不干预数据库操作，**完全依赖数据库约束**处理。    | 需要手动处理外键关系，或在数据库层通过触发器控制。           | 需确保数据库有相应约束（如外键级联），否则可能引发 `IntegrityError`。 |
+|                          |                                                   |                                                              |                                                              |
+| **`models.SET_NULL`**    | 父对象删除时，将子对象的外键字段设为 **`NULL`**。 | 删除分类（父）时，保留文章（子），但将其分类字段设为 `NULL`。 | 外键字段必须设置 `null=True`，否则报错。                     |
+| **`models.SET_DEFAULT`** | 父对象删除时，将子对象的外键字段设为 **默认值**。 | 删除用户（父）时，将子对象（如订单）的 `user` 字段设为预设的“匿名用户”。 | 必须为字段定义有效的 `default` 值。                          |
+
+```python
+from django.db import models
+
+# Create your models here.
+class Student(models.Model):
+    name = models.CharField(max_length=20,db_index=True)
+    age = models.IntegerField()
+    sex = models.BooleanField(null=True,blank=True,default=None)
+
+    class Meta:
+        db_table = 'orm_student'
+        verbose_name = '学生信息'
+        verbose_name_plural = verbose_name
+
+    def __str__(self):
+        return str({"id":self.id, "name":self.name, "age":self.age,"sex":self.sex})
+
+class StudentProfile(models.Model):
+    # 一对一 CASCADE 级联删除 DO_NOTHING 互不影响
+    student = models.OneToOneField('Student',on_delete=models.CASCADE,related_name='profile')
+    description = models.TextField(default='',verbose_name="描述信息")
+    address = models.CharField(max_length=500,verbose_name="家庭住址")
+    mobile = models.CharField(max_length=15,verbose_name="紧急联系电话")
+
+    class Meta:
+        db_table = 'orm_student_profile'
+        verbose_name = "学生详细信息"
+        verbose_name_plural = verbose_name
+
+    def __str__(self):
+        return str({"address":self.address, "mobile":self.mobile})
+```
+
+```python
+from django.http import JsonResponse
+from django.shortcuts import render
+from django.views import View
+
+from . import models
+# from django. import view
+# Create your views here.
+
+class Student1(View):
+    def get1(self, request):
+    # 添加数据操作
+    # 先添加主模型 再添加外键模型
+        student = models.Student.objects.create(
+            name = "小小",
+            age=10,
+            sex=True
+        )
+        models.StudentProfile.objects.create(
+            student = student,
+            description="44585",
+            address="686454",
+            mobile="5454455555"
+        )
+        return JsonResponse({'msg':'添加成功！'})
+
+    def get2(self,request):
+        # 从主模型查询到外键模型
+        student = models.Student.objects.get(id = 1)
+        if student:
+            print(student.profile.address)
+        # 从外键模型查询到主模型
+        profile = models.StudentProfile.objects.get(id = 1)
+        if profile:
+            print(profile.student.name)
+        return JsonResponse({'msg':'查询成功'})
+
+    def get3(self,request):
+        student = models.Student.objects.get(name = "小小")
+        if student:
+            student.profile.address = "新地址"
+            student.profile.mobile = "5454455555"
+            student.profile.save()
+        return JsonResponse({'msg':'1'})
+
+    def get(self, request):
+        student = models.Student.objects.get(id = 1)
+        if student:
+            student.delete()
+        return JsonResponse({'msg':'2'})
+```
+
+#### 一对多
+
+#### 多对多
+
+#### 虚拟外键
+
+#### 查询优化
 
 ### 模型管理器
