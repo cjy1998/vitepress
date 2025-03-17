@@ -443,6 +443,7 @@ def upload(request):
 
 ```bash
  python manage.py makemigrations
+ python manage.py migrate
 ```
 
 ### ORM 框架
@@ -1464,6 +1465,127 @@ class Student1(View):
 ```
 
 #### 一对多
+
+```python
+class Author(models.Model):
+    name = models.CharField(max_length=20,db_index=True,verbose_name="姓名")
+    age = models.IntegerField(verbose_name="年龄")
+    sex = models.BooleanField(null=True,blank=True,default=None,verbose_name="性别")
+
+    class Meta:
+        db_table = 'orm_author'
+        verbose_name = "作者信息"
+        verbose_name_plural = verbose_name
+
+    def __str__(self):
+        return str({"id":self.pk ,"name":self.name, "age":self.age})
+
+class Article(models.Model):
+    author = models.ForeignKey(Author,on_delete= models.DO_NOTHING,related_name="article_list", verbose_name="作者")
+    title = models.CharField(max_length=20,verbose_name="文章标题")
+    createdTime = models.DateTimeField(auto_now_add=True)
+    updateTime = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        db_table = 'orm_article'
+        verbose_name = "文章信息"
+        verbose_name_plural = verbose_name
+
+    def __str__(self):
+        return str({"id":self.pk ,"title":self.title})
+```
+
+##### 添加操作
+
+```python
+ def get1(self, request):
+        # 先添加主模型
+        # author = models.Author.objects.create(
+        #     name="李白",
+        #     age=10,
+        #     sex=True
+        # )
+        #
+        # article_list = [
+        #     models.Article(title="赠汪伦",author=author),
+        #     models.Article(title="将进酒",author_id=author.id)
+        # ]
+        #
+        # models.Article.objects.bulk_create(article_list)
+
+        #作者已存在，添加多篇文章
+
+        # author = models.Author.objects.get(id = 1)
+        # if author:
+        #     article_list = [
+        #         models.Article(title="天生我材必有用",author=author),
+        #         models.Article(title="杯莫停",author_id=author.id)
+        #     ]
+        #     models.Article.objects.bulk_create(article_list)
+
+        models.Article.objects.create(
+            title="春蚕到死丝方尽",
+            author= models.Author.objects.create(
+                name="李商隐",
+                age=10,
+                sex=True
+            )
+        )
+        return JsonResponse({'msg':'3'})
+```
+
+##### 查询操作
+
+```python
+ def get(self,request):
+        #通过主模型  拿到外键模型
+        # query_id = request.GET.get('id')
+        # author = models.Author.objects.get(id = query_id)
+        # article = author.article_list.all().values()
+
+        #通过主键模型作为条件，直接查询外键模型的数据
+        # article_list = models.Article.objects.filter(author_id= query_id).values()
+
+        #通过外键模型 拿到主模型
+        # article = models.Article.objects.get(title="赠汪伦")
+        # if article:
+        #    name = article.author.name
+        #    print(name)
+
+        #通过外键模型作为条件  直接查询主键模型的数据
+        name = models.Author.objects.get(article_list__title="春蚕到死丝方尽").name
+        print(name)
+        return  JsonResponse({'msg':'4'})
+```
+
+##### 更新操作
+
+```python
+    def get(self,request):
+        # 把李白所有的文章创建时间改为 2025-05-01 13:00:00
+        # author = models.Author.objects.get(name = '李白')
+        # for article in author.article_list.all():
+        #     article.createdTime = "2025-05-01 13:00:00"
+        #     article.save()
+
+        #吧赠汪伦的作者改为汪伦
+        author = models.Author.objects.filter(name = '杜甫').first()
+        article = models.Article.objects.get(title = "赠汪伦")
+        if author and article:
+           article.author = author
+           article.save()
+        else:
+            author = models.Author.objects.create(
+                name="杜甫",
+                age=10,
+                sex=True
+            )
+            article.author = author
+            article.save()
+        return JsonResponse({'msg':'5'})
+```
+
+
 
 #### 多对多
 
