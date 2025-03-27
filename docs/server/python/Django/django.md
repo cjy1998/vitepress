@@ -349,6 +349,348 @@ def upload(request):
 - **前后端分离/移动端**：Token（无状态、跨域友好）。
 - **高安全性场景**：结合 HTTPS、HttpOnly Cookie 和短期 Token。
 
+
+
+## 类视图
+
+Django 提供了两种主要的视图编写方式：`函数视图和类视图`。类视图作为函数视图的替代方案，通过将视图逻辑组织为 Python 对象的方式来实现。虽然函数视图对于简单的场景非常直观，但类视图在处理更复杂的逻辑、代码重用以及利用面向对象的技术（如继承和混入）方面展现出显著的优势
+
+ 类视图和函数视图的核心目标是一致的：接收一个 `HttpRequest` 对象作为输入，并返回一个 `HttpResponse` 对象或引发一个异常 。然而，函数视图通常将所有 HTTP 方法的处理逻辑都放在一个函数中，可能需要使用条件语句来区分不同的请求类型。相比之下，类视图则将针对不同 HTTP 方法（如 GET、POST）的处理逻辑分别封装在类的方法中，例如 `get()` 方法处理 GET 请求，`post()` 方法处理 POST 请求 。这种组织方式使得代码结构更加清晰，易于阅读和维护。
+
+Django 引入类视图的主要目的是为了解决函数视图在大型项目中可能出现的代码冗余问题，并提供更好的代码复用机制，尤其是在实现常见的 Web 开发任务（如创建、读取、更新、删除，即 CRUD 操作）时 。虽然对于初学者来说，函数视图可能更容易理解，但随着应用程序复杂性的增加，类视图所提供的结构化和可扩展性使其成为更强大和可维护的解决方案 。
+
+使用类视图带来了诸多益处。其中最显著的优势之一便是代码的可重用性，这主要通过继承来实现 。可以将通用的视图逻辑实现在一个基类中，然后让其他的视图类继承这个基类，从而避免了重复编写相同的代码。此外，类视图还支持使用混入（mixins）来扩展功能 。混入是一些提供特定功能的类，可以通过多重继承的方式将这些功能添加到视图类中，而无需深入理解继承的复杂性。
+
+类视图通过将不同 HTTP 请求方法的处理逻辑分离到不同的方法中，实现了更好的代码结构 。这使得代码更易于理解和维护，因为每个方法都专注于处理特定的请求类型。更重要的是，Django 本身提供了一系列内置的通用类视图，这些视图为常见的 Web 开发任务提供了预配置的功能，例如显示对象列表、显示单个对象的详细信息以及处理表单等 。这些通用视图极大地加快了开发速度，并遵循了最佳实践。
+
+类视图还提供了很高的自定义灵活性，开发者可以通过重写类中的属性和方法来定制视图的行为，以满足特定的需求 。例如，可以修改视图使用的模板名称、查询的数据集或者表单处理的逻辑。然而，需要注意的是，虽然混入提供了强大的代码复用能力，但在不当使用或理解不足的情况下，可能会增加代码的复杂性，使得调试变得更加困难 。因此，在使用混入时，需要对其提供的功能有清晰的理解。
+
+### 常用的内置类视图
+
+Django 提供了一系列强大的内置类视图，可以极大地简化常见的 Web 开发任务。
+
+- **`View`**: 这是所有类视图的基础类 2。它提供了一个 `dispatch()` 方法，该方法接收一个 HTTP 请求，并根据请求的方法（例如 GET、POST）将请求分发到相应的处理方法（例如 `get()`、`post()`） 2。虽然 `View` 类本身很少直接使用，但它是构建其他更高级类视图的基础。理解 `dispatch()` 方法的工作原理对于理解类视图如何处理请求至关重要。
+- **`TemplateView`**: 这个视图类的主要功能是渲染一个指定的模板 3。它非常适用于显示静态内容或者只需要简单地将数据传递给模板进行展示的场景。使用 `TemplateView` 需要指定 `template_name` 属性，告知视图需要渲染哪个模板文件 3。可以通过重写 `get_context_data(**kwargs)` 方法向模板传递额外的上下文数据 4。
+- **`ListView`**: 用于显示模型对象列表 3。使用 `ListView` 需要指定 `model` 属性来指示要显示哪个模型的数据，或者可以重写 `get_queryset()` 方法来定义需要显示的对象的查询集 3。`ListView` 默认会使用一个遵循特定命名约定的模板（例如 `<app_name>/<model_name>_list.html`），但可以通过设置 `template_name` 属性进行自定义 3。对于需要展示大量数据的场景，`ListView` 通常会与 `PaginationMixin` 配合使用来实现分页功能 5。
+- **`DetailView`**: 用于显示单个模型对象的详细信息 3。与 `ListView` 类似，`DetailView` 也需要指定 `model` 属性 3。它会根据 URL 中提供的参数（通常是主键 `pk`）自动获取对应的对象并传递给模板进行渲染 3。`DetailView` 也遵循类似的模板命名约定（例如 `<app_name>/<model_name>_detail.html`），并且可以通过 `template_name` 进行自定义 3。
+- **`FormView`**: 用于处理表单的显示和提交 4。使用 `FormView` 需要指定 `form_class` 属性，该属性指向要使用的 Django 表单类 3。表单的提交通常在 `post()` 方法中处理 4。`FormView` 提供了 `form_valid(form)` 和 `form_invalid(form)` 方法，分别在表单验证成功和失败时被调用，允许开发者定义相应的处理逻辑 4。成功处理表单后，通常会通过 `success_url` 属性指定的 URL 进行重定向 3。
+- **`CreateView`**: 专门用于创建新的模型对象 3。它继承自 `FormView`，通常需要指定 `model` 属性以及 `fields` 属性（指定要在表单中显示的字段）或 `form_class` 属性 3。`CreateView` 默认使用 `<app_name>/<model_name>_form.html` 作为模板，但可以自定义 3。
+- **`UpdateView`**: 用于更新已存在的模型对象 3。它同样继承自 `FormView`，并且需要指定 `model` 属性以及 `fields` 或 `form_class` 属性 3。`UpdateView` 会根据 URL 中的参数（通常是 `pk`）自动获取要更新的对象 3。其默认模板也为 `<app_name>/<model_name>_form.html`，并支持自定义 3。
+- **`DeleteView`**: 用于删除模型对象 4。它需要指定 `model` 属性以及 `success_url` 属性，用于在成功删除后进行重定向 4。`DeleteView` 也会根据 URL 中的参数（通常是 `pk`）获取要删除的对象 3。它通常会使用一个确认删除的模板（默认命名约定为 `<app_name>/<model_name>_confirm_delete.html`），并且可以通过 `template_name` 进行自定义。
+
+这些内置的通用类视图为常见的 CRUD 操作提供了强大的抽象，极大地减少了开发者需要编写的代码量 3。理解这些视图的默认行为和配置方式对于高效地使用 Django 进行 Web 开发至关重要。同时，它们提供的自定义选项也确保了在更复杂的场景下依然能够满足需求 3。
+
+### 在类视图中处理 HTTP 请求
+
+在类视图中，针对不同 HTTP 请求方法的处理逻辑被分别定义在不同的方法中。
+
+当类视图接收到一个 HTTP GET 请求时，Django 会调用该视图类中的 `get()` 方法 。在像 `DetailView` 和 `ListView` 这样的通用视图中，`get()` 方法主要负责从数据库中获取所需的数据，并准备好传递给模板的上下文 。而在 `FormView` 中，`get()` 方法通常用于实例化并显示初始表单 5。
+
+对于 HTTP POST 请求，Django 会调用类视图中的 `post()` 方法 。`post()` 方法通常用于处理提交的数据。在 `FormView`、`CreateView` 和 `UpdateView` 等处理表单的视图中，`post()` 方法负责接收表单数据，进行验证，并在验证成功后保存数据到数据库 。
+
+除了 `get()` 和 `post()` 方法之外，类视图还可以实现其他 HTTP 方法的处理逻辑，例如 `put()`、`delete()`、`head()` 和 `options()` 等 。这使得类视图能够更全面地处理各种类型的 HTTP 请求，尤其是在构建 RESTful API 时非常有用。决定调用哪个方法的核心在于基类 `View` 中的 `dispatch()` 方法 。`dispatch()` 方法会检查传入请求的 HTTP 方法，并将其路由到视图类中名称与之对应的方法。例如，如果请求是 GET 请求，则调用 `get()` 方法；如果是 POST 请求，则调用 `post()` 方法，以此类推。
+
+将不同 HTTP 方法的处理逻辑清晰地分离到不同的方法中，是类视图相较于函数视图的一个显著优势 。这种组织方式使得代码结构更加清晰，开发者可以更容易地理解和维护不同请求类型对应的处理逻辑，而不需要在一个函数中使用大量的条件语句进行区分。
+
+### `as_view()` 方法的作用与用法
+
+由于类视图本质上是 Python 类，而不是可以直接调用的函数，因此它们不能直接在 Django 的 URL 配置文件（`urls.py`）中使用 。为了将类视图连接到 URL 配置，Django 提供了一个名为 `as_view()` 的类方法 。
+
+`as_view()` 方法的作用是将一个类视图转换成一个可调用的视图函数，这个函数可以被 Django 的 URL 路由系统所识别和使用。当 Django 的 URL 匹配到某个模式，并且该模式指向一个通过 `as_view()` 得到的函数时，Django 就会调用这个函数。
+
+实际上，当 `as_view()` 被调用时，它会创建一个类视图的实例，并返回一个内部函数。当这个内部函数被调用时（通常是因为有匹配的请求到来），它会调用该视图实例的 `dispatch()` 方法 。正是 `dispatch()` 方法根据 HTTP 请求的方法将请求分发到视图类中相应的处理方法（如 `get()` 或 `post()`）。
+
+一个非常有用的特性是，可以在 `urls.py` 中调用 `as_view()` 时传递参数，这些参数会作为属性传递给类视图的实例 2。例如，对于 `TemplateView`，可以直接在 `urls.py` 中指定 `template_name`：
+
+```python
+from django.urls import path
+from django.views.generic import TemplateView
+
+urlpatterns =
+```
+
+在这个例子中，当访问 `/about/` 路径时，`TemplateView` 的实例会被创建，并且其 `template_name` 属性会被设置为 `'about.html'`。
+
+`as_view()` 方法就像一个适配器，它将面向对象的类视图结构转换成 Django URL 调度器所期望的基于函数的接口。这种设计使得我们既可以享受到面向对象编程带来的好处，又能够无缝地集成到 Django 的请求-响应处理流程中。
+
+### 类视图中的模板渲染与上下文数据
+
+在类视图中，模板的渲染和上下文数据的传递是至关重要的环节，用于将动态生成的内容呈现给用户。
+
+许多 Django 的通用类视图都遵循一定的模板命名约定 。例如，`ListView` 默认会查找名为 `<app_name>/<model_name>_list.html` 的模板，而 `DetailView` 则会查找 `<app_name>/<model_name>_detail.html`。这种约定化的方式可以减少开发者的配置工作。当然，也可以通过在视图类中设置 `template_name` 属性来显式指定要使用的模板文件 。对于像 `CreateView` 和 `UpdateView` 这样的表单处理视图，默认的模板名称通常会带有 `_form` 后缀，例如 `<app_name>/<model_name>_form.html` 。
+
+上下文数据是指在视图中准备好并传递给模板的变量字典，模板可以使用这些变量来动态地生成 HTML 内容 。Django 的通用类视图会自动提供一些默认的上下文数据。例如，在 `ListView` 中，模型对象的列表通常会以 `object_list` 或模型名称的小写形式作为键传递给模板；在 `DetailView` 中，单个模型对象通常会以 `object` 或模型名称的小写形式作为键传递 。
+
+为了向模板传递额外的自定义上下文数据，可以在类视图中重写 `get_context_data(**kwargs)` 方法 。这个方法通常会返回一个字典，其中包含了所有需要在模板中使用的变量。在重写 `get_context_data()` 方法时，一个重要的最佳实践是首先调用父类的 `get_context_data()` 方法，使用 `super()` 关键字来实现，这样可以确保父类提供的默认上下文数据不会丢失 。然后，可以在返回的字典中添加自定义的键值对。例如：
+
+```python
+from django.views.generic import DetailView
+from myapp.models import MyModel
+
+class MyModelDetailView(DetailView):
+    model = MyModel
+    template_name = 'myapp/mymodel_detail.html'
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['extra_info'] = '一些额外的信息'
+        return context
+```
+
+在这个例子中，除了 `DetailView` 默认提供的模型对象之外，模板 `'myapp/mymodel_detail.html'` 还可以访问名为 `extra_info` 的变量，其值为 `'一些额外的信息'`。
+
+`get_context_data()` 方法提供了一种标准化的、可扩展的方式来管理传递给模板的数据。这有助于保持代码的清晰和一致性，使得开发者能够更容易地理解哪些数据在模板中可用，以及这些数据是如何从视图传递过来的。
+
+### 在类视图中处理 Django 表单
+
+Django 的类视图为处理 Web 表单提供了强大的支持，特别是 `FormView`、`CreateView` 和 `UpdateView` 这几个通用视图。
+
+要显示一个表单，通常需要在视图类中指定 `form_class` 属性，该属性指向要使用的 Django 表单类 。在 `FormView` 中，表单实例会自动在模板上下文中以 `form` 为键提供，使得模板可以轻松地渲染表单字段 。
+
+当用户提交表单时，通常会发送一个 HTTP POST 请求，这个请求会被类视图的 `post()` 方法处理 。在 `post()` 方法中，会使用提交的数据（通常在 `request.POST` 中）创建一个表单实例。
+
+接下来，需要对提交的表单数据进行验证。这是通过调用表单实例的 `is_valid()` 方法来完成的 。如果 `is_valid()` 返回 `True`，则表示表单数据通过了所有验证规则，此时会调用视图的 `form_valid(form)` 方法 。在这个方法中，开发者可以执行与成功提交的表单数据相关的操作，例如将数据保存到数据库。如果 `is_valid()` 返回 `False`，则表示表单数据存在错误，此时会调用视图的 `form_invalid(form)` 方法 。在这个方法中，通常会将包含错误信息的表单重新渲染给用户。
+
+对于像 `FormView`、`CreateView` 和 `UpdateView` 这样的视图，在成功处理完有效的表单后，通常需要将用户重定向到另一个页面。这个重定向的目标 URL 通常通过在视图类中设置 `success_url` 属性来指定 。
+
+`form_valid()` 和 `form_invalid()` 方法的引入，为处理表单提交的成功和失败情况提供了一个清晰的结构 。通过重写这两个方法，开发者可以精确地控制在不同验证结果下应该执行的操作，使得代码更加模块化和易于维护。
+
+### 自定义类视图
+
+Django 的类视图提供了多种方式进行自定义，以满足各种不同的需求。
+
+一种常见的自定义方式是重写视图类的属性 。例如，可以通过设置 `template_name` 属性来指定视图使用的模板，覆盖默认的模板名称 。同样，可以设置 `model` 属性来指定与视图相关的模型，设置 `form_class` 属性来指定要使用的表单类，以及设置 `success_url` 属性来定义表单提交成功后的重定向 URL。
+
+另一种更强大的自定义方式是重写视图类的方法 。以下是一些常用的可以被重写的方法：
+
+- **`get_context_data(\**kwargs)`**: 这个方法用于向模板传递额外的上下文数据 。通过重写这个方法，可以将需要在模板中使用的任何自定义变量添加到上下文字典中。
+- **`get_queryset()`**: 在 `ListView` 中，这个方法用于获取要显示的对象的查询集 。通过重写这个方法，可以对查询结果进行过滤、排序等操作，以满足特定的显示需求。
+- **`form_valid(form)`**: 在处理表单的视图中，当表单验证成功后，这个方法会被调用 。可以在这个方法中实现保存表单数据、发送邮件等自定义逻辑。
+- 还有许多其他的方法可以被重写，例如 `get_object()`（用于在 `DetailView` 和 `UpdateView` 中获取要操作的单个对象）、`get_success_url()`（用于动态生成成功后的重定向 URL）以及 HTTP 方法的处理函数 `get()` 和 `post()` 等。
+
+通过重写属性和方法，开发者可以在不修改 Django 框架源代码的情况下，灵活地定制通用类视图的行为，使其能够适应各种复杂的应用场景 。这种自定义能力是类视图强大功能的重要体现。
+
+### Mixin 的概念与在类视图中的应用
+
+Mixin 是一种可重用的类，它提供了一组特定的功能，可以通过多重继承将其混入到其他的类中 。在 Django 的类视图中，Mixin 是一种强大的工具，用于扩展视图的功能而无需使用传统的继承方式。
+
+使用 Mixin 的主要优势在于代码的重用性 。可以将一些通用的功能封装在 Mixin 中，然后在多个视图类中混入这些 Mixin，避免了重复编写相同的代码，遵循了 DRY（Don't Repeat Yourself）原则。此外，Mixin 还有助于提高代码的模块化程度和可扩展性 。通过简单地添加或移除 Mixin，可以轻松地为视图类添加或移除特定的功能。
+
+Django 提供了许多常用的 Mixin，用于实现各种常见的功能：
+
+- **`LoginRequiredMixin`**: 用于确保只有已登录的用户才能访问该视图 。如果用户未登录，则会被重定向到登录页面。
+- **`PermissionRequiredMixin`**: 要求用户拥有特定的权限才能访问该视图 。
+- **`UserPassesTestMixin`**: 允许定义自定义的测试函数来判断用户是否有权访问该视图 。
+- **`FormMixin`**: 为那些不直接继承自表单处理通用视图的类视图（如 `TemplateView`）提供处理表单的方法 。
+- **`MultipleObjectMixin`** 和 **`SingleObjectMixin`**: 提供处理多个或单个对象的方法，常与 `TemplateView` 等视图配合使用来显示数据 。
+- **`PaginationMixin`**: 为显示对象列表的视图添加分页功能 。
+- **`ContextMixin`**: 提供了一种方便的方式向模板上下文添加额外的变量 。
+- **`CsrfExemptMixin`**: 使视图免受 CSRF 保护（谨慎使用）。
+
+通过将多个 Mixin 组合到一个类视图中，可以轻松地实现复杂的功能 。例如，要创建一个需要用户登录才能访问的对象列表视图，可以将 `LoginRequiredMixin` 和 `ListView` 结合使用：
+
+```python
+from django.views.generic import ListView
+from django.contrib.auth.mixins import LoginRequiredMixin
+from .models import MyModel
+
+class MyProtectedListView(LoginRequiredMixin, ListView):
+    model = MyModel
+    template_name = 'myapp/mymodel_list.html'
+```
+
+在这个例子中，`MyProtectedListView` 同时继承了 `LoginRequiredMixin` 和 `ListView`，因此它既具有 `ListView` 展示对象列表的功能，又具备 `LoginRequiredMixin` 提供的登录验证功能。
+
+Mixin 是扩展 Django 类视图功能的强大工具，它通过组合可重用的功能模块，使得代码更加灵活、易于维护和扩展。然而，在使用多个 Mixin 时，需要注意它们之间的相互作用以及方法解析顺序（MRO），以确保最终的视图行为符合预期 。
+
+### 结论
+
+Django 的类视图提供了一种强大且灵活的方式来构建 Web 应用程序的视图。它们通过组织代码、利用面向对象的技术（如继承和混入）以及提供一系列内置的通用视图，极大地提高了开发效率和代码质量。虽然函数视图在某些简单场景下依然适用，但对于更复杂的应用，类视图无疑是更佳的选择。理解类视图的定义、优势、常用的内置类、HTTP 请求处理方式、`as_view()` 方法、模板渲染、表单处理、自定义方法以及 Mixin 的应用，是成为一名高效 Django 开发者的关键。通过合理地使用类视图，开发者可以编写出更清晰、更易于维护和扩展的 Django 应用程序。
+
+| **特性**       | **函数视图 (FBVs)**                                  | **类视图 (CBVs)**                            |
+| -------------- | ---------------------------------------------------- | -------------------------------------------- |
+| 定义           | Python 函数                                          | Python 类                                    |
+| 代码组织       | 通常在一个函数中处理所有 HTTP 方法，可能使用条件分支 | 将不同 HTTP 方法的处理逻辑分离到不同的方法中 |
+| 可重用性       | 通过辅助函数或装饰器实现，继承机制较弱               | 通过继承和混入实现高度的代码重用             |
+| 可扩展性       | 主要通过装饰器扩展                                   | 通过继承和混入实现灵活的功能扩展             |
+| 初学者复杂度   | 相对容易理解                                         | 学习曲线稍高                                 |
+| 处理 HTTP 方法 | 通常使用条件语句 (if/elif)                           | 使用不同的类方法 (get(), post() 等)          |
+| 使用继承       | 较少使用                                             | 广泛使用                                     |
+| 使用混入       | 不直接支持                                           | 支持使用混入扩展功能                         |
+| 适用简单视图   | 非常适合                                             | 也可以，但可能显得过于复杂                   |
+| 适用复杂视图   | 可能导致代码臃肿和难以维护                           | 更易于组织和维护                             |
+
+| **类视图**     | **主要用途**               | **关键属性/方法**                                            |
+| -------------- | -------------------------- | ------------------------------------------------------------ |
+| `View`         | 所有类视图的基础           | `dispatch()`                                                 |
+| `TemplateView` | 渲染指定的模板             | `template_name`, `get_context_data()`                        |
+| `ListView`     | 显示模型对象列表           | `model`, `queryset`, `template_name`, `get_queryset()`       |
+| `DetailView`   | 显示单个模型对象的详细信息 | `model`, `template_name`, `get_object()`                     |
+| `FormView`     | 显示和处理表单             | `form_class`, `template_name`, `success_url`, `post()`, `form_valid()`, `form_invalid()` |
+| `CreateView`   | 创建新的模型对象           | `model`, `fields`, `form_class`, `template_name`, `success_url` |
+| `UpdateView`   | 更新已存在的模型对象       | `model`, `fields`, `form_class`, `template_name`, `success_url`, `get_object()` |
+| `DeleteView`   | 删除模型对象               | `model`, `template_name`, `success_url`, `get_object()`      |
+
+| **Mixin**                 | **主要用途**                                           |
+| ------------------------- | ------------------------------------------------------ |
+| `LoginRequiredMixin`      | 确保只有已登录的用户才能访问视图                       |
+| `PermissionRequiredMixin` | 要求用户拥有特定权限才能访问视图                       |
+| `UserPassesTestMixin`     | 允许定义自定义测试函数来判断用户是否有权访问视图       |
+| `FormMixin`               | 为非表单处理通用视图提供处理表单的方法                 |
+| `MultipleObjectMixin`     | 提供处理多个对象的方法，常与 `TemplateView` 等配合使用 |
+| `SingleObjectMixin`       | 提供处理单个对象的方法，常与 `TemplateView` 等配合使用 |
+| `PaginationMixin`         | 为显示对象列表的视图添加分页功能                       |
+| `ContextMixin`            | 提供一种方便的方式向模板上下文添加额外的变量           |
+| `CsrfExemptMixin`         | 使视图免受 CSRF 保护（谨慎使用）                       |
+
+## 中间件
+
+### **1. 引言**
+
+在 Django 框架中，中间件是一个强大的组件，它构成了一个处理 HTTP 请求和响应的钩子框架 。这种轻量级的底层插件系统允许开发者全局地修改 Django 的输入和输出 。**中间件位于 Web 服务器和视图层之间，充当着桥梁的角色** 。它使得在 HTTP `请求到达视图函数之前`以及`响应返回给客户端之前`，对请求和响应进行`拦截`、`修改`或`增强`成为可能 。Django 中间件以“中间件栈”的形式运作，其中每个中间件组件都是一个实现特定功能的 Python 类或函数 。
+
+中间件提供了一种实现诸如`日志记录`、`缓存`、`安全性`、`身份验证`和`会话管理`等横切关注点的有效方式，这些功能需要在应用程序的多个视图中应用 。通过集中管理这些通用功能，中间件提高了代码的重用性和模块化 。此外，中间件还增强了应用程序的安全性，因为它提供了一个全局机制来执行安全检查 。通过缓存和其他技术，中间件也有助于应用程序的性能优化 。
+
+### **2. 中间件在请求-响应周期中的作用**
+
+中间件是 Django 请求生命周期中不可或缺的一部分 。在请求阶段，中间件位于 URL 路由和视图执行之间 。当服务器接收到请求后，Django 会首先进行 URL 路由，将请求的路径与 `urls.py` 文件中定义的 URL 模式进行匹配 。在视图执行之前，请求会通过一系列中间件进行处理 。而在响应阶段，中间件则在视图执行之后、响应发送回客户端之前处理响应 。
+
+在请求处理阶段，中间件会拦截所有进入的 HTTP 请求，在它们到达视图函数之前进行处理 。这些中间件按照它们在 `settings.py` 文件的 `MIDDLEWARE` 设置中列出的顺序（从上到下）依次执行 。每个中间件都有机会修改请求对象或者通过返回一个 `HttpResponse` 对象来短路后续的处理 。这种机制允许在请求到达实际处理它的视图之前执行一些预处理操作，例如`身份验证`或`日志记录`。
+
+在响应处理阶段，中间件会拦截所有发出的 HTTP 响应，在它们发送回客户端之前进行处理 。这些中间件按照它们在 `MIDDLEWARE` 设置中列出的顺序的逆序（从下到上）依次执行 。每个中间件都有机会修改响应对象 。这使得在响应离开 Django 应用程序之前，可以进行一些后处理操作，例如添加特定的 HTTP 头或压缩响应内容。
+
+此外，中间件还可以处理在请求-响应周期中引发的异常 。Django 会自动将视图或中间件引发的异常转换为适当的 HTTP 错误响应 。中间件中的 `process_exception` 方法会在视图引发异常时被调用，允许开发者自定义异常处理逻辑，例如记录错误或返回特定的错误页面 。
+
+### **3. 中间件的执行顺序**
+
+Django 中间件的执行顺序至关重要，它直接影响着请求和响应的处理流程 。
+
+- 在请求阶段，中间件按照其在 `settings.py` 文件中 `MIDDLEWARE` 列表中定义的顺序从上到下依次应用 。这意味着列表顶部的中间件会首先处理请求。具体来说，`process_request` 和 `process_view` 这两个方法会按照这个顺序被执行 。
+
+- 在响应阶段，中间件的应用顺序则完全相反，即按照 `MIDDLEWARE` 列表中定义的顺序从下到上依次执行 。这意味着列表底部的中间件会首先处理响应。`process_response`、`process_template_response` 和 `process_exception` 这些方法会按照这个逆序被执行 。
+
+值得注意的是，如果一个中间件的 `process_request` 或 `process_view` 方法返回了一个 `HttpResponse` 对象，那么 Django 将不会继续处理链中后续的中间件，也不会执行相应的视图函数 。相反，该响应会立即传递给响应中间件，并按照逆序进行处理 。这种机制被称为短路请求处理，它在实现某些功能时非常有用，例如未经验证的用户尝试访问受保护的资源时，可以立即返回一个重定向到登录页面的响应。
+
+中间件的顺序对于应用程序的正确运行至关重要，因为某些中间件可能依赖于其他中间件提供的功能 。例如，`AuthenticationMiddleware` 通常应该放在 `SessionMiddleware` 之后，因为它需要访问会话数据来识别用户 。同样，为了尽早实施安全策略，`SecurityMiddleware` 通常会放在 `MIDDLEWARE` 列表的顶部附近 。因此，配置 `MIDDLEWARE` 设置时需要仔细考虑每个中间件的功能及其依赖关系，以确保请求和响应能够按照预期的方式被处理。错误的中间件顺序可能会导致应用程序出现意想不到的行为，甚至引入安全漏洞。
+
+### **4. Django 内置中间件**
+
+这些内置中间件通常在创建新 Django 项目时默认激活，并在 `settings.py` 文件的 `MIDDLEWARE` 设置中列出 。
+
+以下是一些常用的内置中间件及其功能：
+
+- **`SecurityMiddleware`**: 该中间件通过添加各种安全相关的 HTTP 头（例如 `X-XSS-Protection`、`X-Content-Type-Options`），强制执行 SSL/TLS (HTTPS) 重定向，以及管理 HTTP 严格传输安全 (HSTS) 等功能来增强应用程序的安全性 。
+- **`SessionMiddleware`**: 该中间件负责管理用户的会话，使得 Django 可以处理会话数据并将用户与使用会话的请求关联起来 。
+- **`CommonMiddleware`**: 该中间件处理一些常见的操作，例如根据 `APPEND_SLASH` 设置进行 URL 规范化（添加或移除尾部斜杠），根据 `PREPEND_WWW` 设置将不带 "www" 前缀的 URL 重定向到带有前缀的版本，以及设置 `Content-Length` 响应头 。
+- **`CsrfViewMiddleware`**: 该中间件通过在 POST 请求中添加并验证 CSRF 令牌，来提供针对跨站请求伪造 (CSRF) 攻击的保护 。
+- **`AuthenticationMiddleware`**: 该中间件在请求对象中添加 `user` 属性，表示当前登录的用户（如果已登录），并使用会话管理用户的身份验证状态 。
+- **`MessageMiddleware`**: 该中间件支持基于 Cookie 和会话的消息传递，确保消息在重定向后仍然存在，并在用户访问的下一个页面上显示 。
+- **`GZipMiddleware`**: 该中间件使用 GZip 压缩响应内容，以减少带宽使用 。
+
+这些内置中间件为许多常见的 Web 应用程序需求提供了坚实的基础。通过理解每个内置中间件的目的和功能，开发者可以利用这些组件快速实现基本功能，而无需从头开始编写代码。通常建议至少保持 `CommonMiddleware` 处于激活状态 。
+
+| **中间件类**               | **功能**                                                 |
+| -------------------------- | -------------------------------------------------------- |
+| `SecurityMiddleware`       | 添加安全头，强制执行 SSL/TLS 重定向，管理 HSTS。         |
+| `SessionMiddleware`        | 管理用户会话。                                           |
+| `CommonMiddleware`         | 处理 URL 规范化，"www" 前缀处理，设置 `Content-Length`。 |
+| `CsrfViewMiddleware`       | 提供针对跨站请求伪造 (CSRF) 攻击的保护。                 |
+| `AuthenticationMiddleware` | 在请求对象中添加 `user` 属性。                           |
+| `MessageMiddleware`        | 支持基于 Cookie 和会话的消息传递。                       |
+| `GZipMiddleware`           | 使用 GZip 压缩响应。                                     |
+
+### **5. 自定义 Django 中间件**
+
+除了使用 Django 提供的内置中间件之外，开发者还可以根据应用程序的特定需求创建自定义中间件 。自定义中间件允许开发者添加专门的逻辑来处理请求、修改响应、执行自定义身份验证和授权、进行日志记录、监控性能等等 。
+
+创建自定义中间件有两种主要方法：基于类和基于函数 。
+
+**基于类的中间件**: 
+
+通过定义一个 Python 类来实现，该类通常包含一个 `__init__` 方法（用于一次性初始化）和一个 `__call__` 方法（用于处理每个请求/响应）。`__init__` 方法接收一个 `get_response` 可调用对象作为参数，该对象是链中的下一个中间件或视图函数本身 。`__call__` 方法接收一个 `request` 对象作为参数，并且应该返回一个 `response` 对象。它通常会调用 `self.get_response(request)` 将请求传递给下一个中间件或视图 。此外，基于类的中间件还可以实现特定的钩子方法，例如 `process_request`、`process_response`、`process_view`、`process_exception` 和 `process_template_response` 。
+
+**基于函数的中间件**: 
+
+通过定义一个函数来实现，该函数接收一个 `get_response` 可调用对象，并返回另一个接收 `request` 并返回 `response` 的函数 。
+
+**以下是创建自定义中间件（以基于类为例）的步骤 ：**
+
+1. 在你的 Django 应用程序中创建一个 Python 文件（例如，`middleware.py`）。
+2. 定义一个类（例如，`RequestLoggingMiddleware`），并在其中定义一个 `__init__` 方法，该方法接收 `get_response` 作为参数 。
+3. 实现 `__call__` 方法，在该方法中执行你希望在调用 `self.get_response(request)` 之前和/或之后执行的操作 。
+4. 可选地，可以实现其他钩子方法，例如 `process_request`、`process_response` 等。
+5. 在项目的 `settings.py` 文件中的 `MIDDLEWARE` 列表中注册你的自定义中间件，通过提供中间件类的完整 Python 路径 。
+
+自定义中间件提供了一种强大的方式来全局扩展 Django 的功能。无论是使用基于类还是基于函数的方法，其核心原则都是拦截和处理请求与响应。选择哪种方法通常取决于中间件的复杂性和是否需要在中间件中管理状态。基于类的中间件允许通过 `__init__` 方法存储状态，这在某些场景下非常有用 。
+
+### **6. 常用的中间件方法及其功能**
+
+Django 中间件提供了多个钩子方法，允许开发者在请求-响应周期的不同阶段插入自定义逻辑 2。理解这些方法的调用时机和作用对于创建有效的自定义中间件至关重要。
+
+- **`__init__(self, get_response)`**: 这是一个构造方法，在 Web 服务器启动时只会被调用一次 。它接收一个 `get_response` 可调用对象作为参数，该对象要么是链中的下一个中间件，要么是视图函数本身 。这个方法通常用于中间件的一次性配置和初始化 。
+- **`__call__(self, request)`**: 这个方法对于每个请求都会被调用 。它接收一个 `HttpRequest` 对象作为输入，并且应该返回一个 `HttpResponse` 对象 1。通常，它会调用 `self.get_response(request)` 将请求传递给处理链中的下一个阶段 。`__call__` 方法允许在视图（或后续中间件）被调用之前和之后执行代码 。
+- **`process_request(self, request)`**: 这个方法在 Django 确定哪个视图应该处理请求之前被调用 。它接收一个 `HttpRequest` 对象作为输入，并且应该返回 `None` 或一个 `HttpResponse` 对象 。如果返回 `None`，Django 将继续处理请求 。如果返回一个 `HttpResponse`，Django 将短路请求处理并返回该响应 。
+- **`process_view(self, request, view_func, view_args, view_kwargs)`**: 这个方法在 Django 确定要执行的视图函数之后，但在实际调用视图函数之前被调用 。它接收 `HttpRequest` 对象、视图函数以及传递给视图的参数作为输入，并且应该返回 `None` 或一个 `HttpResponse` 对象，与 `process_request` 类似 。当你需要知道哪个视图将被执行时，这个方法非常有用 。
+- **`process_template_response(self, request, response)`**: 这个方法在视图函数执行完毕后被调用，前提是响应是一个 `TemplateResponse` 对象或等效对象（即具有 `render()` 方法）。它接收 `HttpRequest` 对象和 `TemplateResponse` 对象作为输入，并且必须返回一个实现了 `render` 方法的响应对象 。这个方法允许在渲染之前修改模板或上下文数据 。
+- **`process_response(self, request, response)`**: 这个方法在视图函数执行完毕并且响应即将返回给浏览器之前，对所有响应都会被调用 。它接收 `HttpRequest` 对象和 `HttpResponse` 对象作为输入，并且必须返回一个 `HttpResponse` 或 `StreamingHttpResponse` 对象 。即使同一个中间件中的 `process_request` 或 `process_view` 方法返回了一个响应，`process_response` 方法也总是会被调用 。这个方法按照逆序执行 。
+- **`process_exception(self, request, exception)`**: 当视图函数引发异常时，这个方法会被调用 。它接收 `HttpRequest` 对象和 `Exception` 对象作为输入，并且应该返回 `None` 或一个 `HttpResponse` 对象 。如果它返回一个 `HttpResponse`，该响应将被返回给浏览器。否则，将使用默认的异常处理机制 。这个方法也按照逆序执行 。
+
+| **方法名**                  | **调用时机**                                | **作用**                                                     | **返回值**                                     |
+| --------------------------- | ------------------------------------------- | ------------------------------------------------------------ | ---------------------------------------------- |
+| `__init__`                  | 服务器启动时，仅一次                        | 中间件的一次性初始化                                         | `None`                                         |
+| `__call__`                  | 每个请求                                    | 处理请求和响应，包含中间件的核心逻辑                         | `HttpResponse` 对象                            |
+| `process_request`           | 在视图选择之前                              | 在 Django 确定执行哪个视图之前调用，可以修改请求或短路处理   | `None` 或 `HttpResponse` 对象                  |
+| `process_view`              | 在视图选择之后，视图执行之前                | 在 Django 识别视图之后但在执行之前调用，可以根据视图修改请求或短路处理 | `None` 或 `HttpResponse` 对象                  |
+| `process_template_response` | 视图执行之后，如果响应是 `TemplateResponse` | 如果视图返回 `TemplateResponse` 则调用，允许修改模板或上下文 | 实现了 `render` 方法的响应对象                 |
+| `process_response`          | 视图执行之后，响应返回浏览器之前            | 对所有响应调用，允许修改响应                                 | `HttpResponse` 或 `StreamingHttpResponse` 对象 |
+| `process_exception`         | 视图引发异常时                              | 当视图引发异常时调用，允许自定义异常处理                     | `None` 或 `HttpResponse` 对象                  |
+
+### **7. Django 中间件的实际应用场景**
+
+Django 中间件具有广泛的应用场景，开发者可以利用它来解决各种实际问题。
+
+- **日志记录**: 中间件可以用于记录传入的请求（例如，HTTP 方法、路径、头部信息、用户信息）、响应状态码和内容 ，以及跟踪请求的处理时间以进行性能分析 。
+- **性能监控**: 通过中间件可以测量和记录请求/响应的时间 6，并可以集成到各种性能监控工具中 。
+- **安全检查**: 中间件是执行各种安全检查的理想场所，例如身份验证和授权 、IP 白名单或黑名单 、限制请求频率以防止滥用 、添加自定义安全 HTTP 头 、清理请求数据以防止恶意输入 、处理跨域资源共享 (CORS) ，以及实现 JSON Web Tokens (JWT) 身份验证 。
+- **请求和响应修改**: 中间件可以用于修改请求和响应，例如向响应添加自定义 HTTP 头 、修改请求参数 、进行内容压缩（例如，使用 GZip），以及进行 URL 重写或重定向 。
+- **会话管理**: 虽然 Django 提供了内置的会话管理机制，但通过中间件可以实现自定义的会话处理逻辑 。
+- **错误处理**: 中间件可以用于实现自定义的错误页面或针对特定异常的响应 ，以及记录错误信息 。
+- **分析和跟踪**: 中间件可以用于跟踪用户活动和行为 ，以及收集用于分析目的的数据 。
+
+中间件的多功能性使其成为解决各种应用程序需求的不可或缺的工具。通过实现自定义中间件，开发者可以将特定的功能封装起来，并在整个 Django 项目中全局应用，从而使得代码更清晰、更有条理、更易于维护。
+
+### **8. Django 中间件的配置方式**
+
+Django 中间件的配置主要通过 `settings.py` 文件中的 `MIDDLEWARE` 设置来完成 。
+
+要激活一个中间件组件（无论是内置的还是自定义的），只需将其完整的 Python 路径（以字符串形式）添加到 `MIDDLEWARE` 列表中即可 。`MIDDLEWARE` 列表中中间件的顺序决定了请求阶段的执行顺序 。
+
+要禁用一个中间件，只需从 `MIDDLEWARE` 列表中移除其路径即可 。
+
+### **9. Django 中间件的最佳实践和注意事项**
+
+在使用 Django 中间件时，遵循一些最佳实践可以帮助开发者构建更健壮、更高效的应用程序。
+
+- **保持中间件的专注和轻量**: 理想情况下，每个中间件应该只处理一个特定的任务 。避免在中间件中执行繁重的计算或 I/O 密集型操作，以最大程度地减少开销并降低对请求/响应时间的影响 。
+- **维护正确的顺序**: 确保中间件在 `MIDDLEWARE` 设置中以正确的顺序列出，考虑到它们之间的依赖关系以及期望的处理流程 。
+- **优雅地处理异常**: 在中间件中实现适当的错误处理机制，以防止意外崩溃或中断请求/响应周期 。
+- **为自定义中间件编写文档**: 清晰地记录自定义中间件的目的、功能以及任何特定的注意事项，以提高可维护性和可理解性 。
+- **测试你的中间件**: 编写单元测试以确保你的自定义中间件按预期工作，并且不会引入任何意外的副作用 。
+- **避免过度使用中间件**: 虽然中间件功能强大，但应避免创建过多的中间件层，因为它会给请求处理增加不必要的开销 。考虑某些功能是否最好在视图或实用函数中实现，而不是作为全局中间件。
+- **注意性能影响**: 分析你的中间件以识别任何性能瓶颈，并优化中间件的逻辑以提高速度和效率 。
+- **考虑异步支持**: 了解中间件可以支持同步、异步或两种类型的请求 ，如果你的中间件可以处理异步请求，请声明其异步能力 。
+- **限制对请求对象的依赖**: 虽然中间件可以修改请求对象，但通常建议保持其原始结构，以确保视图中的一致性和可维护性 。
+
+有效使用 Django 中间件需要在利用其全局功能强大性的同时，避免性能瓶颈或过于复杂的中间件栈之间取得平衡。通过遵循最佳实践，例如保持中间件的专注性、维护正确的顺序以及彻底测试自定义中间件，开发者可以构建健壮且高效的 Django 应用程序。
+
+### **10. 结论**
+
+Django 中间件提供了一个强大而灵活的机制，用于全局拦截和处理 HTTP 请求和响应。它在实现横切关注点和增强 Django 应用程序的功能方面发挥着至关重要的作用。理解请求-响应周期、中间件执行顺序和常用的中间件方法对于有效使用中间件至关重要。
+
+使用 Django 中间件的益处包括提高代码的重用性和模块化、集中管理通用功能、增强应用程序的安全性和性能，以及允许自定义请求/响应流程。
+
+掌握 Django 中间件是任何希望构建健壮、可扩展和可维护的 Web 应用程序的 Django 开发者的一项关键技能。
+
 ## 数据库
 
 ### 配置数据库连接
@@ -1585,11 +1927,99 @@ class Article(models.Model):
         return JsonResponse({'msg':'5'})
 ```
 
-
-
 #### 多对多
 
+```python
+#多对多关联以后，在数据迁移时，在数据库中实际上会创建三张表，分别是：2个模型对象实体表，1张关联 2个模型的关系表
+class Teacher(models.Model):
+    name = models.CharField(max_length=20,db_index=True,verbose_name="姓名")
+    age = models.IntegerField(verbose_name="年龄")
+    sex = models.BooleanField(null=True,blank=True,default=None,verbose_name="性别")
+    class Meta:
+        db_table = 'orm_teacher'
+        verbose_name = "老师信息"
+        verbose_name_plural = verbose_name
+    def __str__(self):
+        return str({"id":self.pk ,"name":self.name})
+
+class Course(models.Model):
+    name = models.CharField(max_length=20,verbose_name="课程名称")
+    teacher = models.ManyToManyField(Teacher,related_name="course")
+    class Meta:
+        db_table = 'orm_course'
+        verbose_name = "课程信息"
+        verbose_name_plural = verbose_name
+    def __str__(self):
+        return str({"id":self.pk ,"name":self.name})
+```
+
+#### 自关联
+
+自关联就是1张数据表中，主键和外键都在一张表上，一般会在多级部分，多级菜单，多级权限。省市区行政区划，粉丝关注，好友关系，这些业务中使用到。
+
+```python
+class Area(models.Model):
+    #一对多的自关联
+    name = models.CharField(max_length=50)
+    parent = models.ForeignKey("self",on_delete=models.SET_NULL,related_name="son_list",null=True,blank=True)
+    class Meta:
+        db_table = 'orm_area'
+        verbose_name = '行政区划表'
+        verbose_name_plural = verbose_name
+    def __str__(self):
+        return str({"id":self.pk ,"name":self.name})
+
+class User(models.Model):
+    name = models.CharField(max_length=20,unique=True)
+    age = models.IntegerField(default=0)
+    friends = models.ManyToManyField("self",symmetrical=True)
+    class Meta:
+        db_table = 'orm_user'
+        verbose_name = "用户信息表"
+        verbose_name_plural = verbose_name
+    def __str__(self):
+        return str({"id":self.pk ,"name":self.name})
+```
+
 #### 虚拟外键
+
+在前面所有的关联查询操作中，我们使用的外联手段都是依靠数据库本身维护的物理外键，但是这在一定程度上会增加数据库的运行成本，消耗数据库性能，因为数据量大了之后DB在高并发情况会产生大量锁。所以在外界就存在了相当一部分公司(50%左右)为了追求性能，舍弃了物理外键(就是在数据库建表操作中不再创建外键索引)，改用ORM提供的虚拟外键(逻辑外键)来进行关联查询操作。当然，如果没有数据库本身维护的物理外键，肯定也会存在对数据库一致性的风险。
+
+```
+db_constraint=False  表示当前外键使用虚拟外键
+db_constraint=True   表示当前外键使用物理外键
+```
+
+```python
+    student = models.OneToOneField('Student',db_constraint=False,on_delete=models.CASCADE,related_name='profile')
+		author = models.ForeignKey(Author,db_constraint=False,on_delete= models.DO_NOTHING,related_name="article_list", verbose_name="作者")
+    teacher = models.ManyToManyField(Teacher,db_constraint=False,related_name="course")
+```
+
+```python
+from django.db import models
+
+# Create your models here.
+class Student(models.Model):
+    name = models.CharField(max_length=100,verbose_name="姓名")
+    class Meta:
+        db_table = 'dbw_student'
+        verbose_name = '外键学生'
+        verbose_name_plural = verbose_name
+    def __str__(self):
+        return self.name
+
+class StudentDetail(models.Model):
+    student = models.OneToOneField(Student, on_delete=models.CASCADE,db_constraint=False)
+    age = models.IntegerField(verbose_name="年龄")
+    address = models.CharField(max_length=200)
+    phone = models.CharField(max_length=20)
+    class Meta:
+        db_table = 'dbw_student_detail'
+
+    def __str__(self):
+        return self.age
+```
 
 #### 查询优化
 
