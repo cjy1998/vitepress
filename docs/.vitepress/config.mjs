@@ -136,6 +136,15 @@ export default defineConfig({
           ],
         },
       ],
+      "/server/python/Django/": [
+        {
+          text: "django",
+          items: [
+            { text: "django基础知识", link: "/server/python/Django/django.md" },
+            { text: "DRF", link: "/server/python/Django/DRF.md" },
+          ],
+        },
+      ],
     },
 
     socialLinks: [
