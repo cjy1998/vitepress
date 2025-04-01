@@ -441,3 +441,126 @@ class PeopleSerializer(serializers.Serializer):
 ```
 
 ### 反序列化的使用
+
+```python
+  def post(self, request):
+        json_data = request.body
+        book_dict = json.loads(json_data)
+        try:
+            serializer = BookSerializer(data=book_dict)
+            serializer.is_valid(raise_exception=True)  # 自动抛出验证错误
+            # serializer.save()  # 使用序列化器保存数据，避免手动创建对象
+            return JsonResponse(serializer.data, status=201, safe=False)
+        except serializers.ValidationError as e:
+            # 返回详细的验证错误信息
+            return JsonResponse({'error': e.detail}, status=400)
+        except Exception as e:
+            print('eee',e)
+```
+
+#### 反序列化验证数据
+
+基本验证
+
+```python
+class BookSerializer(serializers.Serializer):
+    id = serializers.IntegerField(required=False)
+    name = serializers.CharField(max_length=100)
+    pub_data = serializers.DateField()
+    readcount = serializers.IntegerField(required=False)
+    commentcount = serializers.IntegerField(required=False)
+    people = PeopleForeignKeySerializer(many=True,required=False)
+```
+
+单个字段验证
+
+```python
+class BookSerializer(serializers.Serializer):
+    id = serializers.IntegerField(required=False)
+    name = serializers.CharField(max_length=100)
+    pub_data = serializers.DateField()
+    readcount = serializers.IntegerField(required=False)
+    commentcount = serializers.IntegerField(required=False)
+    people = PeopleForeignKeySerializer(many=True,required=False)
+    def validate_readcount(self, value):
+        if value < 0:
+            raise serializers.ValidationError('阅读量不能为负数')
+        return value
+    def validate(self, attrs):
+        readcount = attrs.get('readcount')
+        commentcount = attrs.get('commentcount')
+        if commentcount > readcount:
+            raise serializers.ValidationError('评论量不能大于阅读量')
+        return attrs
+```
+
+#### 保存、更新数据
+
+保存数据
+
+```python
+ # views.py
+  def post(self, request):
+        json_data = request.body
+        book_dict = json.loads(json_data)
+        try:
+            serializer = BookSerializer(data=book_dict)
+            serializer.is_valid(raise_exception=True)  # 自动抛出验证错误
+            serializer.save()  # 使用序列化器保存数据，避免手动创建对象
+            return JsonResponse(serializer.data, status=201, safe=False)
+        except serializers.ValidationError as e:
+            # 返回详细的验证错误信息
+            return JsonResponse({'error': e.detail}, status=400)
+        except Exception as e:
+            print('eee',e)
+```
+
+```python
+# 序列化器
+class BookSerializer(serializers.Serializer):
+    id = serializers.IntegerField(required=False)
+    name = serializers.CharField(max_length=100)
+    pub_data = serializers.DateField()
+    readcount = serializers.IntegerField(required=False)
+    commentcount = serializers.IntegerField(required=False)
+    people = PeopleForeignKeySerializer(many=True,required=False)
+    # author = serializers.StringRelatedField()
+    def validate_readcount(self, value):
+        if value < 0:
+            raise serializers.ValidationError('阅读量不能为负数')
+        return value
+    def validate(self, attrs):
+        readcount = attrs.get('readcount')
+        commentcount = attrs.get('commentcount')
+        if commentcount > readcount:
+            raise serializers.ValidationError('评论量不能大于阅读量')
+        return attrs
+    def create(self, validated_data):
+        return BookInfo.objects.create(**validated_data)
+```
+
+更新
+
+```python
+ def put(self,request,pk):
+        json_data = request.body
+        book_dict = json.loads(json_data)
+        try:
+            book = models.BookInfo.objects.get(id=pk)
+            serializer = BookSerializer(instance=book, data=book_dict)
+            serializer.is_valid(raise_exception=True)
+            serializer.save()
+        except models.BookInfo.DoesNotExist:
+            return JsonResponse({},status=404)
+```
+
+```python
+ def update(self, instance, validated_data):
+        instance.name = validated_data.get('name', instance.name)
+        # instance.description = validated_data.get('description', instance.description)
+        instance.pub_data = validated_data.get('pub_data', instance.pub_data)
+        instance.readcount = validated_data.get('readcount', instance.readcount)
+        instance.commentcount = validated_data.get('commentcount', instance.commentcount)
+        instance.save()
+        return instance
+```
