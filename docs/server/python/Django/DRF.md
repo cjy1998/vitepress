@@ -299,9 +299,9 @@ class BookDetailView(generics.RetrieveUpdateDestroyAPIView):
 
   然后，用户可以生成令牌，这些令牌可以包含在 API 请求的 `Authorization` 标头中（例如，`Authorization: Token YOUR_TOKEN`）以进行身份验证 。
 
-​ `SessionAuthentication` 示例
+ `SessionAuthentication` 示例
 
-​ `SessionAuthentication` 使用 Django 的内置会话管理 。如果用户已登录到 Django 管理后台或使用 Django 的身份验证的 Web 应用程序，则可以使用他们的会话来验证来自同一浏览器的 API 请求。
+ `SessionAuthentication` 使用 Django 的内置会话管理 。如果用户已登录到 Django 管理后台或使用 Django 的身份验证的 Web 应用程序，则可以使用他们的会话来验证来自同一浏览器的 API 请求。
 
 - ### 路由
 
@@ -333,9 +333,9 @@ class BookDetailView(generics.RetrieveUpdateDestroyAPIView):
 
 - #### 渲染器
 
-​ 渲染器被 DRF 用来将 API 响应格式化为特定的内容类型。常见的渲染器包括 `JSONRenderer`、`BrowsableAPIRenderer` 和 `XMLRenderer` 。与解析器类似，默认渲染器可以在设置中设置，并且可以使用 `renderer_classes` 属性定义特定于视图的渲染器。
+ 渲染器被 DRF 用来将 API 响应格式化为特定的内容类型。常见的渲染器包括 `JSONRenderer`、`BrowsableAPIRenderer` 和 `XMLRenderer` 。与解析器类似，默认渲染器可以在设置中设置，并且可以使用 `renderer_classes` 属性定义特定于视图的渲染器。
 
-​
+
 
 | API 名称 | 主要功能                                                     | 关键类/装饰器                                                       | 示例用例                                                     |
 | -------- | ------------------------------------------------------------ | ------------------------------------------------------------------- | ------------------------------------------------------------ |
@@ -486,13 +486,21 @@ class BookSerializer(serializers.Serializer):
         if value < 0:
             raise serializers.ValidationError('阅读量不能为负数')
         return value
-    def validate(self, attrs):
+   
+```
+
+多个字段验证
+
+```python
+ def validate(self, attrs):
         readcount = attrs.get('readcount')
         commentcount = attrs.get('commentcount')
         if commentcount > readcount:
             raise serializers.ValidationError('评论量不能大于阅读量')
         return attrs
 ```
+
+
 
 #### 保存、更新数据
 
@@ -564,3 +572,279 @@ class BookSerializer(serializers.Serializer):
         instance.save()
         return instance
 ```
+
+### 模型类序列化器
+
+`ModelSerializer`提供了一种快捷方式，可以自动创建一个`Serializer`具有与模型字段相对应的字段的类。
+
+- 将根据模型自动为您生成一组字段。
+- 将自动为序列化器生成验证器，例如 unique_together 验证器。
+- 默认实现`.create()` `.update()`
+
+```python
+#serializers.py
+class BookModelSerializer(serializers.ModelSerializer):
+    #如果当前模型类的字段约束不能满足当前业务，可以再此处进行字段重写
+    readcount =serializers.IntegerField(required=True)    
+    class Meta:
+            model = BookInfo
+            fields = '__all__'
+          #显示部分字段
+            #fields = ('id', 'name', 'pub_data')
+          # 取反  把字段排除在外
+            #exclude = ('is_delete','pub_data')
+          # 只读字段 即仅用于序列化输出的字段
+            read_only_fields = ('id',)
+          #字段约束
+            extra_kwargs = {
+                "name":{
+                    "min_length":5,
+                },
+              # 在序列化时不显示当前字段
+                'password': {'write_only': True}
+            }
+```
+
+```python
+#views.py
+class BookModelView(ModelViewSet):
+    queryset = models.BookInfo.objects.all()
+    serializer_class = BookModelSerializer
+```
+
+```python
+#urls.py
+router = DefaultRouter()
+router.register('bookModel', BookModelView)
+urlpatterns = [
+    path('',include(router.urls))
+]
+```
+
+#### 序列化器嵌套序列化器保存字典数据
+
+```python
+from rest_framework import serializers
+from books.models import BookInfo,PeopleInfo
+
+
+class PeopleSerializer(serializers.ModelSerializer):
+    book_id = serializers.IntegerField(required=False)
+
+    class Meta:
+        model = PeopleInfo
+        fields = ['id','name','password','description','book_id']
+        extra_kwargs = {
+            'password': {'write_only': True},
+        }
+
+
+class BookSerializer(serializers.ModelSerializer):
+    # 添加反向关联字段
+    people = PeopleSerializer(many=True)
+    # 将数据拆分  先保存图书信息 再保存人物信息
+    def create(self, validated_data):
+        peoples = validated_data.pop('people')
+        book = BookInfo.objects.create(**validated_data)
+        for people in peoples:
+            PeopleInfo.objects.create(book=book,**people)
+        return book
+    class Meta:
+        model = BookInfo
+        exclude = ('is_delete',)
+```
+
+### 视图
+
+#### 1.基础视图 `APIView`
+
+DRF 的基础视图类，继承自 Django 的 `View`，但增加了对请求解析、响应渲染、权限校验等功能的支持。
+
+- **特点**：
+  - 需要手动实现 `get()`, `post()`, `put()`, `delete()` 等方法。
+  - 支持基于类的视图装饰器（如 `@throttle_classes`）。
+
+- **适用场景**：需要完全自定义逻辑的简单 API。
+
+- 示例：
+
+  ```python
+  from rest_framework.views import APIView
+  from rest_framework.response import Response
+  
+  class MyView(APIView):
+      def get(self, request):
+          return Response({"message": "Hello World"})
+  ```
+
+#### 2.通用视图 `Generic Views`
+
+DRF 提供了一系列通用视图类，封装了常见的 CRUD 操作逻辑，适合快速开发标准化的 API。
+
+1.**`GenericAPIView`**
+
+继承自 `APIView`，添加了对查询集（`queryset`）和序列化器（`serializer_class`）的支持。
+
+- **核心功能**：
+
+  - `get_queryset()`：获取数据查询集。
+
+  - `get_serializer()`：获取序列化器实例。
+
+  - `get_object()`：获取单个对象（用于详情视图）。
+
+    ```python
+    class BookDetailView(GenericAPIView):
+        queryset = BookInfo.objects.all()
+        serializer_class = BookSerializer
+        lookup_field = 'name'
+        def get(self, request, name):
+            book = self.get_object()
+            ser = self.get_serializer(book)
+            return Response(ser.data)
+     #url
+     path('book/<str:name>',BookDetailView.as_view())
+    ```
+
+    
+
+- **需要配合 Mixin 使用**（如 `ListModelMixin`, `CreateModelMixin`）。
+
+- 示例：
+
+  ```python
+  class Generic(GenericAPIView):
+      queryset = BookInfo.objects.all()
+      serializer_class = BookSerializer
+      def get(self, request):
+          book = self.get_queryset()
+          ser = self.get_serializer(book,many=True)
+          return Response(ser.data)
+      def post(self, request):
+          book = request.data
+          ser = self.get_serializer(data=book)
+          if ser.is_valid(raise_exception=True):
+              ser.save()
+              return Response(ser.data)
+          else:
+              return Response(ser.errors, status=status.HTTP_400_BAD_REQUEST)
+  ```
+
+2.**Mixin 类**
+
+- `ListModelMixin`：提供 `list()` 方法，用于处理 GET 请求返回列表。
+
+  ```python
+  class GenericAndMixin(ListModelMixin,GenericAPIView):
+      queryset = BookInfo.objects.all()
+      serializer_class = BookSerializer
+      def get(self, request):
+          return self.list(request)
+  ```
+
+- `CreateModelMixin`：提供 `create()` 方法，处理 POST 请求创建对象。
+
+- `RetrieveModelMixin`：提供 `retrieve()` 方法，处理 GET 请求返回单个对象。
+
+- `UpdateModelMixin`：提供 `update()` 方法，处理 PUT/PATCH 请求。
+
+- `DestroyModelMixin`：提供 `destroy()` 方法，处理 DELETE 请求。
+
+3.**组合通用视图**
+
+DRF 将 `GenericAPIView` 和 Mixin 组合成以下常用类：
+
+- `ListAPIView`：仅支持 GET 列表（`ListModelMixin` + `GenericAPIView`）。
+- `RetrieveAPIView`：仅支持 GET 单个对象。
+- `CreateAPIView`：仅支持 POST。
+- `UpdateAPIView`：仅支持 PUT/PATCH。
+- `DestroyAPIView`：仅支持 DELETE。
+- `ListCreateAPIView`：支持 GET 列表 + POST。
+- `RetrieveUpdateAPIView`：支持 GET + PUT/PATCH。
+- `RetrieveDestroyAPIView`：支持 GET + DELETE。
+- `RetrieveUpdateDestroyAPIView`：支持 GET + PUT/PATCH + DELETE。
+
+示例：
+
+```python
+from rest_framework.generics import ListCreateAPIView
+from .models import Book
+from .serializers import BookSerializer
+
+class BookListCreateView(ListCreateAPIView):
+    queryset = Book.objects.all()
+    serializer_class = BookSerializer
+```
+
+### 视图集
+
+#### 1.**`ModelViewSet`**
+
+提供完整的CRUD操作（`list`, `create`, `retrieve`, `update`, `destroy`），需指定`queryset`和`serializer_class`。
+
+```python
+class BooksView(ModelViewSet):
+    queryset = BookInfo.objects.all()
+    serializer_class = BookSerializer
+```
+
+```python
+router = DefaultRouter()
+'''
+prefix  路由前缀
+viewset 视图集
+basename 路由别名
+'''
+router.register('books',BooksView)
+router.register('people',PeopleInfoView)
+urlpatterns = [
+    path('',include(router.urls)),
+    path('generic/',Generic.as_view()),
+]
+```
+
+#### 2.**`ReadOnlyModelViewSet`**
+
+仅支持只读操作（`list`和`retrieve`），适用于数据展示场景。
+
+#### 3.**`GenericViewSet`**
+
+基础类，不包含默认动作，需结合**混入类（Mixins）**（如`CreateModelMixin`）或自定义方法实现功能。
+
+#### 4.与路由器配合
+
+使用`SimpleRouter`或`DefaultRouter`，自动将视图集动作映射到URL，例如：
+
+- `list` → `GET /资源/`
+- `create` → `POST /资源/`
+- `retrieve` → `GET /资源/{id}/`
+
+#### 5.自定义动作
+
+**`@action`装饰器**
+
+扩展非标准操作，例如添加`激活用户`：
+
+```python
+from rest_framework.decorators import action
+class UserViewSet(ModelViewSet):
+    @action(detail=True, methods=['post'])
+    def activate(self, request, pk=None):
+        # 自定义逻辑
+```
+
+- 生成URL：`/users/{id}/activate/`。
+- 参数：`detail`（是否针对单个对象）、`methods`（支持的HTTP方法）。
+
+#### 6.混入类
+
+- 提供可组合的动作方法，灵活构建视图集：
+  - `CreateModelMixin` → 实现`create`。
+  - `ListModelMixin` → 实现`list`。
+  - 其他如`RetrieveModelMixin`、`UpdateModelMixin`等。
+
+#### 7.配置选项
+
+- **权限控制**：通过`permission_classes`设置访问策略。
+- **分页与过滤**：使用`pagination_class`、`filter_backends`等属性集成分页或过滤（如DjangoFilterBackend）。
+- **自定义查询集/序列化器**：重写`get_queryset()`或`get_serializer_class()`方法。

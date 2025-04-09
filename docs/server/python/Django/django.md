@@ -1,5 +1,5 @@
 ---
-     outline: deep
+outline: deep
 ---
 
 ## 项目结构
@@ -349,13 +349,11 @@ def upload(request):
 - **前后端分离/移动端**：Token（无状态、跨域友好）。
 - **高安全性场景**：结合 HTTPS、HttpOnly Cookie 和短期 Token。
 
-
-
 ## 类视图
 
 Django 提供了两种主要的视图编写方式：`函数视图和类视图`。类视图作为函数视图的替代方案，通过将视图逻辑组织为 Python 对象的方式来实现。虽然函数视图对于简单的场景非常直观，但类视图在处理更复杂的逻辑、代码重用以及利用面向对象的技术（如继承和混入）方面展现出显著的优势
 
- 类视图和函数视图的核心目标是一致的：接收一个 `HttpRequest` 对象作为输入，并返回一个 `HttpResponse` 对象或引发一个异常 。然而，函数视图通常将所有 HTTP 方法的处理逻辑都放在一个函数中，可能需要使用条件语句来区分不同的请求类型。相比之下，类视图则将针对不同 HTTP 方法（如 GET、POST）的处理逻辑分别封装在类的方法中，例如 `get()` 方法处理 GET 请求，`post()` 方法处理 POST 请求 。这种组织方式使得代码结构更加清晰，易于阅读和维护。
+类视图和函数视图的核心目标是一致的：接收一个 `HttpRequest` 对象作为输入，并返回一个 `HttpResponse` 对象或引发一个异常 。然而，函数视图通常将所有 HTTP 方法的处理逻辑都放在一个函数中，可能需要使用条件语句来区分不同的请求类型。相比之下，类视图则将针对不同 HTTP 方法（如 GET、POST）的处理逻辑分别封装在类的方法中，例如 `get()` 方法处理 GET 请求，`post()` 方法处理 POST 请求 。这种组织方式使得代码结构更加清晰，易于阅读和维护。
 
 Django 引入类视图的主要目的是为了解决函数视图在大型项目中可能出现的代码冗余问题，并提供更好的代码复用机制，尤其是在实现常见的 Web 开发任务（如创建、读取、更新、删除，即 CRUD 操作）时 。虽然对于初学者来说，函数视图可能更容易理解，但随着应用程序复杂性的增加，类视图所提供的结构化和可扩展性使其成为更强大和可维护的解决方案 。
 
@@ -520,16 +518,16 @@ Django 的类视图提供了一种强大且灵活的方式来构建 Web 应用�
 | 适用简单视图   | 非常适合                                             | 也可以，但可能显得过于复杂                   |
 | 适用复杂视图   | 可能导致代码臃肿和难以维护                           | 更易于组织和维护                             |
 
-| **类视图**     | **主要用途**               | **关键属性/方法**                                            |
-| -------------- | -------------------------- | ------------------------------------------------------------ |
-| `View`         | 所有类视图的基础           | `dispatch()`                                                 |
-| `TemplateView` | 渲染指定的模板             | `template_name`, `get_context_data()`                        |
-| `ListView`     | 显示模型对象列表           | `model`, `queryset`, `template_name`, `get_queryset()`       |
-| `DetailView`   | 显示单个模型对象的详细信息 | `model`, `template_name`, `get_object()`                     |
+| **类视图**     | **主要用途**               | **关键属性/方法**                                                                        |
+| -------------- | -------------------------- | ---------------------------------------------------------------------------------------- |
+| `View`         | 所有类视图的基础           | `dispatch()`                                                                             |
+| `TemplateView` | 渲染指定的模板             | `template_name`, `get_context_data()`                                                    |
+| `ListView`     | 显示模型对象列表           | `model`, `queryset`, `template_name`, `get_queryset()`                                   |
+| `DetailView`   | 显示单个模型对象的详细信息 | `model`, `template_name`, `get_object()`                                                 |
 | `FormView`     | 显示和处理表单             | `form_class`, `template_name`, `success_url`, `post()`, `form_valid()`, `form_invalid()` |
-| `CreateView`   | 创建新的模型对象           | `model`, `fields`, `form_class`, `template_name`, `success_url` |
-| `UpdateView`   | 更新已存在的模型对象       | `model`, `fields`, `form_class`, `template_name`, `success_url`, `get_object()` |
-| `DeleteView`   | 删除模型对象               | `model`, `template_name`, `success_url`, `get_object()`      |
+| `CreateView`   | 创建新的模型对象           | `model`, `fields`, `form_class`, `template_name`, `success_url`                          |
+| `UpdateView`   | 更新已存在的模型对象       | `model`, `fields`, `form_class`, `template_name`, `success_url`, `get_object()`          |
+| `DeleteView`   | 删除模型对象               | `model`, `template_name`, `success_url`, `get_object()`                                  |
 
 | **Mixin**                 | **主要用途**                                           |
 | ------------------------- | ------------------------------------------------------ |
@@ -605,11 +603,11 @@ Django 中间件的执行顺序至关重要，它直接影响着请求和响应�
 
 创建自定义中间件有两种主要方法：基于类和基于函数 。
 
-**基于类的中间件**: 
+**基于类的中间件**:
 
 通过定义一个 Python 类来实现，该类通常包含一个 `__init__` 方法（用于一次性初始化）和一个 `__call__` 方法（用于处理每个请求/响应）。`__init__` 方法接收一个 `get_response` 可调用对象作为参数，该对象是链中的下一个中间件或视图函数本身 。`__call__` 方法接收一个 `request` 对象作为参数，并且应该返回一个 `response` 对象。它通常会调用 `self.get_response(request)` 将请求传递给下一个中间件或视图 。此外，基于类的中间件还可以实现特定的钩子方法，例如 `process_request`、`process_response`、`process_view`、`process_exception` 和 `process_template_response` 。
 
-**基于函数的中间件**: 
+**基于函数的中间件**:
 
 通过定义一个函数来实现，该函数接收一个 `get_response` 可调用对象，并返回另一个接收 `request` 并返回 `response` 的函数 。
 
@@ -635,15 +633,15 @@ Django 中间件提供了多个钩子方法，允许开发者在请求-响应周
 - **`process_response(self, request, response)`**: 这个方法在视图函数执行完毕并且响应即将返回给浏览器之前，对所有响应都会被调用 。它接收 `HttpRequest` 对象和 `HttpResponse` 对象作为输入，并且必须返回一个 `HttpResponse` 或 `StreamingHttpResponse` 对象 。即使同一个中间件中的 `process_request` 或 `process_view` 方法返回了一个响应，`process_response` 方法也总是会被调用 。这个方法按照逆序执行 。
 - **`process_exception(self, request, exception)`**: 当视图函数引发异常时，这个方法会被调用 。它接收 `HttpRequest` 对象和 `Exception` 对象作为输入，并且应该返回 `None` 或一个 `HttpResponse` 对象 。如果它返回一个 `HttpResponse`，该响应将被返回给浏览器。否则，将使用默认的异常处理机制 。这个方法也按照逆序执行 。
 
-| **方法名**                  | **调用时机**                                | **作用**                                                     | **返回值**                                     |
-| --------------------------- | ------------------------------------------- | ------------------------------------------------------------ | ---------------------------------------------- |
-| `__init__`                  | 服务器启动时，仅一次                        | 中间件的一次性初始化                                         | `None`                                         |
-| `__call__`                  | 每个请求                                    | 处理请求和响应，包含中间件的核心逻辑                         | `HttpResponse` 对象                            |
-| `process_request`           | 在视图选择之前                              | 在 Django 确定执行哪个视图之前调用，可以修改请求或短路处理   | `None` 或 `HttpResponse` 对象                  |
+| **方法名**                  | **调用时机**                                | **作用**                                                               | **返回值**                                     |
+| --------------------------- | ------------------------------------------- | ---------------------------------------------------------------------- | ---------------------------------------------- |
+| `__init__`                  | 服务器启动时，仅一次                        | 中间件的一次性初始化                                                   | `None`                                         |
+| `__call__`                  | 每个请求                                    | 处理请求和响应，包含中间件的核心逻辑                                   | `HttpResponse` 对象                            |
+| `process_request`           | 在视图选择之前                              | 在 Django 确定执行哪个视图之前调用，可以修改请求或短路处理             | `None` 或 `HttpResponse` 对象                  |
 | `process_view`              | 在视图选择之后，视图执行之前                | 在 Django 识别视图之后但在执行之前调用，可以根据视图修改请求或短路处理 | `None` 或 `HttpResponse` 对象                  |
-| `process_template_response` | 视图执行之后，如果响应是 `TemplateResponse` | 如果视图返回 `TemplateResponse` 则调用，允许修改模板或上下文 | 实现了 `render` 方法的响应对象                 |
-| `process_response`          | 视图执行之后，响应返回浏览器之前            | 对所有响应调用，允许修改响应                                 | `HttpResponse` 或 `StreamingHttpResponse` 对象 |
-| `process_exception`         | 视图引发异常时                              | 当视图引发异常时调用，允许自定义异常处理                     | `None` 或 `HttpResponse` 对象                  |
+| `process_template_response` | 视图执行之后，如果响应是 `TemplateResponse` | 如果视图返回 `TemplateResponse` 则调用，允许修改模板或上下文           | 实现了 `render` 方法的响应对象                 |
+| `process_response`          | 视图执行之后，响应返回浏览器之前            | 对所有响应调用，允许修改响应                                           | `HttpResponse` 或 `StreamingHttpResponse` 对象 |
+| `process_exception`         | 视图引发异常时                              | 当视图引发异常时调用，允许自定义异常处理                               | `None` 或 `HttpResponse` 对象                  |
 
 ### **7. Django 中间件的实际应用场景**
 
@@ -730,13 +728,13 @@ Django 中间件提供了一个强大而灵活的机制，用于全局拦截和�
            'PORT': '3306',
            'NAME': 'school',
            'USER': 'root',
-           'PASSWORD': 'cjy19980128',
+           'PASSWORD': '',
            #数据库连接池配置，主要是为了节省连接数据库的开销，临时存储数据库连接对象
            'POOL_OPTIONS': {
                'POOL_SIZE': 10,
                'MAX_OVERFLOW': 30,
            }
-   
+
        }
    }
    ```
@@ -781,7 +779,7 @@ Django 中间件提供了一个强大而灵活的机制，用于全局拦截和�
 
   [https://docs.djangoproject.com/zh-hans/4.2/ref/models/fields/#model-field-types]:
 
-#### 迁移数据库   
+#### 迁移数据库
 
 ```bash
  python manage.py makemigrations
@@ -1010,21 +1008,19 @@ ORM 是面向对象与关系数据库之间的“翻译器”，简化了数据�
                        age=data.get('age', 0),  # 默认值处理
                        sex=data.get('sex', True),
                        phone=data.get('phone'),
-                       classmate=data.get('classmate', ''), 
+                       classmate=data.get('classmate', ''),
                        description=data.get('description', None),
                        status=data.get('status', 0)
                )
                student.save()
-   
+
                # 返回创建的对象数据
                return JsonResponse({
                   'msg':"成功",
                    'code':200
                }, status=201)
-   
-   ```
 
-   
+   ```
 
 2. **create**
 
@@ -1104,7 +1100,7 @@ ORM 是面向对象与关系数据库之间的“翻译器”，简化了数据�
            # except models.Student.DoesNotExist:
            #     return JsonResponse({'msg':'失败','code':500,'data':None})
            # return JsonResponse({'msg':'成功','code':200,'data':{'name': student.name,'age': student.age})
-   
+
            #如果获取到符合条件的数据有多条也会报错
            try:
                student = models.Student.objects.get(name=name)
@@ -1115,7 +1111,7 @@ ORM 是面向对象与关系数据库之间的“翻译器”，简化了数据�
 
 2. **first**
 
-   获取查询结果的第一条记录，如果查询数据不存在，则返回None
+   获取查询结果的第一条记录，如果查询数据不存在，则返回 None
 
    ```python
     student = models.Student.objects.first()
@@ -1141,7 +1137,7 @@ ORM 是面向对象与关系数据库之间的“翻译器”，简化了数据�
               "updated_time": student.updated_time,
           })
       print(student_list)
-   
+
       student = object_list[0]
      #获取模型对象的字段属性
       print(student.id,student.pk) #获取主键
@@ -1149,18 +1145,18 @@ ORM 是面向对象与关系数据库之间的“翻译器”，简化了数据�
       print(student.created_time.strftime("%Y-%m-%d %H:%M:%S")) #获取日期格式化内容
      # 当字段声明中，使用 choices 可选值选项以后，在模型对象里边就可以通过get_<字段名>_display() 来获取当前选项的文本提示
        print(student.status,student.get_status_display())
-   
+
      """
      第二种
      """
      # student_list = models.Student.objects.all().values()
      # return JsonResponse(list(student_list), safe=False)
-   
+
    ```
 
 4. **count**
 
-   统计返回查询的结果集的数量，结果是一个数字。 
+   统计返回查询的结果集的数量，结果是一个数字。
 
    ```python
     num = models.Student.objects.filter(name='p1').count()
@@ -1225,8 +1221,6 @@ ORM 是面向对象与关系数据库之间的“翻译器”，简化了数据�
                student.delete()
    ```
 
-   
-
 ### 数据库进阶操作
 
 #### 过滤条件
@@ -1241,7 +1235,7 @@ ORM 是面向对象与关系数据库之间的“翻译器”，简化了数据�
   #单表过滤
   #此处的运算符是django的ORM提供的英文单词运算符，与python的运算符不一样，例如ORM 的大于是gt，大于等于是gte
   模型类.objects.filter(属性名称__=值)
-  
+
   #多表过滤
   模型类.objects.filter(外键属性名称__外键模型的属性名称__运算符=值)
   ```
@@ -1250,7 +1244,7 @@ ORM 是面向对象与关系数据库之间的“翻译器”，简化了数据�
 
   1. 相等 `exact` 等同于 `=`
 
-  2. 模糊查询 
+  2. 模糊查询
 
      `contains`：是否包含
 
@@ -1270,7 +1264,7 @@ ORM 是面向对象与关系数据库之间的“翻译器”，简化了数据�
                      "status": obj.status,
                      "phone": obj.phone,
                  })
-     
+
              print(stu_list)
              return JsonResponse({'code': 200, 'mes': '成功','data':stu_list}, status=200)
      ```
@@ -1300,7 +1294,7 @@ ORM 是面向对象与关系数据库之间的“翻译器”，简化了数据�
      `in`:是否包含在范围内
 
      ```python
-       obj_list = models.Student.objects.filter(classmate__in=['c101','c102','c103'])     
+       obj_list = models.Student.objects.filter(classmate__in=['c101','c102','c103'])
      ```
 
   5. 取值范围
@@ -1321,24 +1315,24 @@ ORM 是面向对象与关系数据库之间的“翻译器”，简化了数据�
 
   7. 日期查询
 
-     1. django的ORM中提供了许多方法用于进行日期的查询过滤，例如：`year` `month` `day` `week_day` `hour` `minute` `second` 都可以对日期时间类型的属性进行运算。
-     2. 要进行日期时间的过滤查询，必须保证python 代码中使用的时间时区与mysql 数据库中的时间时区是对应的。
+     1. django 的 ORM 中提供了许多方法用于进行日期的查询过滤，例如：`year` `month` `day` `week_day` `hour` `minute` `second` 都可以对日期时间类型的属性进行运算。
+     2. 要进行日期时间的过滤查询，必须保证 python 代码中使用的时间时区与 mysql 数据库中的时间时区是对应的。
      3. 时间范围查询，先把字符转转换为时间戳。
 
-  8. F对象
+  8. F 对象
 
      主要用于在 SQL 语句中针对字段之间的值进行比较的查询。
 
      ```python
       def post(self, request):
              student = models.Student.objects.filter(created_time=F('updated_time')).values("name","created_time","updated_time")
-     
+
              return JsonResponse({'code': 200,'data':  list(student)}, status=200)
      ```
 
-  9. Q对象
+  9. Q 对象
 
-     多个过滤器逐个调用表示逻辑与关系，同sql 语句中where 部分的and 关键字。
+     多个过滤器逐个调用表示逻辑与关系，同 sql 语句中 where 部分的 and 关键字。
 
      例如：
 
@@ -1350,7 +1344,7 @@ ORM 是面向对象与关系数据库之间的“翻译器”，简化了数据�
              return JsonResponse({'code': 200,'data':list(obj_list)}, status=200)
      ```
 
-     如果需要实现逻辑或or 的查询，需要使用Q()对象结合｜运算符。
+     如果需要实现逻辑或 or 的查询，需要使用 Q()对象结合｜运算符。
 
      ```python
        obj_list = models.Student.objects.filter(Q(name='p1')|Q(name='p2')).values()
@@ -1358,7 +1352,7 @@ ORM 是面向对象与关系数据库之间的“翻译器”，简化了数据�
 
 #### 结果排序
 
-`order_by`：升序（ASC）数值从小到大；降序（DESC）数值从大到小。 
+`order_by`：升序（ASC）数值从小到大；降序（DESC）数值从大到小。
 
 ```python
  obj_list = models.Student.objects.filter(Q(classmate='c101') | Q(classmate='c102') | Q(classmate='c103')).order_by('age').values()
@@ -1371,27 +1365,27 @@ obj_list = models.Student.objects.filter(Q(classmate='c101') | Q(classmate='c102
 
 多字段排序：
 
-- 多字段升序：order_by('字段名','字段名')  优先级从左往右
+- 多字段升序：order_by('字段名','字段名') 优先级从左往右
 - 多字段降序：order_by('-classmate','-age')
 
 #### 限制查询
 
-ORM中针对查询结果的数量限制，提供了一个查询集对象[QuerySet]。这个QuerySet是ORM中针对查询结果进行临时保存数据的一个容器对象，可以通过了解**QuerySet**达到**查询优化**的目的，也或者**限制查询结果数量**的作用。
+ORM 中针对查询结果的数量限制，提供了一个查询集对象[QuerySet]。这个 QuerySet 是 ORM 中针对查询结果进行临时保存数据的一个容器对象，可以通过了解**QuerySet**达到**查询优化**的目的，也或者**限制查询结果数量**的作用。
 
-##### 查询集QuerySet
+##### 查询集 QuerySet
 
 查询集，也称查询结果集、`QuerySet`，表示从数据库中获取的对象集合。
 
-当调用如下ORM提供的过滤方法时，Django会返回查询集（不是简单的列表）。
+当调用如下 ORM 提供的过滤方法时，Django 会返回查询集（不是简单的列表）。
 
 - all()：返回所有数据。
-- filter()：返回满足条件的数据。filter会默认调用all方法。
-- exclude()：返回满足条件之外的数据集。`exclude`会默认调用all 方法。
-- order_by()：对结果进行排序。order_by 会默认调用all 方法。
+- filter()：返回满足条件的数据。filter 会默认调用 all 方法。
+- exclude()：返回满足条件之外的数据集。`exclude`会默认调用 all 方法。
+- order_by()：对结果进行排序。order_by 会默认调用 all 方法。
 
 **判断某一个查询集中是否有数据：**
 
-- `exists()`: 判断查询集中是否有数据，如果有则返回True，没有则返回False。
+- `exists()`: 判断查询集中是否有数据，如果有则返回 True，没有则返回 False。
 - `values()`: 把结果集中的模型对象转换成`字典`，并可以设置转换的字段列表，达到减少内存损耗，提高性能。
 - `values_list()`: 把结果集中的模型对象转换成**列表**，并可以设置转换的字段列表（元祖），达到减少内存损耗，提高性能。
 
@@ -1454,9 +1448,9 @@ print([book.price for book in books])  # 无数据库查询
 
 ##### 限制结果数量
 
-django中还可以对查询集QuerySet进行**取下标*或切片操作，等同于SQL中的limit和offset字句**。
+django 中还可以对查询集 QuerySet 进行**取下标\*或切片操作，等同于 SQL 中的 limit 和 offset 字句**。
 
-注意：QuerySet不是真正的列表，所以它不支持负数索引。
+注意：QuerySet 不是真正的列表，所以它不支持负数索引。
 
 **对查询集进行切片后返回一个新的查询集，但还是不会立即执行查询。**
 
@@ -1466,9 +1460,9 @@ django中还可以对查询集QuerySet进行**取下标*或切片操作，等同
 
 在 Django 中，**聚合函数（Aggregation）** 用于对数据库中的数据进行统计和计算（如求和、平均值、最大值、最小值等）。Django 的 ORM 通过 `django.db.models` 模块提供了丰富的聚合函数，结合 `aggregate()` 和 `annotate()` 方法，可以高效地完成复杂的数据分析操作。
 
-------
+---
 
-##### **核心聚合函数**  
+##### **核心聚合函数**
 
 Django 内置了以下常用聚合函数，可直接从 `django.db.models` 导入：
 
@@ -1494,7 +1488,7 @@ Django 内置了以下常用聚合函数，可直接从 `django.db.models` 导�
 
   ```python
   from django.db.models import Sum, Avg
-  
+
   result = Model.objects.aggregate(
       别名1=聚合函数(字段名),
       别名2=聚合函数(字段名),
@@ -1513,7 +1507,7 @@ Book.objects.aggregate(
 )
 ```
 
-------
+---
 
 #### **2. `annotate()`：分组聚合**
 
@@ -1542,9 +1536,9 @@ Author.objects.values('name').annotate(
 
 #### 原生查询
 
-执行原生SQL语句，在django中我们可以自己引入pymysql执行SQL，也可以调用ORM提供的raw方法来执行SQL语句。
+执行原生 SQL 语句，在 django 中我们可以自己引入 pymysql 执行 SQL，也可以调用 ORM 提供的 raw 方法来执行 SQL 语句。
 
-如果使用raw方法执行SQL语句，则返回结果是QuerySet，这个返回结果在操作字段时，会有额外的性能损耗。
+如果使用 raw 方法执行 SQL 语句，则返回结果是 QuerySet，这个返回结果在操作字段时，会有额外的性能损耗。
 
 #### 多库共存
 
@@ -1573,7 +1567,7 @@ DATABASES = {
 }
 ```
 
-------
+---
 
 ##### 2. 手动选择数据库
 
@@ -1587,7 +1581,7 @@ User.objects.using('secondary').create(name='Alice')
 users = User.objects.using('secondary').all()
 ```
 
-------
+---
 
 ##### 3. 数据库路由（自动选择数据库）
 
@@ -1626,7 +1620,7 @@ class SecondaryRouter:
 DATABASE_ROUTERS = ['path.to.routers.SecondaryRouter']
 ```
 
-------
+---
 
 ##### 4. 迁移多数据库
 
@@ -1640,7 +1634,7 @@ python manage.py migrate
 python manage.py migrate --database=secondary
 ```
 
-------
+---
 
 ##### 5. 事务处理
 
@@ -1658,7 +1652,7 @@ with transaction.atomic(using='secondary'):
     LogEntry.objects.create(action='update')
 ```
 
-------
+---
 
 ##### 6. 动态切换数据库
 
@@ -1683,7 +1677,7 @@ def my_view(request):
     User.objects.using(request.db).filter(...)
 ```
 
-------
+---
 
 ##### 7. 自动生成模型
 
@@ -1693,7 +1687,7 @@ def my_view(request):
 python manage.py inspectdb --database=secondary > secondary_models.py
 ```
 
-------
+---
 
 ##### 注意事项
 
@@ -1703,7 +1697,7 @@ python manage.py inspectdb --database=secondary > secondary_models.py
 
 ### 关联模型
 
-关联模型实际上就是ORM提供给开发者使用用于操作多表数据的功能，因为多个表之间存在的关联关系，往往都是基于建库建表之初的实体关系分析（ER图）和范式理论梳理出来的。
+关联模型实际上就是 ORM 提供给开发者使用用于操作多表数据的功能，因为多个表之间存在的关联关系，往往都是基于建库建表之初的实体关系分析（ER 图）和范式理论梳理出来的。
 
 构建数据库和构建数据表：实体、属性、关系。
 
@@ -1713,13 +1707,13 @@ python manage.py inspectdb --database=secondary > secondary_models.py
 
 #### 一对一
 
-| 选项                     | 作用描述                                          | 应用场景示例                                                 | 注意事项                                                     |
-| :----------------------- | :------------------------------------------------ | :----------------------------------------------------------- | ------------------------------------------------------------ |
-| **`models.CASCADE`**     | 删除父对象时，**级联删除**所有关联的子对象。      | 用户（父）删除后，其所有文章（子）一并删除。                 | 谨慎使用，可能导致意外数据丢失。                             |
-| **`models.DO_NOTHING`**  | 不干预数据库操作，**完全依赖数据库约束**处理。    | 需要手动处理外键关系，或在数据库层通过触发器控制。           | 需确保数据库有相应约束（如外键级联），否则可能引发 `IntegrityError`。 |
-|                          |                                                   |                                                              |                                                              |
-| **`models.SET_NULL`**    | 父对象删除时，将子对象的外键字段设为 **`NULL`**。 | 删除分类（父）时，保留文章（子），但将其分类字段设为 `NULL`。 | 外键字段必须设置 `null=True`，否则报错。                     |
-| **`models.SET_DEFAULT`** | 父对象删除时，将子对象的外键字段设为 **默认值**。 | 删除用户（父）时，将子对象（如订单）的 `user` 字段设为预设的“匿名用户”。 | 必须为字段定义有效的 `default` 值。                          |
+| 选项                     | 作用描述                                          | 应用场景示例                                                             | 注意事项                                                              |
+| :----------------------- | :------------------------------------------------ | :----------------------------------------------------------------------- | --------------------------------------------------------------------- |
+| **`models.CASCADE`**     | 删除父对象时，**级联删除**所有关联的子对象。      | 用户（父）删除后，其所有文章（子）一并删除。                             | 谨慎使用，可能导致意外数据丢失。                                      |
+| **`models.DO_NOTHING`**  | 不干预数据库操作，**完全依赖数据库约束**处理。    | 需要手动处理外键关系，或在数据库层通过触发器控制。                       | 需确保数据库有相应约束（如外键级联），否则可能引发 `IntegrityError`。 |
+|                          |                                                   |                                                                          |                                                                       |
+| **`models.SET_NULL`**    | 父对象删除时，将子对象的外键字段设为 **`NULL`**。 | 删除分类（父）时，保留文章（子），但将其分类字段设为 `NULL`。            | 外键字段必须设置 `null=True`，否则报错。                              |
+| **`models.SET_DEFAULT`** | 父对象删除时，将子对象的外键字段设为 **默认值**。 | 删除用户（父）时，将子对象（如订单）的 `user` 字段设为预设的“匿名用户”。 | 必须为字段定义有效的 `default` 值。                                   |
 
 ```python
 from django.db import models
@@ -1955,7 +1949,7 @@ class Course(models.Model):
 
 #### 自关联
 
-自关联就是1张数据表中，主键和外键都在一张表上，一般会在多级部分，多级菜单，多级权限。省市区行政区划，粉丝关注，好友关系，这些业务中使用到。
+自关联就是 1 张数据表中，主键和外键都在一张表上，一般会在多级部分，多级菜单，多级权限。省市区行政区划，粉丝关注，好友关系，这些业务中使用到。
 
 ```python
 class Area(models.Model):
@@ -1983,7 +1977,7 @@ class User(models.Model):
 
 #### 虚拟外键
 
-在前面所有的关联查询操作中，我们使用的外联手段都是依靠数据库本身维护的物理外键，但是这在一定程度上会增加数据库的运行成本，消耗数据库性能，因为数据量大了之后DB在高并发情况会产生大量锁。所以在外界就存在了相当一部分公司(50%左右)为了追求性能，舍弃了物理外键(就是在数据库建表操作中不再创建外键索引)，改用ORM提供的虚拟外键(逻辑外键)来进行关联查询操作。当然，如果没有数据库本身维护的物理外键，肯定也会存在对数据库一致性的风险。
+在前面所有的关联查询操作中，我们使用的外联手段都是依靠数据库本身维护的物理外键，但是这在一定程度上会增加数据库的运行成本，消耗数据库性能，因为数据量大了之后 DB 在高并发情况会产生大量锁。所以在外界就存在了相当一部分公司(50%左右)为了追求性能，舍弃了物理外键(就是在数据库建表操作中不再创建外键索引)，改用 ORM 提供的虚拟外键(逻辑外键)来进行关联查询操作。当然，如果没有数据库本身维护的物理外键，肯定也会存在对数据库一致性的风险。
 
 ```
 db_constraint=False  表示当前外键使用虚拟外键
