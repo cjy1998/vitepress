@@ -142,6 +142,7 @@ export default defineConfig({
           items: [
             { text: "django基础知识", link: "/server/python/Django/django.md" },
             { text: "DRF", link: "/server/python/Django/DRF.md" },
+            { text: "DRF2", link: "/server/python/Django/DRF2.md" },
           ],
         },
       ],
