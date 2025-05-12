@@ -306,12 +306,14 @@ search_fields = ['=name']
 	   is_permission = request.user.role == 3
 	   if not is_permission:
 		   return False
-	   return True    def has_object_permission(self, request, view, obj):
+	   return True    
+	   def has_object_permission(self, request, view, obj):
 		return True
 ```
 
 - 继承 BasePermission: 自定义权限类需继承自 BasePermission。
 - has_permission 方法: 必须实现 has_permission 方法，用于判定当前用户是否具有访问权限。返回 True 表示有权限，返回 False 表示无权限。
+- ` has_object_permission`方法，当视图中调用`self.get_object`时就会被调用（删除、更新、查看某个对象时都会被调用），一般用于检查某个对象是否具有权限进行操作。
 - 关联视图: 在视图中通过 permission_classes 属性将权限类与视图关联，使得视图在访问时进行权限判定。
 
 ```python
@@ -772,6 +774,131 @@ DRF 将 `GenericAPIView` 和 Mixin 组合成以下常用类：
   - 生成 URL：`/users/{id}/activate/`。
   - 参数：`detail`（是否针对单个对象）、`methods`（支持的 HTTP 方法）。
 
+
+### 8.7 视图的选择
+- 接口与数据库操作无关，直接继承`APIView`
+- 接口需要对数据库进行操作，一般`ModelViewSet`或`CreateModelMixin`等组合
+	- 利用钩子自定义功能
+	- 重写某个方法，实现更加完善的功能
+- 根据公司业务自定义
+## 9. 条件搜索
+#### 9.1 自定义 Filter
+```python
+	from django.shortcuts import render  
+	from rest_framework import viewsets, serializers  
+	from rest_framework.filters import BaseFilterBackend  
+	  
+	from filtertest.models import FilterUser  
+	  
+	# Create your views here.  
+	  
+	class FilterUserSerializer(serializers.ModelSerializer):  
+	    class Meta:  
+	        model = FilterUser  
+	        fields = '__all__'  
+	class Filter1(BaseFilterBackend):  
+	    def filter_queryset(self, request, queryset, view):  
+	        age = request.query_params.get('age')  
+	        if age:  
+	            return queryset.filter(age=age)  
+	        return queryset  
+	class Filter2(BaseFilterBackend):  
+	    def filter_queryset(self, request, queryset, view):  
+	        name = request.query_params.get('name')  
+	        if name:  
+	            return queryset.filter(name=name)  
+	        return queryset  
+	class FilterViewSet(viewsets.ModelViewSet):  
+	    authentication_classes = []  
+	    filter_backends = [Filter1, Filter2]  
+	    queryset = FilterUser.objects.all()  
+	    serializer_class = FilterUserSerializer
+```
+#### 9.2 第三方 Filter
+1. 安装
+	 `pip install django-filter`
+2. 配置
+	```
+		 INSTALLED_APPS = [  
+		    'django_filters',  
+		]
+	```
+3. 使用
+	- 简单使用
+		``` python
+			class FilterViewSet(viewsets.ModelViewSet):  
+			    authentication_classes = []  
+			    filter_backends = [DjangoFilterBackend]  
+			    filterset_fields = ['age', 'name','id']  
+			    queryset = FilterUser.objects.all()  
+			    serializer_class = FilterUserSerializer	
+		```
+	- 通过类实现复杂条件检索
+	 ``` python
+		class Filter3(FilterSet):  
+			min_id = filters.NumberFilter(field_name='age', lookup_expr='gte')  
+			max_age = filters.NumberFilter(field_name='age', lookup_expr='lte')  
+			class Meta:  
+				model = FilterUser  
+				fields = ['max_age', 'min_id','name']  
+		class FilterViewSet(viewsets.ModelViewSet):  
+			authentication_classes = []  
+			filter_backends = [DjangoFilterBackend]  
+			# filterset_fields = ['age', 'name','id']  
+			filterset_class = Filter3  
+			queryset = FilterUser.objects.all()  
+			serializer_class = FilterUserSerializer
+	 ```
+
+	``` python
+		 class Filter4(FilterSet):  
+		    # >=  
+		    min_id = filters.NumberFilter(field_name='id', lookup_expr='gte')  
+		    # !=  
+		    name = filters.CharFilter(field_name='name', lookup_expr='exact',exclude=True)  
+		    # like  
+		    deptname = filters.CharFilter(field_name='deptname', lookup_expr='contains')  
+		    # token = true --> token IS NULL  
+		    # token = false --> token IS NOT NUL    token = filters.BooleanFilter(field_name='token', lookup_expr='isnull')  
+		    # email like 'xxx%'  
+		    email = filters.CharFilter(field_name='email', lookup_expr='startswith')  
+		    # email like '%xxx'  
+		    email2 = filters.CharFilter(field_name='email', lookup_expr='endswith')  
+		    # level=1&level=2 --> level = 1 OR level = 2 必须是存在的数据否则报错  
+		    level = filters.MultipleChoiceFilter(  
+		        field_name='level',  
+		        choices=FilterUser.level_choices,  
+		        lookup_expr='exact',  
+		    )  
+		    # age=18,21 --> age in [18,21]  
+		    age = filters.BaseInFilter(field_name='age', lookup_expr='in')  
+		    # range_id_max=10&range_id_min=5 --> id between 5 and 10  
+		    range_id = filters.NumberFilter(field_name='id', lookup_expr='range')  
+		    """  
+		     ordering=id --> id asc     ordering=-id --> id desc     ordering=age --> age asc     ordering=-age --> age desc     ordering=id,age --> id asc, age asc     ordering=-id,age --> id desc, age asc     ordering=id,-age --> id asc, age desc     ordering=-id,-age --> id desc, age desc    """    ordering = filters.OrderingFilter(  
+		        fields=['id','age']  
+		    )  
+			# distinct 去重
+		    size = filters.CharFilter(method='filter_size',distinct=True,required=False)  
+		    def filter_size(self, queryset, name, value):  
+		        int_value = int(value)  
+		        return queryset[0:int_value]  
+		    class Meta:  
+		        model = FilterUser  
+		        fields = ['min_id','name','deptname','token','email','email2','level','age','range_id','ordering','size']
+	```
+4. 全局配置
+	``` python
+	REST_FRAMEWORK = {  
+	   'DEFAULT_FILTER_BACKENDS': ['django_filters.rest_framework.DjangoFilterBackend'],
+	}
+	```
+#### 9.3 内置 Filter
+``` python
+	filter_backends = [SearchFilter,OrderingFilter]  
+	search_fields = ['name','age']  
+	ordering_fields = ['age','name']
+```
 ## 自关联查询
 
 ```python
