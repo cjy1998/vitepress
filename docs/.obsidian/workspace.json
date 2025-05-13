@@ -6,6 +6,7 @@
       {
         "id": "94699ea936a523cd",
         "type": "tabs",
+        "dimension": 69.04024767801857,
         "children": [
           {
             "id": "047aeb77deb978b6",
@@ -19,6 +20,28 @@
               },
               "icon": "lucide-file",
               "title": "DRF2"
+            }
+          }
+        ]
+      },
+      {
+        "id": "c77d9163b7a909ab",
+        "type": "tabs",
+        "dimension": 30.959752321981426,
+        "children": [
+          {
+            "id": "eca38c94cf4a7b0f",
+            "type": "leaf",
+            "state": {
+              "type": "outline",
+              "state": {
+                "file": "server/python/Django/DRF2.md",
+                "followCursor": false,
+                "showSearch": false,
+                "searchQuery": ""
+              },
+              "icon": "lucide-list",
+              "title": "DRF2 的大纲"
             }
           }
         ]
@@ -78,8 +101,7 @@
       }
     ],
     "direction": "horizontal",
-    "width": 300,
-    "collapsed": true
+    "width": 200
   },
   "right": {
     "id": "d179d6b1125fe4a6",
@@ -152,7 +174,8 @@
               "title": "DRF2 的大纲"
             }
           }
-        ]
+        ],
+        "currentTab": 2
       }
     ],
     "direction": "horizontal",
@@ -170,5 +193,8 @@
     }
   },
   "active": "047aeb77deb978b6",
-  "lastOpenFiles": []
+  "lastOpenFiles": [
+    "server/python/Django/DRF.md",
+    "server/python/Django/DRF2.md"
+  ]
 }

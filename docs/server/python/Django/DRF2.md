@@ -606,6 +606,28 @@ REST_FRAMEWORK = {
 	        serializer.save()
 	        return Response({"code": 200, "data": serializer.data})
 ```
+### 自关联查询
+
+```python
+class GoodsCategorySerializer3(serializers.ModelSerializer):
+    class Meta:
+        model = GoodsCategory
+        fields = '__all__'
+
+class GoodsCategorySerializer2(serializers.ModelSerializer):
+	# sub_cat 该字段为 related_name="sub_cat"
+    sub_cat = GoodsCategorySerializer3(many=True)
+    class Meta:
+        model = GoodsCategory
+        fields = '__all__'
+
+class GoodsCategorySerializer(serializers.ModelSerializer):
+    sub_cat = GoodsCategorySerializer2(many=True)
+    class Meta:
+        model = GoodsCategory
+        fields = '__all__'
+```
+
 
 ## 8. 视图
 
@@ -899,26 +921,81 @@ DRF 将 `GenericAPIView` 和 Mixin 组合成以下常用类：
 	search_fields = ['name','age']  
 	ordering_fields = ['age','name']
 ```
-## 自关联查询
-
-```python
-class GoodsCategorySerializer3(serializers.ModelSerializer):
-    class Meta:
-        model = GoodsCategory
-        fields = '__all__'
-
-class GoodsCategorySerializer2(serializers.ModelSerializer):
-	# sub_cat 该字段为 related_name="sub_cat"
-    sub_cat = GoodsCategorySerializer3(many=True)
-    class Meta:
-        model = GoodsCategory
-        fields = '__all__'
-
-class GoodsCategorySerializer(serializers.ModelSerializer):
-    sub_cat = GoodsCategorySerializer2(many=True)
-    class Meta:
-        model = GoodsCategory
-        fields = '__all__'
+## 10.  分页
+### 10.1 APIView视图
+如果编写视图是直接继承 `APIView`，那么在使用分页时，就必须自己手动实例化和调用相关方法。
+``` python
+class MyPageNumberPagination(pagination.PageNumberPagination):  
+    page_size = 2  
+    page_size_query_param = 'page_size'  
+    page_query_param = 'page_number'  
+    max_page_size = 100  
+# Create your views here.  
+class UserInfView(APIView):  
+    authentication_classes = []  
+    def get(self, request):  
+       queryset = models.UserInfo.objects.all()  
+       # 分页  
+       page_obj = MyPageNumberPagination()  
+       page_queryset = page_obj.paginate_queryset(queryset, request, self)  
+       serializer = UserSerializer(page_queryset, many=True)  
+       print(serializer.data)  
+       return Response({"code":200,"data": serializer.data})
 ```
+### 10.2 GenericAPIView、ModelViewSet
+如果是使用`ListModelMixin`或`ModelViewSet`，则只需要配置相关类即可，内部会自动执行分页的方法。
+``` python
+class MyPageNumberPagination(pagination.PageNumberPagination):  
+    page_size = 2  
+    page_size_query_param = 'page_size'  
+    page_query_param = 'page_number'  
+    max_page_size = 100  
+    def get_paginated_response(self, data):  
+        return Response({  
+            'total': self.page.paginator.count,  
+            'page_number': self.page.number,  
+            'page_size': self.page_size,  
+            'results': data,  
+        })  
+class FilterViewSet(viewsets.ModelViewSet):  
+    authentication_classes = []  
+    pagination_class = MyPageNumberPagination  
+    serializer_class = FilterUserSerializer
+```
+### 10.3 全局配置
+``` python
+REST_FRAMEWORK = {    
+    'DEFAULT_PAGINATION_CLASS': 'utils.pagination.MyPageNumberPagination'  
+}
+```
+## 11. 路由
+`SimpleRouter` 和 `DefaultRouter` 示例
 
-[^1]:
+  ```python
+  # urls.py
+  from rest_framework import routers
+  from .views import BookViewSet, AuthorViewSet # 假设 AuthorViewSet 存在
+
+  router = routers.SimpleRouter()
+  router.register(r'books', BookViewSet, basename='book')
+  router.register(r'authors', AuthorViewSet, basename='author')
+
+  # urlpatterns = router.urls
+
+  router = routers.DefaultRouter()
+  router.register(r'books', BookViewSet, basename='book')
+  router.register(r'authors', AuthorViewSet, basename='author')
+
+  urlpatterns = router.urls
+  # urlpatterns = [其他路由]
+  # urlpatterns += router.urls
+  ```
+
+  `SimpleRouter` 为注册的 ViewSet 生成基本的 URL 模式（例如，`/books/`、`/books/{pk}/`）。`DefaultRouter` 扩展了 `SimpleRouter`，还生成一个根 API 端点，该端点显示所有可用 API 端点的列表 。`basename` 参数用于帮助生成唯一的 URL 名称。
+## 12. 解析器
+
+  DRF 使用解析器来理解请求正文的内容。常见的解析器包括用于处理 JSON 数据的 `JSONParser`、用于标准 HTML 表单数据的 `FormParser` 和用于处理文件上传的 `MultiPartParser` 。默认解析器可以在设置中全局配置，也可以使用 `parser_classes` 属性按视图配置。
+``` python
+# 可配置多个
+parser_classes = [JSONParser,FormParser]
+```
