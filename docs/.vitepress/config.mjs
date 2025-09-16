@@ -2,7 +2,8 @@ import { defineConfig } from "vitepress";
 
 // https://vitepress.dev/reference/site-config
 export default defineConfig({
-  base: "/vitepress/",
+  // githubpage中这样配置/vitepress/
+  base: "/",
   lang: "zh-CN",
   title: "知识便签",
   description: "日常知识积累",
