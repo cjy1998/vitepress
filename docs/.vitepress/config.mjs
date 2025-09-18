@@ -62,7 +62,10 @@ export default defineConfig({
           },
           // { text: 'Nuxt', link: '/nuxt' },
           // { text: 'Vite', link: '/vite' },
-          { text: "css", link: "/css/index" },
+          {
+            text: "css",
+            link: "/css/grid",
+          },
           { text: "软考", link: "/soft/index" },
         ],
       },
@@ -122,6 +125,15 @@ export default defineConfig({
             },
             { text: "webpack", link: "/construct/webpack/index" },
             { text: "npm", link: "/construct/npm/index" },
+          ],
+        },
+      ],
+      "/css/": [
+        {
+          text: "css",
+          items: [
+            { text: "Grid", link: "/css/grid" },
+            { text: "BEM", link: "/css/bem" },
           ],
         },
       ],
