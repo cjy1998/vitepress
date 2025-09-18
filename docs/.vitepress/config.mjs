@@ -16,52 +16,24 @@ export default defineConfig({
         items: [
           {
             text: "Vue",
-            items: [
-              // { text: 'Pinia', link: '/pinia' },
-              // { text: 'Vuex', link: '/vuex' },
-              // { text: 'Vue-Router', link: '/vue-router' },
-              // { text: 'VueUse', link: '/vueuse' },
-              { text: "Vue3", link: "/vue3/index" },
-            ],
+            link: "/vue3/index",
           },
           {
             text: "React",
-            items: [
-              // { text: 'Pinia', link: '/pinia' },
-              // { text: 'Vuex', link: '/vuex' },
-              // { text: 'Vue-Router', link: '/vue-router' },
-              // { text: 'VueUse', link: '/vueuse' },
-              { text: "React+ts", link: "/react/React/base" },
-
-              { text: "Taro", link: "/react/Taro/base" },
-              { text: "nextjs", link: "/react/nextjs/base" },
-            ],
+            link: "/react/React/base",
           },
           {
             text: "数据可视化",
-            items: [
-              // { text: 'Pinia', link: '/pinia' },
-              // { text: 'Vuex', link: '/vuex' },
-              // { text: 'Vue-Router', link: '/vue-router' },
-              // { text: 'VueUse', link: '/vueuse' },
-              { text: "Threejs", link: "/datav/Threejs/index.md" },
-            ],
+            link: "/datav/Threejs/index.md",
           },
           { text: "微信小程序", link: "/wechat/index.md" },
-          // { text: 'React', link: '/react' },
+
           { text: "TypeScript", link: "/typescript/index.md" },
-          // { text: 'Node', link: '/node' },
           {
             text: "项目构建",
-            items: [
-              { text: "Jenkins", link: "/construct/Jenkins/CICD" },
-              { text: "webpack", link: "/construct/webpack/index" },
-              { text: "npm", link: "/construct/npm/index" },
-              { text: "Docker", link: "/construct/dcoker/index" },
-            ],
+            link: "/construct/docker/index",
           },
-          // { text: 'Nuxt', link: '/nuxt' },
-          // { text: 'Vite', link: '/vite' },
+
           {
             text: "css",
             link: "/css/grid",
@@ -111,6 +83,22 @@ export default defineConfig({
           ],
         },
       ],
+      "/datav/": [
+        {
+          text: "数据可视化",
+          items: [{ text: "Threejs", link: "/datav/Threejs/index.md" }],
+        },
+      ],
+      "/react/": [
+        {
+          text: "React",
+          items: [
+            { text: "React基础", link: "/react/React/base" },
+            { text: "Taro", link: "/react/Taro/base" },
+            { text: "nextjs", link: "/react/nextjs/base" },
+          ],
+        },
+      ],
       "/construct/": [
         {
           text: "项目构建",
@@ -121,8 +109,9 @@ export default defineConfig({
             },
             {
               text: "Docker",
-              link: "/construct/dcoker/index",
+              link: "/construct/docker/index",
             },
+            { text: "Github Action", link: "/construct/GithubAction/index.md" },
             { text: "webpack", link: "/construct/webpack/index" },
             { text: "npm", link: "/construct/npm/index" },
           ],
