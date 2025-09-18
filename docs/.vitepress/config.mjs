@@ -112,6 +112,14 @@ export default defineConfig({
         {
           text: "项目构建",
           items: [
+            {
+              text: "利用Jenkins和Docker部署Next.js项目的完整指南",
+              link: "/construct/Jenkins/CICD",
+            },
+            {
+              text: "Docker",
+              link: "/construct/dcoker/index",
+            },
             { text: "webpack", link: "/construct/webpack/index" },
             { text: "npm", link: "/construct/npm/index" },
           ],

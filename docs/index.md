@@ -37,25 +37,25 @@ hero:
 ---
 
 <div style="display: flex; justify-content: center; flex-wrap: wrap; gap: 20px; margin-top:80px">
-  <Card to="/vitepress/react/nextjs/index">
+  <Card to="/react/nextjs/index">
     <template #icon>
       <img src="https://cdn.jsdelivr.net/gh/cjy1998/imagesbed/img/next.png" alt="Nextjs" />
     </template>
     <template #title>Nextjs</template>
   </Card>
-  <Card to="/article-2">
+  <Card to="/typescript/">
     <template #icon>
       <img src="https://cdn.jsdelivr.net/gh/cjy1998/imagesbed/img/typescript-blue.png" alt="TypeScript" />
     </template>
     <template #title>TypeScript</template>
   </Card>
-   <Card to="/vitepress/interview/index">
+   <Card to="/everyday/interview/index">
     <template #icon>
       <img src="https://cdn.jsdelivr.net/gh/cjy1998/imagesbed/img/mianshilogo.png" alt="面试题" />
     </template>
     <template #title>面试题</template>
   </Card>
-  <Card to="/vitepress/react/React/base">
+  <Card to="/react/React/base">
     <template #icon>
       <img src="https://cdn.jsdelivr.net/gh/cjy1998/imagesbed/img/React-blue.png" alt="React" />
     </template>
