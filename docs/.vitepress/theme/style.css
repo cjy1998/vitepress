@@ -136,3 +136,13 @@
 .DocSearch {
   --docsearch-primary-color: var(--vp-c-brand-1) !important;
 }
+@font-face {
+  font-family: LXGW WenKai Mono;
+  font-display: swap;
+  src: local(LXGW WenKai Mono),
+    url(/fonts/lxgw-wenkai-mono-gb-regular-v0.965.1-full.woff2) format(woff2);
+}
+:root {
+  --vp-font-family-base: LXGW WenKai Mono;
+  --vp-font-family-mono: LXGW WenKai Mono;
+}

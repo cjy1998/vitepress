@@ -185,6 +185,26 @@ export default defineConfig({
       },
     },
   },
+  transformHead({ assets }) {
+    // 匹配 LXGW WenKai Mono 字体文件
+    const myFontFile = assets.find((file) =>
+      /lxgw-wenkai-mono.*\.woff2/.test(file)
+    );
+    if (myFontFile) {
+      return [
+        [
+          "link",
+          {
+            rel: "preload",
+            href: myFontFile,
+            as: "font",
+            type: "font/woff2",
+            crossorigin: "",
+          },
+        ],
+      ];
+    }
+  },
 });
 // 自定义字数统计插件
 function wordCountPlugin(md) {
