@@ -37,6 +37,12 @@ hero:
 ---
 
 <div style="display: flex; justify-content: center; flex-wrap: wrap; gap: 20px; margin-top:80px">
+ <Card to="/vps/index">
+    <template #icon>
+      <img src="https://imgbed.cj.abrdns.com/file/1766471274310_vps-logo.png" alt="Nextjs" />
+    </template>
+    <template #title>服务器</template>
+  </Card>
   <Card to="/react/nextjs/index">
     <template #icon>
       <img src="https://cdn.jsdelivr.net/gh/cjy1998/imagesbed/img/next.png" alt="Nextjs" />

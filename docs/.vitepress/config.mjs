@@ -156,6 +156,12 @@ export default defineConfig({
           ],
         },
       ],
+      "/vps/": [
+        {
+          text: "vps",
+          items: [{ text: "常用命令", link: "/vps/sys.md" }],
+        },
+      ],
     },
 
     socialLinks: [
