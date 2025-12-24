@@ -1,5 +1,6 @@
 import { defineConfig } from "vitepress";
-
+import { readFileSync, existsSync } from "node:fs";
+import { join } from "node:path";
 // https://vitepress.dev/reference/site-config
 export default defineConfig({
   // githubpage中这样配置/vitepress/
@@ -185,11 +186,6 @@ export default defineConfig({
         timeStyle: "medium",
       },
     },
-    markdown: {
-      config: (md) => {
-        md.use(wordCountPlugin);
-      },
-    },
   },
   transformHead({ assets }) {
     // 匹配 LXGW WenKai Mono 字体文件
@@ -211,17 +207,46 @@ export default defineConfig({
       ];
     }
   },
-});
-// 自定义字数统计插件
-function wordCountPlugin(md) {
-  md.core.ruler.push("word_count", (state) => {
-    state.tokens.forEach((token) => {
-      if (token.type === "inline") {
-        const text = token.content;
-        const wordCount = text.replace(/\s+/g, "").length; // 去除空格统计字数
-        token.meta = token.meta || {};
-        token.meta.wordCount = wordCount;
+  transformPageData(pageData) {
+    // 忽略非 Markdown 文件
+    if (!pageData.filePath || !pageData.filePath.endsWith(".md")) return;
+
+    // 尝试使用 VitePress 提供的绝对路径
+    let filePath = pageData.filePath;
+
+    // 如果文件不存在（可能是因为路径不对），尝试手动拼接路径
+    // 如果你的文件都在 docs 目录下，这里可以尝试拼接 docs
+    // 假设当前运行目录是项目根目录
+    if (!existsSync(filePath)) {
+      // 尝试方案 A: 拼接到 docs 目录 (常见情况)
+      const docsPath = join(process.cwd(), "docs", pageData.relativePath);
+      // 尝试方案 B: 直接拼接到根目录
+      const rootPath = join(process.cwd(), pageData.relativePath);
+
+      if (existsSync(docsPath)) {
+        filePath = docsPath;
+      } else if (existsSync(rootPath)) {
+        filePath = rootPath;
+      } else {
+        console.warn(`⚠️ 无法找到文件，跳过统计: ${pageData.relativePath}`);
+        return;
       }
-    });
-  });
-}
+    }
+
+    try {
+      const content = readFileSync(filePath, "utf-8");
+      const cleanContent = content.replace(/^---[\s\S]*?---/, ""); // 去除 frontmatter
+
+      const cn = (cleanContent.match(/[\u4e00-\u9fa5]/g) || []).length;
+      const en = (cleanContent.match(/[a-zA-Z0-9_\u0392-\u03c9]+/g) || [])
+        .length;
+      const wordCount = cn + en;
+      const readingTime = Math.ceil(wordCount / 400);
+
+      pageData.frontmatter.wordCount = wordCount;
+      pageData.frontmatter.readingTime = readingTime;
+    } catch (e) {
+      console.error(`❌ 读取失败: ${filePath}`);
+    }
+  },
+});

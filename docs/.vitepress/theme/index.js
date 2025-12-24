@@ -7,12 +7,15 @@ import "viewerjs/dist/viewer.min.css";
 import imageViewer from "vitepress-plugin-image-viewer";
 import vImageViewer from "vitepress-plugin-image-viewer/lib/vImageViewer.vue";
 import { useRoute } from "vitepress";
+import ArticleMetadata from "./components/ArticleMetadata.vue";
 /** @type {import('vitepress').Theme} */
 export default {
   extends: DefaultTheme,
   Layout: () => {
     return h(DefaultTheme.Layout, null, {
       // https://vitepress.dev/guide/extending-default-theme#layout-slots
+      // 在文档标题之下插入自定义内容
+      "doc-before": () => h(ArticleMetadata),
     });
   },
   enhanceApp({ app, router, siteData }) {
