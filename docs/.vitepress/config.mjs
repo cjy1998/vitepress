@@ -157,6 +157,19 @@ export default defineConfig({
           ],
         },
       ],
+      "/server/database/prisma/": [
+        {
+          text: "Prisma",
+          items: [
+            { text: "基础入门", link: "/server/database/prisma/base.md" },
+            { text: "详细使用", link: "/server/database/prisma/detail.md" },
+            {
+              text: "筛选条件和操作符",
+              link: "/server/database/prisma/selector.md",
+            },
+          ],
+        },
+      ],
       "/vps/": [
         {
           text: "vps",

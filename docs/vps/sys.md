@@ -323,3 +323,62 @@ nc -zv 主机 端口
 ```
 telnet 主机 端口
 ```
+
+## 软件管理
+
+### Debian/Ubuntu
+
+```
+apt update
+apt upgrade -y
+apt install 软件名
+apt remove 软件名
+apt autoremove -y
+dpkg -l
+apt search 软件名
+```
+
+### CentOS/RHEL
+
+```
+yum update -y
+yum install 软件名
+yum remove 软件名
+rpm -qa
+yum search 软件名
+```
+
+## 服务与进程管理
+
+- 查看服务状态
+
+```
+systemctl status 服务名
+```
+
+- 启动/停止/重启服务
+
+```
+systemctl start 服务名
+systemctl stop 服务名
+systemctl restart 服务名
+```
+
+- 开机自启/取消自启
+
+```
+systemctl enable 服务名
+systemctl disable 服务名
+```
+
+- 查看进程
+
+```
+ps aux
+```
+
+- 结束进程
+
+```
+kill -9 进程号
+```

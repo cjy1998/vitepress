@@ -1,3 +1,5 @@
+# Prisma 基础入门
+
 Prisma 是一个现代化的数据库工具，通常用于与 JavaScript/TypeScript 项目集成。它能大幅简化数据库操作，特别是在构建全栈应用时。以下是 Prisma 的主要功能和优势：
 
 1. **主要功能**
@@ -28,7 +30,7 @@ npm init -y
 npm install prisma typescript tsx @types/node --save-dev
 ```
 
-2. 初始化TypeScript
+2. 初始化 TypeScript
 
    ```bash
    npx tsc --init npx tsc -- 初始化
@@ -39,7 +41,7 @@ npm install prisma typescript tsx @types/node --save-dev
    - 创建一个名为 `prisma` 的新目录，其中包含一个名为 `schema.prisma` 的文件，该文件包含 Prisma 架构以及数据库连接变量和架构模型
    - 在项目的根目录中创建 [`.env` 文件](https://www.prisma.io/docs/orm/more/development-environment/environment-variables/env-files)，该文件用于定义环境变量（例如数据库连接）
 
-3. 初始化prisma
+3. 初始化 prisma
 
    ```bash
    npx prisma init
@@ -58,7 +60,7 @@ datasource db {
 
 `provider`根据数据库类型进行更改，例：`mysql`
 
-`url`则是数据库连接地址，可以在.env中进行修改
+`url`则是数据库连接地址，可以在.env 中进行修改
 
 ![image-20241125163209658](https://cdn.jsdelivr.net/gh/cjy1998/imagesbed/img/image-20241125163209658.png)
 
@@ -77,7 +79,7 @@ npx prisma db pull
 如果数据库是空的会返回：
 
 ```bash
-Error: 
+Error:
 P4001 The introspected database was empty:
 ```
 
@@ -143,41 +145,41 @@ npx prisma migrate dev --name init
 
 ```ts
 //index.ts
-import { PrismaClient } from '@prisma/client'
+import { PrismaClient } from "@prisma/client";
 
-const prisma = new PrismaClient()
+const prisma = new PrismaClient();
 
 async function main() {
-    await prisma.user.create({
-        data: {
-            name: 'Alice',
-            email: 'alice@prisma.io',
-            posts: {
-                create: { title: 'Hello World' },
-            },
-            profile: {
-                create: { bio: 'I like turtles' },
-            },
-        },
-    })
+  await prisma.user.create({
+    data: {
+      name: "Alice",
+      email: "alice@prisma.io",
+      posts: {
+        create: { title: "Hello World" },
+      },
+      profile: {
+        create: { bio: "I like turtles" },
+      },
+    },
+  });
 
-    const allUsers = await prisma.user.findMany({
-        include: {
-            posts: true,
-            profile: true,
-        },
-    })
-    console.dir(allUsers, { depth: null })
+  const allUsers = await prisma.user.findMany({
+    include: {
+      posts: true,
+      profile: true,
+    },
+  });
+  console.dir(allUsers, { depth: null });
 }
 main()
-    .then(async () => {
-        await prisma.$disconnect()
-    })
-    .catch(async (e) => {
-        console.error(e)
-        await prisma.$disconnect()
-        process.exit(1)
-    })
+  .then(async () => {
+    await prisma.$disconnect();
+  })
+  .catch(async (e) => {
+    console.error(e);
+    await prisma.$disconnect();
+    process.exit(1);
+  });
 ```
 
 使用`npx tsx index.ts`命令运行
@@ -190,10 +192,13 @@ main()
 //index.ts
 //修改
 async function edit() {
-    const user = await prisma.user.update({ where: { id: 1 }, data: { name: '张三' } })
-    console.log('====================================');
-    console.log(user);
-    console.log('====================================');
+  const user = await prisma.user.update({
+    where: { id: 1 },
+    data: { name: "张三" },
+  });
+  console.log("====================================");
+  console.log(user);
+  console.log("====================================");
 }
 ```
 
@@ -204,27 +209,27 @@ async function edit() {
 ```ts
 // 新增
 async function add() {
-    await prisma.user.create({
-        data: {
-            name: '李四',
-            email: 'lisi@prisma.io',
-            posts: {
-                create: { title: 'Hello World' },
-            },
-            profile: {
-                create: { bio: 'I like turtles' },
-            },
-        },
-    })
+  await prisma.user.create({
+    data: {
+      name: "李四",
+      email: "lisi@prisma.io",
+      posts: {
+        create: { title: "Hello World" },
+      },
+      profile: {
+        create: { bio: "I like turtles" },
+      },
+    },
+  });
 
-    const allUsers = await prisma.user.findMany({
-        //include 选项传递给 findMany，它告诉 Prisma Client 在返回的 User 对象上包含 posts 和 profile 关系
-        include: {
-            posts: true,
-            profile: true,
-        },
-    })
-    console.dir(allUsers, { depth: null })
+  const allUsers = await prisma.user.findMany({
+    //include 选项传递给 findMany，它告诉 Prisma Client 在返回的 User 对象上包含 posts 和 profile 关系
+    include: {
+      posts: true,
+      profile: true,
+    },
+  });
+  console.dir(allUsers, { depth: null });
 }
 ```
 
@@ -260,28 +265,28 @@ npx prisma migrate dev --name add_cascade_delete
 
 除了 `onDelete: Cascade`，Prisma 支持以下几种行为：
 
-| 选项              | 描述                                                         |
-| ----------------- | ------------------------------------------------------------ |
-| `Cascade`         | 删除父记录时，自动删除所有相关子记录。                       |
-| `SetNull`         | 删除父记录时，将子记录中的外键字段设置为 `NULL`。            |
-| `Restrict` (默认) | 如果有子记录引用父记录，则禁止删除父记录，避免违反外键约束。 |
+| 选项              | 描述                                                          |
+| ----------------- | ------------------------------------------------------------- |
+| `Cascade`         | 删除父记录时，自动删除所有相关子记录。                        |
+| `SetNull`         | 删除父记录时，将子记录中的外键字段设置为 `NULL`。             |
+| `Restrict` (默认) | 如果有子记录引用父记录，则禁止删除父记录，避免违反外键约束。  |
 | `NoAction`        | 不做任何操作，由数据库决定行为（类似 `Restrict`，但更灵活）。 |
 
 ```ts
 //index.ts
 //删除
 async function removeUserById(id: number) {
-    await prisma.user.delete({ where: { id } })
+  await prisma.user.delete({ where: { id } });
 }
 removeUserById(2)
-    .then(async () => {
-        await prisma.$disconnect()
-    })
-    .catch(async (e) => {
-        console.error(e)
-        await prisma.$disconnect()
-        process.exit(1)
-    })
+  .then(async () => {
+    await prisma.$disconnect();
+  })
+  .catch(async (e) => {
+    console.error(e);
+    await prisma.$disconnect();
+    process.exit(1);
+  });
 ```
 
 ### 查询
@@ -291,13 +296,13 @@ removeUserById(2)
 ```ts
 // 查询
 async function findAllUser() {
-    const allUsers = await prisma.user.findMany({
-        include: {
-            profile: true,
-            posts: true
-        }
-    })
-    console.log(allUsers);
+  const allUsers = await prisma.user.findMany({
+    include: {
+      profile: true,
+      posts: true,
+    },
+  });
+  console.log(allUsers);
 }
 ```
 
@@ -389,11 +394,11 @@ model Post {
 }
 ```
 
-## 一图搞懂Prisma在应用中所处位置
+## 一图搞懂 Prisma 在应用中所处位置
 
 ![image-20241126152037553](https://cdn.jsdelivr.net/gh/cjy1998/imagesbed/img/image-20241126152037553.png)
 
-## 在项目中集成Prisma
+## 在项目中集成 Prisma
 
 1. 下载依赖
 
@@ -419,7 +424,7 @@ model Post {
      updatedAt DateTime @updatedAt
      createdAt DateTime @default(now())
    }
-   
+
    ```
 
 4. 运行`npx prisma db push`
@@ -447,26 +452,24 @@ model Post {
 
 6. 新建`/lib/db.ts`文件
 
-   [详见]: https://www.prisma.io/docs/orm/more/help-and-troubleshooting/help-articles/nextjs-prisma-client-dev-practices	"详见"
-
-   
+   [详见]: https://www.prisma.io/docs/orm/more/help-and-troubleshooting/help-articles/nextjs-prisma-client-dev-practices "详见"
 
    ```ts
-   import { PrismaClient } from '@prisma/client'
-   
+   import { PrismaClient } from "@prisma/client";
+
    const prismaClientSingleton = () => {
-       return new PrismaClient()
-   }
-   
+     return new PrismaClient();
+   };
+
    declare const globalThis: {
-       prismaGlobal: ReturnType<typeof prismaClientSingleton>;
+     prismaGlobal: ReturnType<typeof prismaClientSingleton>;
    } & typeof global;
-   
-   const prisma = globalThis.prismaGlobal ?? prismaClientSingleton()
-   
-   export default prisma
-   
-   if (process.env.NODE_ENV !== 'production') globalThis.prismaGlobal = prisma
+
+   const prisma = globalThis.prismaGlobal ?? prismaClientSingleton();
+
+   export default prisma;
+
+   if (process.env.NODE_ENV !== "production") globalThis.prismaGlobal = prisma;
    ```
 
 7. 查询`post`所有数据
@@ -498,12 +501,12 @@ model Post {
 
    ```tsx
    import prisma from "@/lib/db";
-   
+
    const PagesDetail = async ({ params }: { params: { id: string } }) => {
      const detail = await prisma.post.findUnique({ where: { id: params.id } });
      return <div className="">{detail?.content}</div>;
    };
-   
+
    export default PagesDetail;
    ```
 
@@ -530,7 +533,7 @@ model Post {
 
     ```tsx
     import prisma from "@/lib/db";
-    
+
     const PagesDetail = async ({ params }: { params: { slug: string } }) => {
       const detail = await prisma.post.findUnique({
         where: { slug: decodeURIComponent(params.slug) },
@@ -542,29 +545,29 @@ model Post {
         </div>
       );
     };
-    
+
     export default PagesDetail;
     ```
 
 11. 其他一些操作
 
     ```tsx
-     const posts = await prisma.post.findMany({
-         //过滤出已发布的文章
-        where: { published: true },
-     	//按照创建时间降序    
-        orderBy: {
-          createdAt: "desc",
-        },
-         //要返回的字段
-        select: {
-          id: true,
-          slug: true,
-          title: true,
-        },
-        take: 2, // 获取前 2 条记录
-      	skip: 0, // 从第 0 条开始，不跳过任何记录
-      });
+    const posts = await prisma.post.findMany({
+      //过滤出已发布的文章
+      where: { published: true },
+      //按照创建时间降序
+      orderBy: {
+        createdAt: "desc",
+      },
+      //要返回的字段
+      select: {
+        id: true,
+        slug: true,
+        title: true,
+      },
+      take: 2, // 获取前 2 条记录
+      skip: 0, // 从第 0 条开始，不跳过任何记录
+    });
     ```
 
     分页：https://www.prisma.io/docs/orm/prisma-client/queries/pagination
@@ -600,16 +603,15 @@ model Post {
         </div>
       );
     };
-    
+
     export default addPost;
     ```
 
 13. 编辑文章
 
     ```tsx
-    ```
 
-    
+    ```
 
 14. 删除文章
 
@@ -622,7 +624,7 @@ model Post {
       const handleRemove = async () => {
         await deletePost(id);
       };
-    
+
       return (
         <IoIosCloseCircle
           onClick={handleRemove}
@@ -630,47 +632,45 @@ model Post {
         />
       );
     };
-    
+
     export default RemoveBtn;
-    
     ```
 
 15. `action`文件
 
     ```ts
     //action/action.ts
-    "use server"
-    import prisma from "@/lib/db"
-    import { revalidatePath } from "next/cache"
-    import { redirect } from "next/navigation"
-    
+    "use server";
+    import prisma from "@/lib/db";
+    import { revalidatePath } from "next/cache";
+    import { redirect } from "next/navigation";
+
     export async function createPost(formData: FormData) {
-        await prisma.post.create({
-            data: {
-                title: formData.get("title") as string,
-                content: formData.get("content") as string,
-                slug: formData.get("title") as string
-            }
-        })
-        revalidatePath("/")
-        redirect('/')
+      await prisma.post.create({
+        data: {
+          title: formData.get("title") as string,
+          content: formData.get("content") as string,
+          slug: formData.get("title") as string,
+        },
+      });
+      revalidatePath("/");
+      redirect("/");
     }
     export async function editPost(formData: FormData, id: string) {
-        await prisma.post.update({
-            where: { id },
-            data: {
-                title: formData.get("title") as string,
-                content: formData.get("content") as string,
-                slug: formData.get("title") as string
-            }
-        })
-        revalidatePath("/")
-        redirect('/')
-    
+      await prisma.post.update({
+        where: { id },
+        data: {
+          title: formData.get("title") as string,
+          content: formData.get("content") as string,
+          slug: formData.get("title") as string,
+        },
+      });
+      revalidatePath("/");
+      redirect("/");
     }
     export async function deletePost(id: string) {
-        await prisma.post.delete({ where: { id } })
-        revalidatePath("/")
+      await prisma.post.delete({ where: { id } });
+      revalidatePath("/");
     }
     ```
 
@@ -683,7 +683,7 @@ model Post {
       hashedPassword String
       posts          Post[]
     }
-    
+
     model Post {
       id        String   @id @default(cuid())
       title     String
@@ -704,20 +704,20 @@ model Post {
 
     ```ts
     export async function createPost(formData: FormData) {
-        await prisma.post.create({
-            data: {
-                title: formData.get("title") as string,
-                content: formData.get("content") as string,
-                slug: formData.get("title") as string,
-                author: {
-                    connect: {
-                        email: "1404340013@qq.com"
-                    }
-                }
-            }
-        })
-        revalidatePath("/")
-        redirect('/')
+      await prisma.post.create({
+        data: {
+          title: formData.get("title") as string,
+          content: formData.get("content") as string,
+          slug: formData.get("title") as string,
+          author: {
+            connect: {
+              email: "1404340013@qq.com",
+            },
+          },
+        },
+      });
+      revalidatePath("/");
+      redirect("/");
     }
     ```
 
@@ -725,50 +725,47 @@ model Post {
 
     ```ts
     // /prisma/seed.ts
-    import { Prisma, PrismaClient } from '@prisma/client'
-    const prisma = new PrismaClient()
+    import { Prisma, PrismaClient } from "@prisma/client";
+    const prisma = new PrismaClient();
     const initialPosts: Prisma.PostCreateInput[] = [
-        {
-            title: "post 1",
-            slug: "post-1",
-            content: "个人皇家公馆热加工戈培尔工卡让娃",
-            author: {
-                connectOrCreate: {
-                    where: {
-                        email: "18839362311@163.com"
-                    },
-                    create: {
-                        email: "18839362311@163.com",
-                        hashedPassword: "flefhjkhfjkhjjk"
-                    }
-                }
-            }
-        }
-    ]
-    
+      {
+        title: "post 1",
+        slug: "post-1",
+        content: "个人皇家公馆热加工戈培尔工卡让娃",
+        author: {
+          connectOrCreate: {
+            where: {
+              email: "18839362311@163.com",
+            },
+            create: {
+              email: "18839362311@163.com",
+              hashedPassword: "flefhjkhfjkhjjk",
+            },
+          },
+        },
+      },
+    ];
+
     async function main() {
-        console.log("start seeding...");
-        for (const post of initialPosts) {
-            const newPost = await prisma.post.create({
-                data: post
-            })
-            console.log(`"new postid"${newPost.id}`);
-    
-        }
-        console.log("seeding finish");
+      console.log("start seeding...");
+      for (const post of initialPosts) {
+        const newPost = await prisma.post.create({
+          data: post,
+        });
+        console.log(`"new postid"${newPost.id}`);
+      }
+      console.log("seeding finish");
     }
     main()
-        .then(async () => {
-            await prisma.$disconnect()
-        })
-        .catch(async (e) => {
-            console.error(e)
-            await prisma.$disconnect()
-            process.exit(1)
-        })
+      .then(async () => {
+        await prisma.$disconnect();
+      })
+      .catch(async (e) => {
+        console.error(e);
+        await prisma.$disconnect();
+        process.exit(1);
+      });
     ```
-
-    
 
 19. 在`package.json`中添加命令行
 
@@ -786,35 +783,35 @@ model Post {
 
     ```ts
     export async function createPost(formData: FormData) {
-        try {
-            await prisma.post.create({
-                data: {
-                    title: formData.get("title") as string,
-                    content: formData.get("content") as string,
-                    slug: formData.get("title") as string,
-                    author: {
-                        connect: {
-                            email: "18839362311@163.com"
-                        }
-                    }
-                }
-            })
-        } catch (error) {
-            if (error instanceof Prisma.PrismaClientKnownRequestError)
-                // console.log(error);
-    
-                switch (error.code) {
-                    case 'P2002':
-                        console.log("Unique constraint failed on the {constraint}");
-                        break;
-                    default:
-                        break;
-                }
-            console.log("出错啦");
-        }
-    
-        revalidatePath("/")
-        redirect('/')
+      try {
+        await prisma.post.create({
+          data: {
+            title: formData.get("title") as string,
+            content: formData.get("content") as string,
+            slug: formData.get("title") as string,
+            author: {
+              connect: {
+                email: "18839362311@163.com",
+              },
+            },
+          },
+        });
+      } catch (error) {
+        if (error instanceof Prisma.PrismaClientKnownRequestError)
+          // console.log(error);
+
+          switch (error.code) {
+            case "P2002":
+              console.log("Unique constraint failed on the {constraint}");
+              break;
+            default:
+              break;
+          }
+        console.log("出错啦");
+      }
+
+      revalidatePath("/");
+      redirect("/");
     }
     ```
 
@@ -823,5 +820,3 @@ model Post {
     https://www.prisma.io/docs/orm/reference/error-reference#p1012
 
 21. 数据库迁移`npx prisma migrate dev`
-
-    
