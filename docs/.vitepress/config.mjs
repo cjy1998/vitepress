@@ -45,7 +45,23 @@ export default defineConfig({
       {
         text: "后端",
         items: [
-          { text: "Prisma", link: "/server/database/prisma/base.md" },
+          {
+            text: "Node",
+            items: [
+              { text: "honojs", link: "/server/node/honojs/base.md" },
+              { text: "nestjs", link: "/server/node/nestjs/base.md" },
+            ],
+          },
+          {
+            text: "数据库",
+            items: [
+              { text: "Prisma", link: "/server/database/prisma/base.md" },
+            ],
+          },
+          {
+            text: "服务器",
+            items: [{ text: "vps", link: "/vps/index.md" }],
+          },
           {
             text: "python",
             items: [
@@ -115,6 +131,7 @@ export default defineConfig({
             { text: "Github Action", link: "/construct/GithubAction/index.md" },
             { text: "webpack", link: "/construct/webpack/index" },
             { text: "npm", link: "/construct/npm/index" },
+            { text: "monorepo", link: "/construct/npm/monorepo.md" },
           ],
         },
       ],
@@ -147,13 +164,22 @@ export default defineConfig({
           ],
         },
       ],
-      "/server/python/Django/": [
+      "/server/node/django/": [
         {
           text: "django",
           items: [
             { text: "django基础知识", link: "/server/python/Django/django.md" },
             { text: "DRF", link: "/server/python/Django/DRF.md" },
             { text: "DRF2", link: "/server/python/Django/DRF2.md" },
+          ],
+        },
+      ],
+      "/server/node/nestjs/": [
+        {
+          text: "nestjs",
+          items: [
+            { text: "基础", link: "/server/node/nestjs/base.md" },
+            { text: "提升", link: "/server/node/nestjs/up.md" },
           ],
         },
       ],
