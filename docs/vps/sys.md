@@ -382,3 +382,90 @@ ps aux
 ```
 kill -9 进程号
 ```
+
+## 压缩与解压
+
+```
+# 压缩
+tar -czvf file.tar.gz 目录
+# 解压
+tar -xzvf file.tar.gz
+# 压缩
+zip -r file.zip 目录
+# 解压
+unzip file.zip
+
+```
+
+## 日志与监控
+
+- 查看系统日志
+
+```
+journalctl -xe
+```
+
+- 实时查看日志
+
+```
+tail -f /var/log/syslog
+```
+
+- 每 5 秒刷新一次命令输出
+
+```
+watch -n 5 命令
+```
+
+## 计划任务
+
+- 编辑定时任务
+
+```
+crontab -e
+```
+
+- 查看定时任务
+
+```
+crontab -l
+```
+
+- 查看 systemd 定时器
+
+```
+systemctl list-timers
+```
+
+## 实用技巧
+
+- 查看历史命令
+
+```
+history
+```
+
+- 设置别名
+
+```
+alias 别名="命令"
+```
+
+如何设置永久生效
+
+1. 编辑 ~/.bashrc 文件
+   ```
+   nano ~/.bashrc
+   ```
+2. 在文件末尾添加 alias 别名="命令"
+   ```
+   alias 别名="命令"
+   ```
+3. 执行 source ~/.bashrc 使配置生效
+
+- 查看/设置环境变量
+
+```
+echo $PATH
+export VAR=value
+```
