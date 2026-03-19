@@ -45,7 +45,7 @@ nest g res [name]  --no-spec  不生成测试文件，可以传递 --no-spec 标
 
 ![](https://cdn.nlark.com/yuque/0/2023/png/29244275/1690794991503-e715128e-59df-4912-a491-c969470a2db4.png)
 
-生成完毕，启动项目。访问[http://localhost:3000/user](http://localhost:3000/user)，可以看到页面上会出现“<font style="color:rgb(0, 0, 0);">This action returns all user</font>”，这时证明已经成功生成。默认情况下不绑定到任何特定的 ORM（或数据源），所有方法都将包含占位符，允许你使用特定于项目的数据源填充它。
+生成完毕，启动项目。访问可以看到页面上会出现“<font style="color:rgb(0, 0, 0);">This action returns all user</font>”，这时证明已经成功生成。默认情况下不绑定到任何特定的 ORM（或数据源），所有方法都将包含占位符，允许你使用特定于项目的数据源填充它。
 
 根据生成的 users 模块可以看到主要分为控制器（controller）、提供者（service）、模块（module）、实体类、dto 文件。
 
@@ -123,7 +123,7 @@ import { UserDTO } from "./UserDTO";
 function processUserData(userDTO: UserDTO) {
   // 处理用户信息...
   console.log(
-    `Received user data - ID: ${userDTO.id}, Username: ${userDTO.username}, Email: ${userDTO.email}, Age: ${userDTO.age}`
+    `Received user data - ID: ${userDTO.id}, Username: ${userDTO.username}, Email: ${userDTO.email}, Age: ${userDTO.age}`,
   );
 }
 
@@ -272,7 +272,7 @@ export class UsersController {
 
 ![](https://cdn.nlark.com/yuque/0/2023/png/29244275/1690802496165-024af668-0a81-4191-bfac-9caf306f3f6d.png)
 
-使用浏览器访问[http://localhost:3000/users/all](http://localhost:3000/users/all)，可以看到接口调用成功。
+使用浏览器访问，可以看到接口调用成功。
 
 <!-- 这是一张图片，ocr 内容为：LOCALHOST:3000/USERS/ALL [HALO主题]SAK... 公司 在云端意逍遥 在线翻译有道 THIS ACTION ON RETURNS ALL USERS -->
 
