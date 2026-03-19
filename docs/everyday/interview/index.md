@@ -17,6 +17,12 @@
     </template>
     <template #title>JavaScript</template>
   </Card>
+   <Card to="/everyday/interview/es6">
+    <template #icon>
+      <img src="https://cdn.jsdelivr.net/gh/cjy1998/imagesbed/img/JS.png" alt="js" />
+    </template>
+    <template #title>ES6+</template>
+  </Card>
    <Card to="/everyday/interview/typeScript">
     <template #icon>
       <img src="https://cdn.jsdelivr.net/gh/cjy1998/imagesbed/img/typescript-blue.png" alt="TypeScript" />
@@ -53,11 +59,11 @@
     </template>
     <template #title>uniapp</template>
   </Card>
-   <Card to="/everyday/interview/H5">
+   <Card to="/everyday/interview/project">
     <template #icon>
-      <img src="https://cdn.jsdelivr.net/gh/cjy1998/imagesbed/img/h5.png" alt="H5" />
+      <img src="https://cdn.jsdelivr.net/gh/cjy1998/imagesbed/img/h5.png" alt="前端工程" />
     </template>
-    <template #title>H5</template>
+    <template #title>前端工程模块</template>
   </Card>
   <Card to="/everyday/interview/client">
     <template #icon>
@@ -76,6 +82,24 @@
       <img src="https://cdn.jsdelivr.net/gh/cjy1998/imagesbed/img/rocket.png" alt="性能优化" />
     </template>
     <template #title>性能优化</template>
+  </Card>
+   <Card to="/everyday/interview/safety">
+    <template #icon>
+      <img src="https://cdn.jsdelivr.net/gh/cjy1998/imagesbed/img/h5.png" alt="前端安全" />
+    </template>
+    <template #title>前端安全</template>
+  </Card>
+   <Card to="/everyday/interview/design">
+    <template #icon>
+      <img src="https://imgbed.cj.abrdns.com/file/1773913996955_design.png" alt="设计模式" />
+    </template>
+    <template #title>设计模式</template>
+  </Card>
+     <Card to="/everyday/interview/frame">
+    <template #icon>
+      <img src="https://imgbed.cj.abrdns.com/file/1773914260001_farme.png" alt="框架通识" />
+    </template>
+    <template #title>框架通识</template>
   </Card>
    <Card to="/everyday/interview/code">
     <template #icon>
