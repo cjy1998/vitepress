@@ -66,6 +66,7 @@ export default defineConfig({
             text: "python",
             items: [
               { text: "Django", link: "/server/python/Django/django.md" },
+              { text: "fastapi", link: "/server/python/fastapi/base.md" },
             ],
           },
         ],
@@ -229,7 +230,7 @@ export default defineConfig({
   transformHead({ assets }) {
     // 匹配 LXGW WenKai Mono 字体文件
     const myFontFile = assets.find((file) =>
-      /lxgw-wenkai-mono.*\.woff2/.test(file)
+      /lxgw-wenkai-mono.*\.woff2/.test(file),
     );
     if (myFontFile) {
       return [
