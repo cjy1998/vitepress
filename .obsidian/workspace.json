@@ -1,41 +1,66 @@
 {
   "main": {
-    "id": "0a73f85fcd432fa7",
+    "id": "25adfdd4760c3538",
     "type": "split",
     "children": [
       {
-        "id": "ae4abd198c671db2",
+        "id": "1cf6b118a9a88c97",
         "type": "tabs",
         "children": [
           {
-            "id": "04eda90663fd0950",
+            "id": "56f0a262821ee004",
             "type": "leaf",
             "state": {
               "type": "markdown",
               "state": {
-                "file": "docs/vps/sys.md",
+                "file": "Bun 和 Deno.md",
                 "mode": "source",
                 "source": false
               },
               "icon": "lucide-file",
-              "title": "sys"
+              "title": "Bun 和 Deno"
+            }
+          },
+          {
+            "id": "31747158a0ef9490",
+            "type": "leaf",
+            "state": {
+              "type": "markdown",
+              "state": {
+                "file": "考试相关/申论/归纳概括题.md",
+                "mode": "source",
+                "source": false
+              },
+              "icon": "lucide-file",
+              "title": "归纳概括题"
+            }
+          },
+          {
+            "id": "8a100b48559ad305",
+            "type": "leaf",
+            "state": {
+              "type": "empty",
+              "state": {},
+              "icon": "lucide-file",
+              "title": "新标签页"
             }
           }
-        ]
+        ],
+        "currentTab": 2
       }
     ],
     "direction": "vertical"
   },
   "left": {
-    "id": "abe1d7c3921e4fa1",
+    "id": "f6f33f18860be2ad",
     "type": "split",
     "children": [
       {
-        "id": "295cce13d188ba49",
+        "id": "27691f007cb23fba",
         "type": "tabs",
         "children": [
           {
-            "id": "33a6837dcb13c83b",
+            "id": "48da9a115525c4e9",
             "type": "leaf",
             "state": {
               "type": "file-explorer",
@@ -48,7 +73,7 @@
             }
           },
           {
-            "id": "cb0a199c69eef47d",
+            "id": "e1b4c03b4d2ac638",
             "type": "leaf",
             "state": {
               "type": "search",
@@ -65,7 +90,7 @@
             }
           },
           {
-            "id": "2c57159a993d92e4",
+            "id": "3c7c1ea2fad1da3a",
             "type": "leaf",
             "state": {
               "type": "bookmarks",
@@ -78,51 +103,51 @@
       }
     ],
     "direction": "horizontal",
-    "width": 300
+    "width": 305.5
   },
   "right": {
-    "id": "e5c695547973e537",
+    "id": "00bcd929268ddeac",
     "type": "split",
     "children": [
       {
-        "id": "222b3b69448643ec",
+        "id": "d3aa498dc98d2230",
         "type": "tabs",
         "children": [
           {
-            "id": "54438b02cee7e940",
+            "id": "06069078bd5598a5",
             "type": "leaf",
             "state": {
               "type": "backlink",
               "state": {
-                "file": "docs/vps/sys.md",
+                "file": "考试相关/言语理解/思维导图.canvas",
                 "collapseAll": false,
                 "extraContext": false,
                 "sortOrder": "alphabetical",
                 "showSearch": false,
                 "searchQuery": "",
                 "backlinkCollapsed": false,
-                "unlinkedCollapsed": true
+                "unlinkedCollapsed": false
               },
               "icon": "links-coming-in",
-              "title": "sys 的反向链接列表"
+              "title": "思维导图 的反向链接列表"
             }
           },
           {
-            "id": "65d91761a39a14f4",
+            "id": "fecc7d69a6700ac2",
             "type": "leaf",
             "state": {
               "type": "outgoing-link",
               "state": {
-                "file": "docs/vps/sys.md",
+                "file": "掘金小册 Nest 通关秘籍 最新205章/第98章—会议室预订系统：预定管理模块-后端开发.md",
                 "linksCollapsed": false,
                 "unlinkedCollapsed": true
               },
               "icon": "links-going-out",
-              "title": "sys 的出链列表"
+              "title": "第98章—会议室预订系统：预定管理模块-后端开发 的出链列表"
             }
           },
           {
-            "id": "fb35753c29c0a74d",
+            "id": "4acaac3079c9a661",
             "type": "leaf",
             "state": {
               "type": "tag",
@@ -137,32 +162,28 @@
             }
           },
           {
-            "id": "3dfc74df39b8d3d0",
-            "type": "leaf",
-            "state": {
-              "type": "all-properties",
-              "state": {
-                "sortOrder": "frequency",
-                "showSearch": false,
-                "searchQuery": ""
-              },
-              "icon": "lucide-archive",
-              "title": "添加笔记属性"
-            }
-          },
-          {
-            "id": "fa9a087e75791bcc",
+            "id": "5ca27ff7ce471fe3",
             "type": "leaf",
             "state": {
               "type": "outline",
               "state": {
-                "file": "docs/vps/sys.md",
+                "file": "考试相关/资料分析/未命名.md",
                 "followCursor": false,
                 "showSearch": false,
                 "searchQuery": ""
               },
               "icon": "lucide-list",
-              "title": "sys 的大纲"
+              "title": "未命名 的大纲"
+            }
+          },
+          {
+            "id": "e354f4abec254499",
+            "type": "leaf",
+            "state": {
+              "type": "git-view",
+              "state": {},
+              "icon": "lucide-ghost",
+              "title": "git-view"
             }
           }
         ],
@@ -170,20 +191,62 @@
       }
     ],
     "direction": "horizontal",
-    "width": 459.5,
+    "width": 200,
     "collapsed": true
   },
   "left-ribbon": {
     "hiddenItems": {
+      "bases:新建数据库": false,
       "switcher:打开快速切换": false,
       "graph:查看关系图谱": false,
       "canvas:新建白板": false,
       "daily-notes:打开/创建今天的日记": false,
       "templates:插入模板": false,
       "command-palette:打开命令面板": false,
-      "bases:新建数据库": false
+      "obsidian-git:Open Git source control": false
     }
   },
-  "active": "04eda90663fd0950",
-  "lastOpenFiles": []
+  "active": "8a100b48559ad305",
+  "lastOpenFiles": [
+    "技术相关/React 实战：设计模式和最佳实践/1、React的设计思想.pdf",
+    "技术相关/React 通关秘籍_online/4-React 组件如何写 TypeScript 类型.md",
+    "技术相关/React 通关秘籍_online/3-Hook 的闭包陷阱的成因和解决方案.md",
+    "技术相关/React 通关秘籍_online/2-一网打尽组件常用 Hook.md",
+    "技术相关/React 通关秘籍_online/14-组件实战：Space 间距组件.md",
+    "考试相关/言语理解/思维导图.canvas",
+    "技术相关/掘金小册 Nest 通关秘籍 最新205章/02-业务模块知识~.md",
+    "技术相关/掘金小册 Nest 通关秘籍 最新205章/02-业务模块知识.md",
+    "技术相关/掘金小册 Nest 通关秘籍 最新205章/01-基础知识.md",
+    "考试相关/判断推理/论证类.md",
+    "考试相关/判断推理/思维导图.canvas",
+    "考试相关/判断推理",
+    "考试相关/资料分析/题型.md",
+    "考试相关/资料分析/未命名.canvas",
+    "考试相关/言语理解",
+    "考试相关/申论/归纳概括题.md",
+    "考试相关/申论/学习方法.md",
+    "技术相关/vpn.md",
+    "技术相关/Bun 和 Deno.md",
+    "技术相关",
+    "考试相关/备考.canvas",
+    "考试相关/申论",
+    "考试相关/前期准备.md",
+    "考试相关/资料分析",
+    "考试相关",
+    "技术相关/Next.js开发指南/6.路由篇 ❘ 路由处理程序.md",
+    "技术相关/Next.js开发指南/3.路由篇 ❘ App Router.md",
+    "技术相关/Next.js开发指南/5.路由篇 ❘ 动态路由、路由组、平行路由和拦截路由.md",
+    "技术相关/Next.js开发指南/7.路由篇 ❘ 中间件.md",
+    "技术相关/Next.js开发指南/20.配置篇 ❘ 路由段配置项.md",
+    "技术相关/Next.js开发指南/17.数据获取篇 ❘ Server Actions（下）.md",
+    "技术相关/Next.js开发指南/16.数据获取篇 ❘ Server Actions（上）.md",
+    "技术相关/React 组合式开发实践：打造企业管理系统五大核心模块/4实战篇 03：页面布局方案.md",
+    "技术相关/React 通关秘籍_online/1-小册介绍.md",
+    "技术相关/Three.js 通关秘籍/12. 如何画各种曲线.md",
+    "技术相关/Next.js开发指南/71.面试篇 ❘  常见面试题及解析（2）.md",
+    "技术相关/Next.js开发指南",
+    "技术相关/开发者必备的Docker实践指南/基础概念：这是 Docker 的简历.html",
+    "技术相关/开发者必备的Docker实践指南/安装运行：搭建 Docker 运行环境.html",
+    "技术相关/开发者必备的Docker实践指南/使用容器：管理和存储数据.html"
+  ]
 }
