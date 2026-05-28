@@ -321,3 +321,210 @@ console.log(fullContent);
 ```
 
 两者不冲突：流式体验保留，完整内容也能拿到。常见用途包括做二次处理、计算 token 数、保存到数据库等。
+### token使用追踪
+
+#### usage收集的两种方式
+
+1. 非流式
+
+```ts
+import { createModel } from "../utils/index";
+
+export default async function trackTokenUsage() {
+  const model = createModel({ modelName: "qwen3.7-max-2026-05-17" });
+  const result = await model.invoke("TUI框架是什么？");
+  const usage = result.usage_metadata;
+  console.log(`\n 输入token: ${usage?.input_tokens}`);
+  console.log(`\n 输出token: ${usage?.output_tokens}`);
+  console.log(`\n 总token: ${usage?.total_tokens}`);
+}
+```
+
+2. 流式
+一般在最后一个chunk返回usage
+```ts
+import { createModel } from "../utils/index";
+import { AIMessageChunk } from "@langchain/core/messages";
+
+export default async function trackTokenUsage() {
+  const model = createModel({ modelName: "qwen3.7-max-2026-05-17" });
+  let finalChunk: AIMessageChunk | undefined;
+  const result = await model.stream("TUI框架是什么？");
+  for await (const chunk of result) {
+    process.stdout.write(chunk.content as string);
+    finalChunk = chunk;
+  }
+  const usage = finalChunk?.usage_metadata;
+  console.log(`\n 输入token: ${usage?.input_tokens}`);
+  console.log(`\n 输出token: ${usage?.output_tokens}`);
+  console.log(`\n 总token: ${usage?.total_tokens}`);
+}
+```
+#### 降低成本的简单方法
+1. 使用`maxTokens`限制响应长度
+2. 压缩对话记录
+```ts
+const recentMessages = messages.slice(-10);
+const response = await model.invoke(recentMessages);
+```
+## Templates
+
+### Messages vs Templates
+
+```ts
+  import { createModel } from "../utils/index";
+  import { HumanMessage, SystemMessage } from "langchain";
+  import { ChatPromptTemplate } from "@langchain/core/prompts";
+  
+  export default async function messagesVsTemplates() {
+    const model = createModel();
+    //messages
+    const messages = [
+      new SystemMessage("You are a helpful assistant."),
+      new HumanMessage("把今天天气怎么样翻译成英文?"),
+    ];
+    const result = await model.invoke(messages);
+    console.log(`messages result: ${result.content}`);
+    // templates
+    const template = ChatPromptTemplate.fromMessages([
+      ["system", "You are a helpful translator."],
+      ["human", "Translate '{text}' to {language}"],
+    ]);
+    const templateChain = template.pipe(model);
+    const templateResult = await templateChain.invoke({
+      text: "今天天气怎么样",
+      language: "日语",
+    });
+    console.log(`template result: ${templateResult.content}`);
+  }
+
+```
+| | `Messages` | `Templates` |
+|---|---|---|
+| **本质** | 手动拼接，硬编码 | 可复用的"模板函数" |
+| **变量替换** | 不支持（字符串拼接 | 支持 `{变量名}` 插值 |
+| **复用性** | 差，每次写一套 | 好，一次定义多处调用 |
+| **适合场景** | Agent、动态工作流、多步推理、工具集成 | RAG、复用提示、变量替换、一致性 |
+| **链式调用** | 不行 | 支持 `.pipe(model) |
+
+### pip
+
+.pipe()` 就像管道符 `|`，把前一个组件的输出作为后一个组件的输入。链一旦建好，你就把它当**一个整体**来调用，不需要手动处理中间转换。
+
+```ts
+const template = ChatPromptTemplate.fromMessages([
+  ["system", "You are a helpful translator."],
+  ["human", "Translate '{text}' to {language}"],
+]);
+
+// 用 .pipe() 把 template 和 model 串联成链
+const templateChain = template.pipe(model);
+
+```
+现在 `templateChain` 是一个**统一的可调用对象**，可以直接 `.invoke()`：
+
+```ts
+const result = await templateChain.invoke({
+  text: "今天天气怎么样",
+  language: "英文",
+});
+```
+为什么叫"可调用的链"？
+
+`.pipe()` 返回的是 `Runnable` 对象，它有一套统一的调用接口：
+
+| 方法 | 作用 |
+|---|---|
+| `.invoke(input)` | 单次调用 |
+| `.stream(input)` | 流式输出 |
+| `.batch(inputs)` | 批量调用 |
+| `.pipe(next)` | 继续拼接下一个组件 |
+
+链可以继续拼接
+
+```ts
+import { StringOutputParser } from "@langchain/core/output_parsers";
+
+// template → model → outputParser
+const templateChain = template
+  .pipe(model)
+  .pipe(new StringOutputParser()); // 把 AIMessage 转成纯字符串
+
+const text = await templateChain.invoke({
+  text: "你好",
+  language: "英文",
+});
+console.log(text); // 纯字符串，不是 AIMessage 对象
+```
+
+### ChatPromptTemplate 与 PromptTemplate
+
+两者的核心区别在于**输出格式**和**目标模型类型**：
+
+| | `ChatPromptTemplate` | `PromptTemplate` |
+|---|---|---|
+| **输出类型** | `BaseMessage[]`（消息数组） | `string`（纯字符串） |
+| **目标模型** | **聊天模型**（Chat Models）如 gpt-4, ChatOpenAI | **文本补全模型**（LLMs）如 text-davinci-003 |
+| **能否设置 System 角色** | ✅ 可以，明确区分 system/human/ai | ❌ 不行，只有一个字符串模板 |
+| **现代推荐度** | ⭐ **首选**，所有聊天场景都用它 | 仅用于特定旧模型或纯字符串场景
+
+```ts
+  import { createModel } from "../utils";
+  import { PromptTemplate, ChatPromptTemplate } from "@langchain/core/prompts";
+  export default async function TemplateFormat() {
+    // ChatPromptTemplate
+    const chatPrompt = ChatPromptTemplate.fromMessages([
+      {
+        role: "system",
+        content: "你是一个以{style}风格并用{language}回答问题的{role}",
+      },
+      {
+        role: "human",
+        content: "{question}",
+      },
+    ]);
+    const model = createModel();
+    const result = await chatPrompt.pipe(model).invoke({
+      role: "pirate",
+      style: "dramatic",
+      language: "中文",
+      question: "什么是 TypeScript?",
+    });
+    console.log(result.content);
+  
+    console.log("\n2️⃣  PromptTemplate:\n");
+    // PromptTemplate
+    const stringTemplate = PromptTemplate.fromTemplate(
+      "用{style}风格写一段{topic}的开头，用{language}回答",
+    );
+    const prompt = await stringTemplate.format({
+      style: "幽默",
+      language: "中文",
+      topic: "今天周三",
+    });
+  
+    console.log(prompt + "\n");
+  
+    const result2 = await model.invoke(prompt);
+    console.log(result2.content);
+  }
+
+```
+| | `.format()` | `.pipe(model).invoke()` |
+|---|---|---|
+| **做什么** | 仅渲染模板 | 渲染模板 + 调用模型 |
+| **返回值** | `string` 或 `BaseMessage[]` | `AIMessage`（模型回复） |
+| **消耗 Token** | ❌ 不消耗 | ✅ 消耗 |
+| **灵活性** | 高，可以拿到 prompt 做其他事 | 低，直接出结果 |
+| **代码量** | 需要再写一行 `model.invoke(prompt)` | 一步完成
+
+什么时候用 `.format()`？
+
+想**查看、调试或二次处理**生成的 prompt 时：
+
+```ts
+const prompt = await template.format({...});
+console.log("实际发给模型的内容：", prompt); // 调试
+await saveToDB(prompt);                      // 存日志
+const result = await model.invoke(prompt);   // 再手动调用
+```

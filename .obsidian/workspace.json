@@ -13,12 +13,12 @@
             "state": {
               "type": "markdown",
               "state": {
-                "file": "docs/ai/langchain/base.md",
-                "mode": "preview",
+                "file": "docs/vps/index.md",
+                "mode": "source",
                 "source": false
               },
               "icon": "lucide-file",
-              "title": "base"
+              "title": "index"
             }
           }
         ]
