@@ -13,12 +13,12 @@
             "state": {
               "type": "markdown",
               "state": {
-                "file": "docs/ai/langchain/base.md",
+                "file": "docs/markdown-examples.md",
                 "mode": "source",
                 "source": false
               },
               "icon": "lucide-file",
-              "title": "base"
+              "title": "markdown-examples"
             }
           }
         ]
@@ -181,11 +181,11 @@
       "obsidian-git:Open Git source control": false
     }
   },
-  "active": "48da9a115525c4e9",
+  "active": "56f0a262821ee004",
   "lastOpenFiles": [
+    "docs/index.md",
+    "docs/ai/langchain/base.md",
     "docs/vps/index.md",
-    "docs/ai/langchain/base.md",
-    "docs/ai/langchain/base.md",
     "docs/ai/langchain.md",
     "docs/ai/langchain",
     "技术相关/React 实战：设计模式和最佳实践/1、React的设计思想.pdf",
