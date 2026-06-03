@@ -13,7 +13,6 @@ bun init
 ```bash
  pnpm  add zod langchain @langchain/openai @langchain/core
 ```
-
 3. 创建环境变量 `.env`
 
 ```bash
@@ -21,7 +20,6 @@ OPENAI_API_KEY=
 OPENAI_MODEL=
 OPENAI_API_BASE_URL=
 ```
-
 4. 校验环境变量
 ```ts
 // types/env.ts
@@ -321,12 +319,12 @@ console.log(fullContent);
 ```
 
 两者不冲突：流式体验保留，完整内容也能拿到。常见用途包括做二次处理、计算 token 数、保存到数据库等。
+
 ### token使用追踪
 
 #### usage收集的两种方式
 
 1. 非流式
-
 ```ts
 import { createModel } from "../utils/index";
 
@@ -361,6 +359,7 @@ export default async function trackTokenUsage() {
 }
 ```
 #### 降低成本的简单方法
+
 1. 使用`maxTokens`限制响应长度
 2. 压缩对话记录
 ```ts
@@ -528,3 +527,331 @@ console.log("实际发给模型的内容：", prompt); // 调试
 await saveToDB(prompt);                      // 存日志
 const result = await model.invoke(prompt);   // 再手动调用
 ```
+### 结构化输出
+
+#### 基本结构化输出
+
+**用 z.object（） 来定义模式，用 [model].withStructuredOutput（） 来获取类型化、验证过的数据。**
+
+```ts
+  import { createModel } from "../utils/index";
+  import { z } from "zod";
+  export default async function main() {
+    const model = createModel();
+    const personSchema = z.object({
+      //使用 .describe（） 来告诉 AI 每个字段代表什么
+      name: z.string().describe("姓名"),
+      age: z.number().describe("年龄"),
+      email: z.string().email().describe("邮箱地址"),
+    });
+  
+    const structuredModel = model.withStructuredOutput(personSchema, {
+      strict: true,
+      method: "functionCalling",
+    });
+    const structuredOutput = await structuredModel.invoke(
+      "我的名字是张三，年龄28岁，邮箱是1258963@qq.com",
+    );
+  
+    console.log(structuredOutput);
+  }
+
+```
+#### 复杂结构化输出
+
+```ts
+ const model = createModel();
+  const CompanySchema = z.object({
+    name: z.string().describe("Company name"),
+    founded: z.number().describe("Year the company was founded"),
+    headquarters: z
+      .object({
+        city: z.string(),
+        country: z.string(),
+      })
+      .describe("Company headquarters location"),
+    products: z.array(z.string()).describe("List of main products or services"),
+    employeeCount: z.number().describe("Approximate number of employees"),
+    isPublic: z.boolean().describe("Whether the company is publicly traded"),
+  });
+  const structuredModel = model.withStructuredOutput(CompanySchema, {
+    strict: true,
+    method: "functionCalling",
+  });
+  const template = ChatPromptTemplate.fromMessages([
+    [
+      "system",
+      "Extract company information from the text. If information is not available, make reasonable estimates.",
+    ],
+    ["human", "{text}"],
+  ]);
+  const chain = template.pipe(structuredModel);
+  const companyInfo = `
+      Microsoft was founded in 1975 and is headquartered in Redmond, Washington.
+      The company is publicly traded and has over 220,000 employees worldwide.
+      Their main products include Windows, Office, Azure, and Xbox.
+    `;
+  const result = await chain.invoke({ text: companyInfo });
+
+  console.log("✅ Extracted Company Data:\n");
+  console.log(result);
+```
+输出结果
+
+```
+✅ Extracted Company Data:
+
+{
+  name: 'Microsoft',
+  founded: 1975,
+  headquarters: { city: 'Redmond', country: 'Washington' },
+  products: [ 'Windows', 'Office', 'Azure', 'Xbox' ],
+  employeeCount: 220000,
+  isPublic: true
+}
+```
+#### withStructuredOutput` 的三个 method 详解
+
+| | jsonSchema | functionCalling | jsonMode |
+| --- | --- | --- | --- |
+| API 参数 | `response_format` + `type: json_schema` | `tools` + `tool_choice` | `response_format` + `type: json_object` |
+| 返回方式 | `content` 直接是 JSON | `tool_calls` 返回 | `content` 是 JSON |
+| Schema 强制 | ✅ 严格 | ✅ 严格 | ❌ 不保证 |
+| strict 模式 | ✅ 支持 | ✅ 支持 | ❌ 不支持 |
+| 模型兼容性 | 仅 GPT-4o+ | 大多数兼容 API ✅ | 较广泛 |
+
+![image.png](https://imgbed.cj.abrdns.com/file/1780457502391_image.png)
+
+## Tools
+ ### 什么是 `Function Calling` ?
+ `Function Calling` 是一种让模型调用函数的机制，通过定义函数的 `schema` 让模型知道何时以及如何调用函数。将大语言模型从单纯的文本生成器转变为行动协调中枢。模型不再局限于文本输出，而是能够触发真实世界的操作——例如查询天气、检索数据库、调用API等。
+
+![67a33cfc435247ada028395922bd132b.jpg](https://imgbed.cj.abrdns.com/file/1780467789222_67a33cfc435247ada028395922bd132b.jpg)
+
+### 简单的工具调用
+
+```ts
+import { createModel } from "@/utils";
+import { tool } from "langchain";
+import { evaluate } from "mathjs";
+import z from "zod";
+/**
+ * 定义工具
+ */
+const calculatorTool = tool(
+  async (input) => {
+    try {
+      const result = evaluate(input.expression);
+      return `The result is ${result}`;
+    } catch (error) {
+      return `Error evaluating expression: ${error instanceof Error ? error.message : String(error)}`;
+    }
+  },
+  {
+    name: "calculator",
+    //帮助大型语言模型决定何时使用
+    description:
+      "Useful for performing mathematical calculations. Use this when you need to compute numbers.",
+    schema: z.object({
+      expression: z
+        .string()
+        .describe("The mathematical expression to evaluate, e.g., '25 * 4'"),
+    }),
+  },
+);
+
+console.log("Tool created:", calculatorTool.name);
+// console.log("Schema:", calculatorTool.schema);
+
+/**
+ * 绑定工具到模型
+ */
+export default async function main() {
+  const model = createModel();
+  const boundModel = model.bindTools([calculatorTool]);
+  const baseMessage: Array<{
+    role: string;
+    content: string;
+    tool_call_id?: string;
+  }> = [{ role: "user", content: "What is 25 * 17?" }];
+  const result = await boundModel.invoke(baseMessage);
+  baseMessage.push({ role: "assistant", content: result.text });
+  console.log(result.tool_calls);
+  // 工具调用
+  const toolCall = result.tool_calls?.[0];
+  if (toolCall) {
+    const { args } = toolCall;
+    const toolResult = await calculatorTool.invoke(
+      calculatorTool.schema.parse(args),
+    );
+    console.log("Tool result:", toolResult);
+    baseMessage.push({
+      role: "tool",
+      content: toolResult,
+      tool_call_id: toolCall.id,
+    });
+    /**
+     * 把结果返回给模型
+     */
+    const finalResult = await boundModel.invoke(baseMessage);
+    console.log("Final result:", finalResult.text);
+  }
+}
+
+```
+
+### 多工具调用
+
+```ts
+import {
+  BaseMessage,
+  HumanMessage,
+  tool,
+  ToolMessage,
+  type ToolCall,
+} from "langchain";
+import z from "zod";
+import { dirname, join, resolve } from "node:path";
+import { mkdir, readdir } from "node:fs/promises";
+import { createModel } from "@/utils";
+import { DynamicStructuredTool } from "@langchain/core/tools";
+const BASE_PATH = resolve(import.meta.dir, "../..");
+function safePath(inputPath: string): string {
+  const absolute = resolve(BASE_PATH, inputPath);
+  if (!absolute.startsWith(BASE_PATH)) {
+    throw new Error(
+      `Access denied: path "${inputPath}" is outside the project directory`,
+    );
+  }
+  return absolute;
+}
+
+const readFileTool = tool(
+  async (input) => {
+    try {
+      const filePath = safePath(input.filePath);
+      const file = Bun.file(filePath);
+      const exists = await file.exists();
+      if (!exists) {
+        return `Error: File not found: ${input.filePath}`;
+      }
+      const content = await file.text();
+      return content;
+    } catch (error) {
+      return `Error reading file: ${error instanceof Error ? error.message : String(error)}`;
+    }
+  },
+  {
+    name: "read_file",
+    description:
+      "Reads the content of a file from the filesystem. Use this when you need to inspect or read a file's contents.",
+    schema: z.object({
+      filePath: z
+        .string()
+        .describe("The path to the file to read, e.g. 'src/index.ts'"),
+    }),
+  },
+);
+
+const listDirTool = tool(
+  async (input) => {
+    try {
+      const dirPath = safePath(input.dirPath);
+      const entries = await readdir(dirPath);
+      return entries.join("\n");
+    } catch (error) {
+      return `Error listing directory: ${error instanceof Error ? error.message : String(error)}`;
+    }
+  },
+  {
+    name: "list_directory",
+    description:
+      "Lists files and directories in a given path. Use this when you need to see what files exist in a directory.",
+    schema: z.object({
+      dirPath: z
+        .string()
+        .describe("The path to the directory to list, e.g. 'src'"),
+    }),
+  },
+);
+
+const writeFileTool = tool(
+  async (input) => {
+    try {
+      const filePath = safePath(input.filePath);
+      const dir = dirname(filePath);
+      await mkdir(dir, { recursive: true });
+      await Bun.write(filePath, input.content);
+      return `Successfully wrote to ${input.filePath}`;
+    } catch (error) {
+      return `Error writing file: ${error instanceof Error ? error.message : String(error)}`;
+    }
+  },
+  {
+    name: "write_file",
+    description:
+      "Writes content to a file on the filesystem. Creates the file and any missing parent directories if needed.",
+    schema: z.object({
+      filePath: z
+        .string()
+        .describe("The path to the file to write, e.g. 'src/index.ts'"),
+      content: z.string().describe("The content to write to the file"),
+    }),
+  },
+);
+const toolCallHandler = async (
+  tools: DynamicStructuredTool[],
+  toolCall: ToolCall,
+) => {
+  const tool = tools.find((t) => t.name === toolCall.name);
+  if (tool) {
+    const toolResult = await tool.invoke(toolCall.args);
+    console.log(`tool ${tool.name} result:`, toolResult);
+    return toolResult;
+  }
+  return null;
+};
+
+export default async function main() {
+  const tools: DynamicStructuredTool[] = [
+    readFileTool,
+    listDirTool,
+    writeFileTool,
+  ];
+  const model = createModel();
+  const boundModel = model.bindTools(tools);
+  const baseMessage: BaseMessage[] = [];
+  const userInput = prompt(
+    `🧠：我是你的ai助手，你有什么想问的吗？（直接回车退出）：\n`,
+  );
+  if (!userInput) return;
+  baseMessage.push(new HumanMessage(userInput));
+  const result = await boundModel.invoke(baseMessage);
+  console.log("tool calls result:", result);
+  if (result.tool_calls && result.tool_calls.length > 0) {
+    for (const toolCall of result.tool_calls) {
+      const toolCallFinal = {
+        ...toolCall,
+        id: toolCall.id ?? crypto.randomUUID(),
+      };
+
+      const toolResult = await toolCallHandler(tools, toolCallFinal);
+      if (toolResult) {
+        baseMessage.push(
+          new ToolMessage({
+            content: toolResult,
+            tool_call_id: toolCallFinal.id,
+          }),
+        );
+        const finalResult = await boundModel.invoke(baseMessage);
+        console.log("final result:", finalResult);
+      }
+    }
+  }
+}
+
+```
+
+**哪些因素会影响LLM选择工具？**
+
+工具名称、工具描述、参数模式、用户的问题
