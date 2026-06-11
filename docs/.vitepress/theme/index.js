@@ -8,6 +8,8 @@ import imageViewer from "vitepress-plugin-image-viewer";
 import vImageViewer from "vitepress-plugin-image-viewer/lib/vImageViewer.vue";
 import { useRoute } from "vitepress";
 import ArticleMetadata from "./components/ArticleMetadata.vue";
+import { initComponent } from "vitepress-plugin-legend/component";
+import "vitepress-plugin-legend/dist/index.css";
 /** @type {import('vitepress').Theme} */
 export default {
   extends: DefaultTheme,
@@ -21,6 +23,7 @@ export default {
   enhanceApp({ app, router, siteData }) {
     app.component("Card", Card);
     app.component("vImageViewer", vImageViewer);
+    initComponent(app);
   },
   setup() {
     const route = useRoute();

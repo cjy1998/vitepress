@@ -5,7 +5,7 @@
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "dev": "vitepress dev docs   --port 8888",
+    "dev": "vitepress dev docs   --port 8887",
     "docs:build": "vitepress build docs",
     "docs:preview": "vitepress preview docs  --port 8082"
   },
@@ -17,6 +17,7 @@
   },
   "dependencies": {
     "viewerjs": "^1.11.7",
-    "vitepress-plugin-image-viewer": "^1.1.6"
+    "vitepress-plugin-image-viewer": "^1.1.6",
+    "vitepress-plugin-legend": "^2.0.0"
   }
 }

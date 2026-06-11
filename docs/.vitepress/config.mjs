@@ -1,6 +1,7 @@
 import { defineConfig } from "vitepress";
 import { readFileSync, existsSync } from "node:fs";
 import { join } from "node:path";
+import { vitepressPluginLegend } from "vitepress-plugin-legend";
 // https://vitepress.dev/reference/site-config
 export default defineConfig({
   // githubpage中这样配置/vitepress/
@@ -69,6 +70,16 @@ export default defineConfig({
               { text: "fastapi", link: "/server/python/fastapi/base.md" },
             ],
           },
+        ],
+      },
+      {
+        text: "AI",
+        items: [
+          { text: "LangChain", link: "/ai/langchain/base.md" },
+          // { text: 'H5', link: '/react' },
+          // { text: '微信小程序', link: '/wechat/index.md' },
+          // { text: 'Vue3后台管理系统', link: '/typescript' },
+          // { text: 'React后台管理系统', link: '/node' },
         ],
       },
       {
@@ -288,5 +299,13 @@ export default defineConfig({
     } catch (e) {
       console.error(`❌ 读取失败: ${filePath}`);
     }
+  },
+  markdown: {
+    config(md) {
+      vitepressPluginLegend(md, {
+        markmap: { showToolbar: true }, // 显示脑图工具栏
+        mermaid: true, // 启用 Mermaid
+      });
+    },
   },
 });

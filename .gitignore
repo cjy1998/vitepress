@@ -21,4 +21,6 @@ selenium-debug.log
 package-lock.json
 yarn.lock
 
-.obsidian
+**/.obsidian
+**/.vitepress/cache
+**/.vitepress/dist
