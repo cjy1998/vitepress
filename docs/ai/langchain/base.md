@@ -181,63 +181,11 @@ const messages = [
 
     ![image.png](https://imgbed.cj.abrdns.com/file/1779783815832_image.png)
 
-    ```ts
-  
-      import { createModel } from "../utils/index.ts";
-      import { AIMessage, HumanMessage, SystemMessage } from "langchain";
-      
-      export default async function multiTurn() {
-        const baseMessages: (AIMessage | HumanMessage | SystemMessage)[] = [
-          new SystemMessage("你是个海盗。所有问题都要用'Oh！Man'开头回答。"),
-        ];
-      
-        const model = createModel();
-      
-        async function chatLoop() {
-          // bun的prompt函数
-          const userInput = prompt(
-            `🧠：我是你的ai助手，你有什么想问的吗？（直接回车退出）：\n`,
-          );
-          if (!userInput || !userInput.trim()) {
-            console.log("👋 对话结束");
-            return;
-          }
-      
-          baseMessages.push(new HumanMessage(userInput));
-          const result = await model.invoke(baseMessages);
-          console.log(`🧠: ${result.content}\n`);
-          baseMessages.push(new AIMessage(result.content));
-          // 递归：继续下一轮对话
-          await chatLoop();
-        }
-      
-        await chatLoop();
-      }
+    [示例代码](https://github.com/cjy1998/agent-practice/blob/master/langchain/src/section2/multi-turn.ts)
 
-    ```
 2. 保持上下文
 3. 流式输出
-    ```ts
-      import { createModel } from "../utils/index.ts";
-      import { AIMessage, HumanMessage, SystemMessage } from "langchain";
-      
-      export default async function streaming() {
-        const model = createModel();
-        const messages = [
-          new SystemMessage("你是一个温柔的人？"),
-          new HumanMessage(
-            "对比一下python、java、go,对比元素需要加入中国国内招聘市场的岗位数量、热度",
-          ),
-        ];
-        const result = await model.stream(messages);
-        for await (const chunk of result) {
-          const content = typeof chunk.content === "string" ? chunk.content : "";
-          //这是Node.js / Bun 内置的进程 I/O API，作用是把内容直接写入终端（标准输出），不带换行符。
-          process.stdout.write(content);
-        }
-      }
-
-    ```
+    [示例代码](https://github.com/cjy1998/agent-practice/blob/master/langchain/src/section2/streaming.ts)
 4. 调整行为
 
 ### 流式输出深入理解
@@ -559,43 +507,8 @@ const result = await model.invoke(prompt);   // 再手动调用
 ```
 #### 复杂结构化输出
 
-```ts
- const model = createModel();
-  const CompanySchema = z.object({
-    name: z.string().describe("Company name"),
-    founded: z.number().describe("Year the company was founded"),
-    headquarters: z
-      .object({
-        city: z.string(),
-        country: z.string(),
-      })
-      .describe("Company headquarters location"),
-    products: z.array(z.string()).describe("List of main products or services"),
-    employeeCount: z.number().describe("Approximate number of employees"),
-    isPublic: z.boolean().describe("Whether the company is publicly traded"),
-  });
-  const structuredModel = model.withStructuredOutput(CompanySchema, {
-    strict: true,
-    method: "functionCalling",
-  });
-  const template = ChatPromptTemplate.fromMessages([
-    [
-      "system",
-      "Extract company information from the text. If information is not available, make reasonable estimates.",
-    ],
-    ["human", "{text}"],
-  ]);
-  const chain = template.pipe(structuredModel);
-  const companyInfo = `
-      Microsoft was founded in 1975 and is headquartered in Redmond, Washington.
-      The company is publicly traded and has over 220,000 employees worldwide.
-      Their main products include Windows, Office, Azure, and Xbox.
-    `;
-  const result = await chain.invoke({ text: companyInfo });
+[示例代码](https://github.com/cjy1998/agent-practice/blob/master/langchain/src/section2.2/zod-schemas.ts)
 
-  console.log("✅ Extracted Company Data:\n");
-  console.log(result);
-```
 输出结果
 
 ```
@@ -630,233 +543,19 @@ const result = await model.invoke(prompt);   // 再手动调用
 
 ### 简单的工具调用
 
-```ts
-import { createModel } from "@/utils";
-import { tool } from "langchain";
-import { evaluate } from "mathjs";
-import z from "zod";
-/**
- * 定义工具
- */
-const calculatorTool = tool(
-  async (input) => {
-    try {
-      const result = evaluate(input.expression);
-      return `The result is ${result}`;
-    } catch (error) {
-      return `Error evaluating expression: ${error instanceof Error ? error.message : String(error)}`;
-    }
-  },
-  {
-    name: "calculator",
-    //帮助大型语言模型决定何时使用
-    description:
-      "Useful for performing mathematical calculations. Use this when you need to compute numbers.",
-    schema: z.object({
-      expression: z
-        .string()
-        .describe("The mathematical expression to evaluate, e.g., '25 * 4'"),
-    }),
-  },
-);
-
-console.log("Tool created:", calculatorTool.name);
-// console.log("Schema:", calculatorTool.schema);
-
-/**
- * 绑定工具到模型
- */
-export default async function main() {
-  const model = createModel();
-  const boundModel = model.bindTools([calculatorTool]);
-  const baseMessage: Array<{
-    role: string;
-    content: string;
-    tool_call_id?: string;
-  }> = [{ role: "user", content: "What is 25 * 17?" }];
-  const result = await boundModel.invoke(baseMessage);
-  baseMessage.push({ role: "assistant", content: result.text });
-  console.log(result.tool_calls);
-  // 工具调用
-  const toolCall = result.tool_calls?.[0];
-  if (toolCall) {
-    const { args } = toolCall;
-    const toolResult = await calculatorTool.invoke(
-      calculatorTool.schema.parse(args),
-    );
-    console.log("Tool result:", toolResult);
-    baseMessage.push({
-      role: "tool",
-      content: toolResult,
-      tool_call_id: toolCall.id,
-    });
-    /**
-     * 把结果返回给模型
-     */
-    const finalResult = await boundModel.invoke(baseMessage);
-    console.log("Final result:", finalResult.text);
-  }
-}
-
-```
+[示例代码](https://github.com/cjy1998/agent-practice/blob/master/langchain/src/section3/01-simple-tool.ts)
 
 ### 多工具调用
 
-```ts
-import {
-  BaseMessage,
-  HumanMessage,
-  tool,
-  ToolMessage,
-  type ToolCall,
-} from "langchain";
-import z from "zod";
-import { dirname, join, resolve } from "node:path";
-import { mkdir, readdir } from "node:fs/promises";
-import { createModel } from "@/utils";
-import { DynamicStructuredTool } from "@langchain/core/tools";
-const BASE_PATH = resolve(import.meta.dir, "../..");
-function safePath(inputPath: string): string {
-  const absolute = resolve(BASE_PATH, inputPath);
-  if (!absolute.startsWith(BASE_PATH)) {
-    throw new Error(
-      `Access denied: path "${inputPath}" is outside the project directory`,
-    );
-  }
-  return absolute;
-}
-
-const readFileTool = tool(
-  async (input) => {
-    try {
-      const filePath = safePath(input.filePath);
-      const file = Bun.file(filePath);
-      const exists = await file.exists();
-      if (!exists) {
-        return `Error: File not found: ${input.filePath}`;
-      }
-      const content = await file.text();
-      return content;
-    } catch (error) {
-      return `Error reading file: ${error instanceof Error ? error.message : String(error)}`;
-    }
-  },
-  {
-    name: "read_file",
-    description:
-      "Reads the content of a file from the filesystem. Use this when you need to inspect or read a file's contents.",
-    schema: z.object({
-      filePath: z
-        .string()
-        .describe("The path to the file to read, e.g. 'src/index.ts'"),
-    }),
-  },
-);
-
-const listDirTool = tool(
-  async (input) => {
-    try {
-      const dirPath = safePath(input.dirPath);
-      const entries = await readdir(dirPath);
-      return entries.join("\n");
-    } catch (error) {
-      return `Error listing directory: ${error instanceof Error ? error.message : String(error)}`;
-    }
-  },
-  {
-    name: "list_directory",
-    description:
-      "Lists files and directories in a given path. Use this when you need to see what files exist in a directory.",
-    schema: z.object({
-      dirPath: z
-        .string()
-        .describe("The path to the directory to list, e.g. 'src'"),
-    }),
-  },
-);
-
-const writeFileTool = tool(
-  async (input) => {
-    try {
-      const filePath = safePath(input.filePath);
-      const dir = dirname(filePath);
-      await mkdir(dir, { recursive: true });
-      await Bun.write(filePath, input.content);
-      return `Successfully wrote to ${input.filePath}`;
-    } catch (error) {
-      return `Error writing file: ${error instanceof Error ? error.message : String(error)}`;
-    }
-  },
-  {
-    name: "write_file",
-    description:
-      "Writes content to a file on the filesystem. Creates the file and any missing parent directories if needed.",
-    schema: z.object({
-      filePath: z
-        .string()
-        .describe("The path to the file to write, e.g. 'src/index.ts'"),
-      content: z.string().describe("The content to write to the file"),
-    }),
-  },
-);
-const toolCallHandler = async (
-  tools: DynamicStructuredTool[],
-  toolCall: ToolCall,
-) => {
-  const tool = tools.find((t) => t.name === toolCall.name);
-  if (tool) {
-    const toolResult = await tool.invoke(toolCall.args);
-    console.log(`tool ${tool.name} result:`, toolResult);
-    return toolResult;
-  }
-  return null;
-};
-
-export default async function main() {
-  const tools: DynamicStructuredTool[] = [
-    readFileTool,
-    listDirTool,
-    writeFileTool,
-  ];
-  const model = createModel();
-  const boundModel = model.bindTools(tools);
-  const baseMessage: BaseMessage[] = [];
-  const userInput = prompt(
-    `🧠：我是你的ai助手，你有什么想问的吗？（直接回车退出）：\n`,
-  );
-  if (!userInput) return;
-  baseMessage.push(new HumanMessage(userInput));
-  const result = await boundModel.invoke(baseMessage);
-  console.log("tool calls result:", result);
-  if (result.tool_calls && result.tool_calls.length > 0) {
-    for (const toolCall of result.tool_calls) {
-      const toolCallFinal = {
-        ...toolCall,
-        id: toolCall.id ?? crypto.randomUUID(),
-      };
-
-      const toolResult = await toolCallHandler(tools, toolCallFinal);
-      if (toolResult) {
-        baseMessage.push(
-          new ToolMessage({
-            content: toolResult,
-            tool_call_id: toolCallFinal.id,
-          }),
-        );
-        const finalResult = await boundModel.invoke(baseMessage);
-        console.log("final result:", finalResult);
-      }
-    }
-  }
-}
-
-```
+[示例代码](https://github.com/cjy1998/agent-practice/blob/master/langchain/src/section3/02-multiple-tools.ts)
 
 **哪些因素会影响LLM选择工具？**
 
 工具名称、工具描述、参数模式、用户的问题
 
 ## Agent
+
+[示例代码](https://github.com/cjy1998/agent-practice/blob/master/langchain/src/section4/01-create-agent-basic.ts)
 
 ### createAgent() 底层到底做什么？
 
@@ -1016,6 +715,8 @@ for (const toolCall of result.tool_calls) {
 `createAgent()` 把步骤 2-5 **全部自动化**到一个 LangGraph 状态机中：LLM 调用 → 检查 tool_calls → 执行工具 → 把结果喂回 LLM → 循环，直到 LLM 不再请求工具调用为止。
 
 ---
+
+[示例代码](https://github.com/cjy1998/agent-practice/blob/master/langchain/src/section4/02-create-agent-multi-tool.ts)
 
 ### createAgent() 如何防止无限循环？
 
@@ -1465,6 +1166,8 @@ sequenceDiagram
 
 ## Middleware
 
+[示例代码](https://github.com/cjy1998/agent-practice/blob/master/langchain/src/section4/03-agent-with-middleware.ts)
+
 1. **wrapModelCall**：拦截对模型的调用
 
     主要用途：
@@ -1491,6 +1194,8 @@ flowchart TD
 ```
 
 ### 内置中间件
+
+[示例代码](https://github.com/cjy1998/agent-practice/blob/master/langchain/src/section4/04-built-in-middleware.ts)
 
 1. **summarizationMiddleware**：总结长对话，使其保持在上下文范围内
 
