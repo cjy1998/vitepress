@@ -1210,3 +1210,10 @@ graph TD
     E --> B
     C -->|No| F[Answer]
 ```
+
+## MCP
+
+| 传输方式 | 通信方法 | 适用场景 | 示例 |
+| :--- | :--- | :--- | :--- |
+| Streamable HTTP | 基于网络（客户端 → 服务器，通过网络传输） | 当 MCP 服务器通过 URL 访问时（本地或远程） | `{ transport: "http", url: "https://api.mycompany.com/mcp" }` |
+| stdio | 基于进程（父进程 ↔ 子进程，通过数据流传输） | 当 MCP 服务器作为应用程序的子进程运行时 | `{ transport: "stdio", command: "node", args: ["/path/to/server.js"] }` |
