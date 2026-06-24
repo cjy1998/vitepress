@@ -13,6 +13,7 @@ bun init
 ```bash
  pnpm  add zod langchain @langchain/openai @langchain/core
 ```
+
 3. 创建环境变量 `.env`
 
 ```bash
@@ -20,7 +21,9 @@ OPENAI_API_KEY=
 OPENAI_MODEL=
 OPENAI_API_BASE_URL=
 ```
+
 4. 校验环境变量
+
 ```ts
 // types/env.ts
 import { z } from "zod";
@@ -47,18 +50,21 @@ export const settings = {
   openai_api_key: parsedEnv.data.OPENAI_API_KEY,
   openai_model: parsedEnv.data.OPENAI_MODEL,
 };
-
 ```
+
 在程序入口文件引入
+
 ```ts
 // index.ts
-import "./types/env.ts";  
+import "./types/env.ts";
 ```
 
 ## 模型抽象层ChatOpenAI
 
 ### ChatOpenAI的简单使用
+
 [详细参数与方法](https://reference.langchain.com/javascript/langchain-openai/ChatOpenAI)
+
 ```ts
 // src/chat.ts
 export const chatOpenAI = new ChatOpenAI({
@@ -82,8 +88,10 @@ export default async function main() {
   console.log(result);
 }
 ```
+
 返回接口是一个AIMessage
 [详细参数](https://reference.langchain.com/javascript/langchain/browser/AIMessage)
+
 ```json
 AIMessage {
   "id": "chatcmpl-e6c0d8d7-6600-94c1-a857-a1a1bb56208d",
@@ -114,6 +122,7 @@ AIMessage {
   }
 }
 ```
+
 ![image.png](https://imgbed.cj.abrdns.com/file/1779775724897_image.png)
 
 ## Message
@@ -124,13 +133,13 @@ AIMessage {
 
 它们都继承自 `BaseMessage`，核心区别在于 **角色定位** 和 **对模型行为的控制力**：
 
-| | `SystemMessage` | `HumanMessage` |
-|---|---|---|
-| **角色** | 系统指令/设定 | 用户输入/提问 |
-| **作用** | 定义 AI 的行为规则、人格、约束 | 提出具体问题或需求 |
-| **谁说的** | 开发者（不是最终用户） | 最终用户 |
-| **模型对待方式** | 视为不可违背的指令，优先级最高 | 视为需要回应的内容 |
-| **典型位置** | 消息列表的开头，通常只有一条 | 紧随 SystemMessage 之后，可多条 |
+|                  | `SystemMessage`                | `HumanMessage`                  |
+| ---------------- | ------------------------------ | ------------------------------- |
+| **角色**         | 系统指令/设定                  | 用户输入/提问                   |
+| **作用**         | 定义 AI 的行为规则、人格、约束 | 提出具体问题或需求              |
+| **谁说的**       | 开发者（不是最终用户）         | 最终用户                        |
+| **模型对待方式** | 视为不可违背的指令，优先级最高 | 视为需要回应的内容              |
+| **典型位置**     | 消息列表的开头，通常只有一条   | 紧随 SystemMessage 之后，可多条 |
 
 结合代码来理解：
 
@@ -138,7 +147,7 @@ AIMessage {
 const messages = [
   // 1️⃣ SystemMessage：设定 AI 的"人设"和行为规则
   new SystemMessage(
-    "你是一个代码助手，每次回答后，都需要提示用户，'该回答由AI产生，请仔细检查！'"
+    "你是一个代码助手，每次回答后，都需要提示用户，'该回答由AI产生，请仔细检查！'",
   ),
   // 2️⃣ HumanMessage：用户的实际提问
   new HumanMessage("列举一下ts中不经常用到的方法或者API"),
@@ -159,10 +168,10 @@ const messages = [
 
 ```ts
 const messages = [
-  new SystemMessage("你是一个代码助手..."),   // 系统设定
-  new HumanMessage("第一个问题"),              // 第1轮 - 用户
-  new AIMessage("第一个回答"),                 // 第1轮 - AI
-  new HumanMessage("第二个问题"),              // 第2轮 - 用户
+  new SystemMessage("你是一个代码助手..."), // 系统设定
+  new HumanMessage("第一个问题"), // 第1轮 - 用户
+  new AIMessage("第一个回答"), // 第1轮 - AI
+  new HumanMessage("第二个问题"), // 第2轮 - 用户
 ];
 ```
 
@@ -172,20 +181,19 @@ const messages = [
 
 也支持字典模式`{ role: "system", content: "你是一个代码助手..." }`
 
-
 ### 聊天模式
 
 1. 多回合对话
 
-    聊天模型其实并不会记住之前的消息，需要在每次对话中传递完整的消息列表。
+   聊天模型其实并不会记住之前的消息，需要在每次对话中传递完整的消息列表。
 
-    ![image.png](https://imgbed.cj.abrdns.com/file/1779783815832_image.png)
+   ![image.png](https://imgbed.cj.abrdns.com/file/1779783815832_image.png)
 
-    [示例代码](https://github.com/cjy1998/agent-practice/blob/master/langchain/src/section2/multi-turn.ts)
+   [示例代码](https://github.com/cjy1998/agent-practice/blob/master/langchain/src/section2/multi-turn.ts)
 
 2. 保持上下文
 3. 流式输出
-    [示例代码](https://github.com/cjy1998/agent-practice/blob/master/langchain/src/section2/streaming.ts)
+   [示例代码](https://github.com/cjy1998/agent-practice/blob/master/langchain/src/section2/streaming.ts)
 4. 调整行为
 
 ### 流式输出深入理解
@@ -205,11 +213,11 @@ for await (const chunk of result) {
 
 `process.stdout.write(data)` 是 **Node.js / Bun 内置的进程 I/O API**，作用是把内容直接写入终端（标准输出），**不带换行符**。
 
-| | `process.stdout.write()` | `console.log()` |
-|---|---|---|
-| **换行** | 不换行 | 自动加 `\n` |
-| **性能** | 更底层，更快 | 内部调用 `.write()` + 格式化 |
-| **适用场景** | 流式逐字输出、进度条 | 普通日志打印 |
+|              | `process.stdout.write()` | `console.log()`              |
+| ------------ | ------------------------ | ---------------------------- |
+| **换行**     | 不换行                   | 自动加 `\n`                  |
+| **性能**     | 更底层，更快             | 内部调用 `.write()` + 格式化 |
+| **适用场景** | 流式逐字输出、进度条     | 普通日志打印                 |
 
 在流式输出中，AI 的回复是一块一块（chunk）回来的。用 `process.stdout.write` 能实现**打字机效果**，所有 chunk 在同一行拼接显示；如果用 `console.log`，每一块都会换行。
 
@@ -242,12 +250,12 @@ while (true) {
 2. 当模型服务端推送新的 chunk 过来，Promise resolve，`await` 恢复执行
 3. 循环体执行完，再次 `await iterator.next()`，重复直到 `done: true`
 
-| | 同步 `Symbol.iterator` | 异步 `Symbol.asyncIterator` |
-|---|---|---|
-| `next()` 返回 | `{ value, done }` | `Promise<{ value, done }>` |
-| 数据等待 | 立即拿到，CPU 计算 | 需要 I/O（网络/文件） |
-| 语法 | `for...of` | `for await...of` |
-| 是否会"暂停" | 不会 | 会（`await` Promise） |
+|               | 同步 `Symbol.iterator` | 异步 `Symbol.asyncIterator` |
+| ------------- | ---------------------- | --------------------------- |
+| `next()` 返回 | `{ value, done }`      | `Promise<{ value, done }>`  |
+| 数据等待      | 立即拿到，CPU 计算     | 需要 I/O（网络/文件）       |
+| 语法          | `for...of`             | `for await...of`            |
+| 是否会"暂停"  | 不会                   | 会（`await` Promise）       |
 
 #### 流式输出时收集完整内容
 
@@ -259,7 +267,7 @@ let fullContent = "";
 for await (const chunk of result) {
   const content = typeof chunk.content === "string" ? chunk.content : "";
   process.stdout.write(content); // 实时输出到终端
-  fullContent += content;        // 同步拼接到完整字符串
+  fullContent += content; // 同步拼接到完整字符串
 }
 
 console.log("\n--- 完整内容 ---");
@@ -273,6 +281,7 @@ console.log(fullContent);
 #### usage收集的两种方式
 
 1. 非流式
+
 ```ts
 import { createModel } from "../utils/index";
 
@@ -287,7 +296,8 @@ export default async function trackTokenUsage() {
 ```
 
 2. 流式
-一般在最后一个chunk返回usage
+   一般在最后一个chunk返回usage
+
 ```ts
 import { createModel } from "../utils/index";
 import { AIMessageChunk } from "@langchain/core/messages";
@@ -306,57 +316,60 @@ export default async function trackTokenUsage() {
   console.log(`\n 总token: ${usage?.total_tokens}`);
 }
 ```
+
 #### 降低成本的简单方法
 
 1. 使用`maxTokens`限制响应长度
 2. 压缩对话记录
+
 ```ts
 const recentMessages = messages.slice(-10);
 const response = await model.invoke(recentMessages);
 ```
+
 ## Templates
 
 ### Messages vs Templates
 
 ```ts
-  import { createModel } from "../utils/index";
-  import { HumanMessage, SystemMessage } from "langchain";
-  import { ChatPromptTemplate } from "@langchain/core/prompts";
-  
-  export default async function messagesVsTemplates() {
-    const model = createModel();
-    //messages
-    const messages = [
-      new SystemMessage("You are a helpful assistant."),
-      new HumanMessage("把今天天气怎么样翻译成英文?"),
-    ];
-    const result = await model.invoke(messages);
-    console.log(`messages result: ${result.content}`);
-    // templates
-    const template = ChatPromptTemplate.fromMessages([
-      ["system", "You are a helpful translator."],
-      ["human", "Translate '{text}' to {language}"],
-    ]);
-    const templateChain = template.pipe(model);
-    const templateResult = await templateChain.invoke({
-      text: "今天天气怎么样",
-      language: "日语",
-    });
-    console.log(`template result: ${templateResult.content}`);
-  }
+import { createModel } from "../utils/index";
+import { HumanMessage, SystemMessage } from "langchain";
+import { ChatPromptTemplate } from "@langchain/core/prompts";
 
+export default async function messagesVsTemplates() {
+  const model = createModel();
+  //messages
+  const messages = [
+    new SystemMessage("You are a helpful assistant."),
+    new HumanMessage("把今天天气怎么样翻译成英文?"),
+  ];
+  const result = await model.invoke(messages);
+  console.log(`messages result: ${result.content}`);
+  // templates
+  const template = ChatPromptTemplate.fromMessages([
+    ["system", "You are a helpful translator."],
+    ["human", "Translate '{text}' to {language}"],
+  ]);
+  const templateChain = template.pipe(model);
+  const templateResult = await templateChain.invoke({
+    text: "今天天气怎么样",
+    language: "日语",
+  });
+  console.log(`template result: ${templateResult.content}`);
+}
 ```
-| | `Messages` | `Templates` |
-|---|---|---|
-| **本质** | 手动拼接，硬编码 | 可复用的"模板函数" |
-| **变量替换** | 不支持（字符串拼接 | 支持 `{变量名}` 插值 |
-| **复用性** | 差，每次写一套 | 好，一次定义多处调用 |
+
+|              | `Messages`                            | `Templates`                     |
+| ------------ | ------------------------------------- | ------------------------------- |
+| **本质**     | 手动拼接，硬编码                      | 可复用的"模板函数"              |
+| **变量替换** | 不支持（字符串拼接                    | 支持 `{变量名}` 插值            |
+| **复用性**   | 差，每次写一套                        | 好，一次定义多处调用            |
 | **适合场景** | Agent、动态工作流、多步推理、工具集成 | RAG、复用提示、变量替换、一致性 |
-| **链式调用** | 不行 | 支持 `.pipe(model) |
+| **链式调用** | 不行                                  | 支持 `.pipe(model)              |
 
 ### pip
 
-.pipe()` 就像管道符 `|`，把前一个组件的输出作为后一个组件的输入。链一旦建好，你就把它当**一个整体**来调用，不需要手动处理中间转换。
+.pipe()`就像管道符`|`，把前一个组件的输出作为后一个组件的输入。链一旦建好，你就把它当**一个整体**来调用，不需要手动处理中间转换。
 
 ```ts
 const template = ChatPromptTemplate.fromMessages([
@@ -366,8 +379,8 @@ const template = ChatPromptTemplate.fromMessages([
 
 // 用 .pipe() 把 template 和 model 串联成链
 const templateChain = template.pipe(model);
-
 ```
+
 现在 `templateChain` 是一个**统一的可调用对象**，可以直接 `.invoke()`：
 
 ```ts
@@ -376,16 +389,17 @@ const result = await templateChain.invoke({
   language: "英文",
 });
 ```
+
 为什么叫"可调用的链"？
 
 `.pipe()` 返回的是 `Runnable` 对象，它有一套统一的调用接口：
 
-| 方法 | 作用 |
-|---|---|
-| `.invoke(input)` | 单次调用 |
-| `.stream(input)` | 流式输出 |
-| `.batch(inputs)` | 批量调用 |
-| `.pipe(next)` | 继续拼接下一个组件 |
+| 方法             | 作用               |
+| ---------------- | ------------------ |
+| `.invoke(input)` | 单次调用           |
+| `.stream(input)` | 流式输出           |
+| `.batch(inputs)` | 批量调用           |
+| `.pipe(next)`    | 继续拼接下一个组件 |
 
 链可以继续拼接
 
@@ -393,9 +407,7 @@ const result = await templateChain.invoke({
 import { StringOutputParser } from "@langchain/core/output_parsers";
 
 // template → model → outputParser
-const templateChain = template
-  .pipe(model)
-  .pipe(new StringOutputParser()); // 把 AIMessage 转成纯字符串
+const templateChain = template.pipe(model).pipe(new StringOutputParser()); // 把 AIMessage 转成纯字符串
 
 const text = await templateChain.invoke({
   text: "你好",
@@ -408,62 +420,62 @@ console.log(text); // 纯字符串，不是 AIMessage 对象
 
 两者的核心区别在于**输出格式**和**目标模型类型**：
 
-| | `ChatPromptTemplate` | `PromptTemplate` |
-|---|---|---|
-| **输出类型** | `BaseMessage[]`（消息数组） | `string`（纯字符串） |
-| **目标模型** | **聊天模型**（Chat Models）如 gpt-4, ChatOpenAI | **文本补全模型**（LLMs）如 text-davinci-003 |
-| **能否设置 System 角色** | ✅ 可以，明确区分 system/human/ai | ❌ 不行，只有一个字符串模板 |
-| **现代推荐度** | ⭐ **首选**，所有聊天场景都用它 | 仅用于特定旧模型或纯字符串场景
+|                          | `ChatPromptTemplate`                            | `PromptTemplate`                            |
+| ------------------------ | ----------------------------------------------- | ------------------------------------------- |
+| **输出类型**             | `BaseMessage[]`（消息数组）                     | `string`（纯字符串）                        |
+| **目标模型**             | **聊天模型**（Chat Models）如 gpt-4, ChatOpenAI | **文本补全模型**（LLMs）如 text-davinci-003 |
+| **能否设置 System 角色** | ✅ 可以，明确区分 system/human/ai               | ❌ 不行，只有一个字符串模板                 |
+| **现代推荐度**           | ⭐ **首选**，所有聊天场景都用它                 | 仅用于特定旧模型或纯字符串场景              |
 
 ```ts
-  import { createModel } from "../utils";
-  import { PromptTemplate, ChatPromptTemplate } from "@langchain/core/prompts";
-  export default async function TemplateFormat() {
-    // ChatPromptTemplate
-    const chatPrompt = ChatPromptTemplate.fromMessages([
-      {
-        role: "system",
-        content: "你是一个以{style}风格并用{language}回答问题的{role}",
-      },
-      {
-        role: "human",
-        content: "{question}",
-      },
-    ]);
-    const model = createModel();
-    const result = await chatPrompt.pipe(model).invoke({
-      role: "pirate",
-      style: "dramatic",
-      language: "中文",
-      question: "什么是 TypeScript?",
-    });
-    console.log(result.content);
-  
-    console.log("\n2️⃣  PromptTemplate:\n");
-    // PromptTemplate
-    const stringTemplate = PromptTemplate.fromTemplate(
-      "用{style}风格写一段{topic}的开头，用{language}回答",
-    );
-    const prompt = await stringTemplate.format({
-      style: "幽默",
-      language: "中文",
-      topic: "今天周三",
-    });
-  
-    console.log(prompt + "\n");
-  
-    const result2 = await model.invoke(prompt);
-    console.log(result2.content);
-  }
+import { createModel } from "../utils";
+import { PromptTemplate, ChatPromptTemplate } from "@langchain/core/prompts";
+export default async function TemplateFormat() {
+  // ChatPromptTemplate
+  const chatPrompt = ChatPromptTemplate.fromMessages([
+    {
+      role: "system",
+      content: "你是一个以{style}风格并用{language}回答问题的{role}",
+    },
+    {
+      role: "human",
+      content: "{question}",
+    },
+  ]);
+  const model = createModel();
+  const result = await chatPrompt.pipe(model).invoke({
+    role: "pirate",
+    style: "dramatic",
+    language: "中文",
+    question: "什么是 TypeScript?",
+  });
+  console.log(result.content);
 
+  console.log("\n2️⃣  PromptTemplate:\n");
+  // PromptTemplate
+  const stringTemplate = PromptTemplate.fromTemplate(
+    "用{style}风格写一段{topic}的开头，用{language}回答",
+  );
+  const prompt = await stringTemplate.format({
+    style: "幽默",
+    language: "中文",
+    topic: "今天周三",
+  });
+
+  console.log(prompt + "\n");
+
+  const result2 = await model.invoke(prompt);
+  console.log(result2.content);
+}
 ```
-| | `.format()` | `.pipe(model).invoke()` |
-|---|---|---|
-| **做什么** | 仅渲染模板 | 渲染模板 + 调用模型 |
-| **返回值** | `string` 或 `BaseMessage[]` | `AIMessage`（模型回复） |
-| **消耗 Token** | ❌ 不消耗 | ✅ 消耗 |
-| **灵活性** | 高，可以拿到 prompt 做其他事 | 低，直接出结果 |
-| **代码量** | 需要再写一行 `model.invoke(prompt)` | 一步完成
+
+|                | `.format()`                         | `.pipe(model).invoke()` |
+| -------------- | ----------------------------------- | ----------------------- |
+| **做什么**     | 仅渲染模板                          | 渲染模板 + 调用模型     |
+| **返回值**     | `string` 或 `BaseMessage[]`         | `AIMessage`（模型回复） |
+| **消耗 Token** | ❌ 不消耗                           | ✅ 消耗                 |
+| **灵活性**     | 高，可以拿到 prompt 做其他事        | 低，直接出结果          |
+| **代码量**     | 需要再写一行 `model.invoke(prompt)` | 一步完成                |
 
 什么时候用 `.format()`？
 
@@ -475,6 +487,7 @@ console.log("实际发给模型的内容：", prompt); // 调试
 await saveToDB(prompt);                      // 存日志
 const result = await model.invoke(prompt);   // 再手动调用
 ```
+
 ### 结构化输出
 
 #### 基本结构化输出
@@ -482,29 +495,29 @@ const result = await model.invoke(prompt);   // 再手动调用
 **用 z.object（） 来定义模式，用 [model].withStructuredOutput（） 来获取类型化、验证过的数据。**
 
 ```ts
-  import { createModel } from "../utils/index";
-  import { z } from "zod";
-  export default async function main() {
-    const model = createModel();
-    const personSchema = z.object({
-      //使用 .describe（） 来告诉 AI 每个字段代表什么
-      name: z.string().describe("姓名"),
-      age: z.number().describe("年龄"),
-      email: z.string().email().describe("邮箱地址"),
-    });
-  
-    const structuredModel = model.withStructuredOutput(personSchema, {
-      strict: true,
-      method: "functionCalling",
-    });
-    const structuredOutput = await structuredModel.invoke(
-      "我的名字是张三，年龄28岁，邮箱是1258963@qq.com",
-    );
-  
-    console.log(structuredOutput);
-  }
+import { createModel } from "../utils/index";
+import { z } from "zod";
+export default async function main() {
+  const model = createModel();
+  const personSchema = z.object({
+    //使用 .describe（） 来告诉 AI 每个字段代表什么
+    name: z.string().describe("姓名"),
+    age: z.number().describe("年龄"),
+    email: z.string().email().describe("邮箱地址"),
+  });
 
+  const structuredModel = model.withStructuredOutput(personSchema, {
+    strict: true,
+    method: "functionCalling",
+  });
+  const structuredOutput = await structuredModel.invoke(
+    "我的名字是张三，年龄28岁，邮箱是1258963@qq.com",
+  );
+
+  console.log(structuredOutput);
+}
 ```
+
 #### 复杂结构化输出
 
 [示例代码](https://github.com/cjy1998/agent-practice/blob/master/langchain/src/section2.2/zod-schemas.ts)
@@ -523,21 +536,24 @@ const result = await model.invoke(prompt);   // 再手动调用
   isPublic: true
 }
 ```
+
 #### withStructuredOutput` 的三个 method 详解
 
-| | jsonSchema | functionCalling | jsonMode |
-| --- | --- | --- | --- |
-| API 参数 | `response_format` + `type: json_schema` | `tools` + `tool_choice` | `response_format` + `type: json_object` |
-| 返回方式 | `content` 直接是 JSON | `tool_calls` 返回 | `content` 是 JSON |
-| Schema 强制 | ✅ 严格 | ✅ 严格 | ❌ 不保证 |
-| strict 模式 | ✅ 支持 | ✅ 支持 | ❌ 不支持 |
-| 模型兼容性 | 仅 GPT-4o+ | 大多数兼容 API ✅ | 较广泛 |
+|             | jsonSchema                              | functionCalling         | jsonMode                                |
+| ----------- | --------------------------------------- | ----------------------- | --------------------------------------- |
+| API 参数    | `response_format` + `type: json_schema` | `tools` + `tool_choice` | `response_format` + `type: json_object` |
+| 返回方式    | `content` 直接是 JSON                   | `tool_calls` 返回       | `content` 是 JSON                       |
+| Schema 强制 | ✅ 严格                                 | ✅ 严格                 | ❌ 不保证                               |
+| strict 模式 | ✅ 支持                                 | ✅ 支持                 | ❌ 不支持                               |
+| 模型兼容性  | 仅 GPT-4o+                              | 大多数兼容 API ✅       | 较广泛                                  |
 
 ![image.png](https://imgbed.cj.abrdns.com/file/1780457502391_image.png)
 
 ## Tools
- ### 什么是 `Function Calling` ?
- `Function Calling` 是一种让模型调用函数的机制，通过定义函数的 `schema` 让模型知道何时以及如何调用函数。将大语言模型从单纯的文本生成器转变为行动协调中枢。模型不再局限于文本输出，而是能够触发真实世界的操作——例如查询天气、检索数据库、调用API等。
+
+### 什么是 `Function Calling` ?
+
+`Function Calling` 是一种让模型调用函数的机制，通过定义函数的 `schema` 让模型知道何时以及如何调用函数。将大语言模型从单纯的文本生成器转变为行动协调中枢。模型不再局限于文本输出，而是能够触发真实世界的操作——例如查询天气、检索数据库、调用API等。
 
 ![67a33cfc435247ada028395922bd132b.jpg](https://imgbed.cj.abrdns.com/file/1780467789222_67a33cfc435247ada028395922bd132b.jpg)
 
@@ -606,14 +622,14 @@ const graph = new StateGraph(state, { input, output, context });
 
 **3. 注册节点（Nodes）**
 
-| 节点 | 类 | 作用 |
-|---|---|---|
-| `"agent"` | `AgentNode` | 调用 LLM，拿到 AI 回复（可能包含 tool_calls） |
-| `"tools"` | `ToolNode` | 执行 tool_calls，返回 ToolMessage |
-| `middleware名.before_agent` | `BeforeAgentNode` | 中间件：在 Agent 运行前执行 |
-| `middleware名.before_model` | `BeforeModelNode` | 中间件：在 LLM 调用前执行 |
-| `middleware名.after_model` | `AfterModelNode` | 中间件：在 LLM 调用后执行 |
-| `middleware名.after_agent` | `AfterAgentNode` | 中间件：在 Agent 运行后执行 |
+| 节点                        | 类                | 作用                                          |
+| --------------------------- | ----------------- | --------------------------------------------- |
+| `"agent"`                   | `AgentNode`       | 调用 LLM，拿到 AI 回复（可能包含 tool_calls） |
+| `"tools"`                   | `ToolNode`        | 执行 tool_calls，返回 ToolMessage             |
+| `middleware名.before_agent` | `BeforeAgentNode` | 中间件：在 Agent 运行前执行                   |
+| `middleware名.before_model` | `BeforeModelNode` | 中间件：在 LLM 调用前执行                     |
+| `middleware名.after_model`  | `AfterModelNode`  | 中间件：在 LLM 调用后执行                     |
+| `middleware名.after_agent`  | `AfterAgentNode`  | 中间件：在 Agent 运行后执行                   |
 
 在没有 middleware 的场景下，只有 **`agent`** 和 **`tools`** 两个核心节点。
 
@@ -639,7 +655,9 @@ graph.addEdge("tools", "agent");
   if (!AIMessage.isInstance(lastMessage) || !lastMessage.tool_calls?.length)
     return END;
   // 否则 → 发送到 tools 节点并行执行
-  return regularToolCalls.map(call => new Send("tools", { ...state, lg_tool_call: call }));
+  return regularToolCalls.map(
+    (call) => new Send("tools", { ...state, lg_tool_call: call }),
+  );
 };
 ```
 
@@ -706,7 +724,9 @@ const result = await boundModel.invoke(messages);
 for (const toolCall of result.tool_calls) {
   const toolResult = await toolCallHandler(tools, toolCall);
   // 手动：4. 拼装 ToolMessage
-  baseMessage.push(new ToolMessage({ content: toolResult, tool_call_id: toolCall.id }));
+  baseMessage.push(
+    new ToolMessage({ content: toolResult, tool_call_id: toolCall.id }),
+  );
   // 手动：5. 再次调用模型
   const finalResult = await boundModel.invoke(baseMessage);
 }
@@ -739,8 +759,8 @@ const stop = step + (config.recursionLimit ?? DEFAULT_LOOP_LIMIT) + 1;
 
 // tick() 内
 if (this.step > this.stop) {
-    this.status = "out_of_steps";
-    return false;
+  this.status = "out_of_steps";
+  return false;
 }
 ```
 
@@ -748,11 +768,15 @@ if (this.step > this.stop) {
 
 ```js
 // @langchain/langgraph/dist/pregel/index.js
-if (loop.status === "out_of_steps") throw new GraphRecursionError([
-    `Recursion limit of ${config.recursionLimit} reached`,
-    "without hitting a stop condition. You can increase the",
-    `limit by setting the "recursionLimit" config key.`
-].join(" "), { lc_error_code: "GRAPH_RECURSION_LIMIT" });
+if (loop.status === "out_of_steps")
+  throw new GraphRecursionError(
+    [
+      `Recursion limit of ${config.recursionLimit} reached`,
+      "without hitting a stop condition. You can increase the",
+      `limit by setting the "recursionLimit" config key.`,
+    ].join(" "),
+    { lc_error_code: "GRAPH_RECURSION_LIMIT" },
+  );
 ```
 
 **默认值是 25**：
@@ -768,7 +792,7 @@ const DEFAULT_RECURSION_LIMIT = 25;
 const agent = createAgent({ model, tools: commonTools });
 const result = await agent.invoke(
   { messages: [new HumanMessage(query)] },
-  { recursionLimit: 50 }  // 将递归限制调为 50
+  { recursionLimit: 50 }, // 将递归限制调为 50
 );
 ```
 
@@ -794,13 +818,19 @@ const result = await agent.invoke(
 
 ```js
 if (this.#areMoreStepsNeeded(state, aiMessage)) {
-    commands.push(new Command({
-        update: { messages: [new AIMessage({
+  commands.push(
+    new Command({
+      update: {
+        messages: [
+          new AIMessage({
             content: "Sorry, need more steps to process this request.",
             name: this.name,
-            id: aiMessage.id
-        })] }
-    }));
+            id: aiMessage.id,
+          }),
+        ],
+      },
+    }),
+  );
 }
 ```
 
@@ -818,9 +848,9 @@ const agent = createAgent({
   tools: commonTools,
   middleware: [
     toolCallLimitMiddleware({
-      runLimit: 10,        // 单次运行最多 10 次工具调用
-      threadLimit: 50,     // 整个线程最多 50 次工具调用
-      exitBehavior: "continue",  // "continue" | "error" | "end"
+      runLimit: 10, // 单次运行最多 10 次工具调用
+      threadLimit: 50, // 整个线程最多 50 次工具调用
+      exitBehavior: "continue", // "continue" | "error" | "end"
     }),
   ],
 });
@@ -828,11 +858,11 @@ const agent = createAgent({
 
 它通过 `afterModel` 钩子在 LLM 返回 tool_calls 之后、工具执行之前进行拦截，三种退出行为：
 
-| `exitBehavior` | 行为 |
-|---|---|
-| `"continue"` | （默认）超限的工具调用被替换为错误 ToolMessage，其他工具继续执行，LLM 看到错误后自行决定是否停止 |
-| `"error"` | 直接抛出 `ToolCallLimitExceededError` 异常 |
-| `"end"` | 立即注入错误 ToolMessage + 最终 AIMessage，然后跳转到 `END` 终止图 |
+| `exitBehavior` | 行为                                                                                             |
+| -------------- | ------------------------------------------------------------------------------------------------ |
+| `"continue"`   | （默认）超限的工具调用被替换为错误 ToolMessage，其他工具继续执行，LLM 看到错误后自行决定是否停止 |
+| `"error"`      | 直接抛出 `ToolCallLimitExceededError` 异常                                                       |
+| `"end"`        | 立即注入错误 ToolMessage + 最终 AIMessage，然后跳转到 `END` 终止图                               |
 
 #### 循环如何自然终止？
 
@@ -882,11 +912,11 @@ sequenceDiagram
 
 #### 总结
 
-| 层级 | 机制 | 默认值 | 行为 |
-|---|---|---|---|
-| **LangGraph 硬上限** | `recursionLimit` | 25 步 | 超限抛 `GraphRecursionError` |
-| **AgentNode 优雅降级** | `remainingSteps` 检查 | undefined（不启用） | 步数不足时返回 "Sorry" 消息 |
-| **toolCallLimitMiddleware** | 工具调用计数 | 需手动添加 | 可选 continue / error / end |
+| 层级                        | 机制                  | 默认值              | 行为                         |
+| --------------------------- | --------------------- | ------------------- | ---------------------------- |
+| **LangGraph 硬上限**        | `recursionLimit`      | 25 步               | 超限抛 `GraphRecursionError` |
+| **AgentNode 优雅降级**      | `remainingSteps` 检查 | undefined（不启用） | 步数不足时返回 "Sorry" 消息  |
+| **toolCallLimitMiddleware** | 工具调用计数          | 需手动添加          | 可选 continue / error / end  |
 
 ---
 
@@ -905,7 +935,11 @@ const toolClasses = [...options.tools, ...middlewareTools];
 然后在 `AgentNode.#invokeModel` 中，每次调用 LLM 前通过 `#bindTools` 将工具绑定到模型：
 
 ```ts
-const modelWithTools = await this.#bindTools(request.model, request, structuredResponseFormat);
+const modelWithTools = await this.#bindTools(
+  request.model,
+  request,
+  structuredResponseFormat,
+);
 ```
 
 `#bindTools` 内部调用 `ChatOpenAI.bindTools()`，最终通过 `convertToOpenAIFunction` 将每个工具转为 OpenAI API 格式：
@@ -914,9 +948,9 @@ const modelWithTools = await this.#bindTools(request.model, request, structuredR
 // @langchain/core/dist/utils/function_calling.js
 function convertToOpenAIFunction(tool, fields) {
   return {
-    name: tool.name,            // 工具名
-    description: tool.description,  // 工具描述
-    parameters: toJsonSchema(tool.schema),  // zod → JSON Schema
+    name: tool.name, // 工具名
+    description: tool.description, // 工具描述
+    parameters: toJsonSchema(tool.schema), // zod → JSON Schema
   };
 }
 ```
@@ -951,7 +985,10 @@ function convertToOpenAIFunction(tool, fields) {
         "parameters": {
           "type": "object",
           "properties": {
-            "filePath": { "type": "string", "description": "The path to the file to read..." }
+            "filePath": {
+              "type": "string",
+              "description": "The path to the file to read..."
+            }
           },
           "required": ["filePath"]
         }
@@ -965,10 +1002,10 @@ function convertToOpenAIFunction(tool, fields) {
 
 LLM 收到工具定义 + 用户消息后，**自己决定**是否调用工具、调用哪个、传什么参数。这是语言模型内置的 Function Calling 能力，不是代码逻辑。
 
-| 用户输入 | LLM 推理过程 | LLM 的 tool_call 响应 |
-|---|---|---|
-| `"What is 125*8?"` | 包含数学计算，calculator 的 description 匹配 | `{name: "calculator", args: {expression: "125*8"}}` |
-| `"查看一下有什么文件"` | 需要浏览目录，list_directory 的 description 匹配 | `{name: "list_directory", args: {dirPath: "."}}` |
+| 用户输入               | LLM 推理过程                                     | LLM 的 tool_call 响应                               |
+| ---------------------- | ------------------------------------------------ | --------------------------------------------------- |
+| `"What is 125*8?"`     | 包含数学计算，calculator 的 description 匹配     | `{name: "calculator", args: {expression: "125*8"}}` |
+| `"查看一下有什么文件"` | 需要浏览目录，list_directory 的 description 匹配 | `{name: "list_directory", args: {dirPath: "."}}`    |
 
 #### 第 3 步：路由 → 执行 → 回传
 
@@ -1001,12 +1038,12 @@ sequenceDiagram
 
 #### 影响工具选择的四个因素
 
-| 因素 | 代码中对应 | 作用 |
-|---|---|---|
-| **工具名称** `name` | `name: "calculator"` | LLM 通过名称做语义匹配 |
+| 因素                       | 代码中对应                                             | 作用                                         |
+| -------------------------- | ------------------------------------------------------ | -------------------------------------------- |
+| **工具名称** `name`        | `name: "calculator"`                                   | LLM 通过名称做语义匹配                       |
 | **工具描述** `description` | `"Useful for performing mathematical calculations..."` | **最关键的因素**，LLM 以此判断何时使用该工具 |
-| **参数模式** `schema` | `z.object({ expression: z.string().describe(...) })` | 帮助 LLM 理解需要传什么参数 |
-| **用户输入** | `HumanMessage` 的 content | LLM 综合理解用户意图后匹配最合适的工具 |
+| **参数模式** `schema`      | `z.object({ expression: z.string().describe(...) })`   | 帮助 LLM 理解需要传什么参数                  |
+| **用户输入**               | `HumanMessage` 的 content                              | LLM 综合理解用户意图后匹配最合适的工具       |
 
 > **为什么 `description` 最关键？** LLM 无法看到工具的实现代码，它唯一的依据就是 `name` + `description` + `schema`。如果发现 LLM 经常选错工具，优先改进 `description`。
 
@@ -1044,31 +1081,44 @@ const agent = createAgent({
 ```ts
 // ❌ 模糊描述
 export const calculatorTool = tool(
-  async (input) => { /* ... */ },
+  async (input) => {
+    /* ... */
+  },
   {
     name: "calculator",
     description: "Useful for calculations.",
-    schema: z.object({ /* ... */ }),
+    schema: z.object({
+      /* ... */
+    }),
   },
 );
 
 // ✅ 精确描述
 export const calculatorTool = tool(
-  async (input) => { /* ... */ },
+  async (input) => {
+    /* ... */
+  },
   {
     name: "calculator",
-    description: "首选工具。当用户的问题涉及数学计算时，使用此工具而不是其他工具。",
-    schema: z.object({ /* ... */ }),
+    description:
+      "首选工具。当用户的问题涉及数学计算时，使用此工具而不是其他工具。",
+    schema: z.object({
+      /* ... */
+    }),
   },
 );
 
 // ✅ 明确排除
 export const readFileTool = tool(
-  async (input) => { /* ... */ },
+  async (input) => {
+    /* ... */
+  },
   {
     name: "read_file",
     description: "仅用于读取文件内容。不要用于数学计算。",
-    schema: z.object({ /* ... */ }),
+    schema: z.object({
+      /* ... */
+    }),
   },
 );
 ```
@@ -1087,7 +1137,7 @@ const boundModel = model.bindTools([calculatorTool], {
 
 // 强制必须调用某个工具（任意一个）
 const boundModel = model.bindTools(commonTools, {
-  tool_choice: "required",  // 或 "any"
+  tool_choice: "required", // 或 "any"
 });
 
 // 自动选择（默认行为）
@@ -1096,27 +1146,31 @@ const boundModel = model.bindTools(commonTools, {
 });
 ```
 
-| `tool_choice` 值 | 含义 |
-|---|---|
-| `"auto"` | （默认）LLM 自行决定是否调用工具、调用哪个 |
-| `"required"` / `"any"` | 必须调用至少一个工具，LLM 自己选哪个 |
-| `{ type: "function", function: { name: "xxx" } }` | **强制**调用指定工具 |
+| `tool_choice` 值                                  | 含义                                       |
+| ------------------------------------------------- | ------------------------------------------ |
+| `"auto"`                                          | （默认）LLM 自行决定是否调用工具、调用哪个 |
+| `"required"` / `"any"`                            | 必须调用至少一个工具，LLM 自己选哪个       |
+| `{ type: "function", function: { name: "xxx" } }` | **强制**调用指定工具                       |
 
 #### 方法 4：`llmToolSelectorMiddleware`（智能筛选）
 
 这是 LangChain Agent 内置的中间件，**当工具很多时最有用**。原理：**先用一个小模型筛选出最相关的 N 个工具，然后再把精选的工具列表传给主模型。**
 
 ```ts
-import { createAgent, HumanMessage, llmToolSelectorMiddleware } from "langchain";
+import {
+  createAgent,
+  HumanMessage,
+  llmToolSelectorMiddleware,
+} from "langchain";
 
 const agent = createAgent({
   model,
-  tools: commonTools,  // 20+ 个工具
+  tools: commonTools, // 20+ 个工具
   middleware: [
     llmToolSelectorMiddleware({
-      model: "openai:gpt-4o-mini",  // 用便宜的小模型做筛选
-      maxTools: 3,                  // 最多选 3 个工具给主模型
-      alwaysInclude: ["calculator"],  // calculator 永远包含，不占名额
+      model: "openai:gpt-4o-mini", // 用便宜的小模型做筛选
+      maxTools: 3, // 最多选 3 个工具给主模型
+      alwaysInclude: ["calculator"], // calculator 永远包含，不占名额
     }),
   ],
 });
@@ -1124,12 +1178,12 @@ const agent = createAgent({
 
 **参数详解：**
 
-| 参数 | 作用 |
-|---|---|
-| `model` | 用于筛选的小模型，不填则用 agent 的主模型 |
-| `maxTools` | 最多传给主模型的工具数量 |
-| `alwaysInclude` | 始终包含的工具名列表，不受 `maxTools` 限制 |
-| `systemPrompt` | 自定义筛选指令，默认 `"Your goal is to select the most relevant tools..."` |
+| 参数            | 作用                                                                       |
+| --------------- | -------------------------------------------------------------------------- |
+| `model`         | 用于筛选的小模型，不填则用 agent 的主模型                                  |
+| `maxTools`      | 最多传给主模型的工具数量                                                   |
+| `alwaysInclude` | 始终包含的工具名列表，不受 `maxTools` 限制                                 |
+| `systemPrompt`  | 自定义筛选指令，默认 `"Your goal is to select the most relevant tools..."` |
 
 **执行流程：**
 
@@ -1155,11 +1209,11 @@ sequenceDiagram
 
 #### 总结对比
 
-| 方法 | 优先级强度 | 适用场景 | 缺点 |
-|---|---|---|---|
-| **工具排列顺序** | ⭐ 很弱 | 差别不大时微调 | 基本没有实际效果 |
-| **优化 description** | ⭐⭐ 中等 | 所有场景 | 需要人工精心编写 |
-| **`tool_choice`** | ⭐⭐⭐ 很强 | 已知必须调用某工具 | 灵活性差，只能手动写死 |
+| 方法                            | 优先级强度    | 适用场景            | 缺点                         |
+| ------------------------------- | ------------- | ------------------- | ---------------------------- |
+| **工具排列顺序**                | ⭐ 很弱       | 差别不大时微调      | 基本没有实际效果             |
+| **优化 description**            | ⭐⭐ 中等     | 所有场景            | 需要人工精心编写             |
+| **`tool_choice`**               | ⭐⭐⭐ 很强   | 已知必须调用某工具  | 灵活性差，只能手动写死       |
 | **`llmToolSelectorMiddleware`** | ⭐⭐ 智能筛选 | 工具数量多（10+）时 | 多一次小模型调用，有额外成本 |
 
 **推荐优先级**：优先写好 `description` → 工具多时加 `llmToolSelectorMiddleware` → 需要强制时用 `tool_choice`。
@@ -1170,16 +1224,17 @@ sequenceDiagram
 
 1. **wrapModelCall**：拦截对模型的调用
 
-    主要用途：
-    - 动态选择模型
-    - 请求日志与监控
-    - 上下文注入（用户权限、回话数据）
+   主要用途：
+   - 动态选择模型
+   - 请求日志与监控
+   - 上下文注入（用户权限、回话数据）
+
 2. **wrapToolCall**：拦截工具执行
- 
-    主要用途：
-    - 错误处理与重试
-    - 工具结果转换
-    - 工具执行前的权限检查
+
+   主要用途：
+   - 错误处理与重试
+   - 工具结果转换
+   - 工具执行前的权限检查
 
 ### 执行流程
 
@@ -1213,7 +1268,661 @@ graph TD
 
 ## MCP
 
-| 传输方式 | 通信方法 | 适用场景 | 示例 |
-| :--- | :--- | :--- | :--- |
-| Streamable HTTP | 基于网络（客户端 → 服务器，通过网络传输） | 当 MCP 服务器通过 URL 访问时（本地或远程） | `{ transport: "http", url: "https://api.mycompany.com/mcp" }` |
-| stdio | 基于进程（父进程 ↔ 子进程，通过数据流传输） | 当 MCP 服务器作为应用程序的子进程运行时 | `{ transport: "stdio", command: "node", args: ["/path/to/server.js"] }` |
+| 传输方式        | 通信方法                                    | 适用场景                                   | 示例                                                                    |
+| :-------------- | :------------------------------------------ | :----------------------------------------- | :---------------------------------------------------------------------- |
+| Streamable HTTP | 基于网络（客户端 → 服务器，通过网络传输）   | 当 MCP 服务器通过 URL 访问时（本地或远程） | `{ transport: "http", url: "https://api.mycompany.com/mcp" }`           |
+| stdio           | 基于进程（父进程 ↔ 子进程，通过数据流传输） | 当 MCP 服务器作为应用程序的子进程运行时    | `{ transport: "stdio", command: "node", args: ["/path/to/server.js"] }` |
+
+## 文档、嵌入与语义搜索
+
+```mermaid
+graph TD
+    A[加载文档] --> B[拆分成块]
+    B --> C[创建嵌入]
+    C --> D[存储到矢量数据库]
+    D --> E[语义搜索]
+```
+
+### 加载文档
+
+所有 Document Loader 的输出格式统一：返回 `Document[]`，每个文档包含 `pageContent`（文本内容）和 `metadata`（元数据），方便后续统一处理（分割、向量化、存入向量数据库等）。
+
+[示例代码](https://github.com/cjy1998/agent-practice/blob/master/langchain/src/section6/01-load-text.ts)
+
+#### 加载 PDF
+
+加载 PDF 需要额外安装 `pdf-parse` 依赖：
+
+```bash
+pnpm add pdf-parse
+```
+
+```ts
+import { PDFLoader } from "@langchain/classic/document_loaders/fs/pdf";
+
+// 加载整个 PDF（默认每页一个文档）
+const loader = new PDFLoader("path/to/file.pdf");
+const docs = await loader.load();
+
+// 不拆页，合并为一个文档
+const loader2 = new PDFLoader("path/to/file.pdf", { splitPages: false });
+const docs2 = await loader2.load();
+```
+
+#### 支持的文件类型总览
+
+**文本类**
+
+| 格式     | Loader       | 说明                                     |
+| -------- | ------------ | ---------------------------------------- |
+| `.txt`   | `TextLoader` | 纯文本文件                               |
+| `.csv`   | `CSVLoader`  | CSV 表格数据                             |
+| `.json`  | `JSONLoader` | JSON 文件，可指定 jq schema 提取特定字段 |
+| `.jsonl` | `JSONLoader` | 逐行 JSON                                |
+
+**文档类**
+
+| 格式    | Loader       | 额外依赖    |
+| ------- | ------------ | ----------- |
+| `.pdf`  | `PDFLoader`  | `pdf-parse` |
+| `.docx` | `DocxLoader` | `mammoth`   |
+| `.epub` | `EPubLoader` | `epub2`     |
+
+**网页 / 远程**
+
+| 来源    | Loader                    | 说明                      |
+| ------- | ------------------------- | ------------------------- |
+| URL     | `CheerioWebBaseLoader`    | 用 Cheerio 解析网页       |
+| URL     | `PuppeteerWebBaseLoader`  | 用 Puppeteer 渲染动态页面 |
+| URL     | `PlaywrightWebBaseLoader` | 用 Playwright             |
+| Sitemap | `SitemapLoader`           | 批量抓取站点地图中的页面  |
+| GitHub  | `GithubRepoLoader`        | 加载 GitHub 仓库文件      |
+
+**第三方集成**
+
+| 来源         | Loader                               | 说明               |
+| ------------ | ------------------------------------ | ------------------ |
+| Notion       | `NotionDBLoader` / `NotionAPILoader` | Notion 数据库/页面 |
+| Figma        | `FigmaFileLoader`                    | Figma 设计文件     |
+| Hugging Face | `HFDocumentLoader`                   | HF 数据集          |
+| YouTube      | `YoutubeLoader`                      | 提取字幕/转录文本  |
+
+### 拆分
+
+文档拆分是 RAG 管道中的关键环节。加载文档后，需要将其拆分为合适大小的片段，以便后续向量化和语义搜索。
+
+```mermaid
+graph LR
+    A[加载文档] --> B[拆分成块]
+    B --> C[创建嵌入]
+    C --> D[存储到矢量数据库]
+    D --> E[语义搜索]
+```
+
+#### 可用分割器总览
+
+| 分割器 | 说明 | 适用场景 |
+|--------|------|----------|
+| `CharacterTextSplitter` | 按单个分隔符分割（默认 `\n\n`） | 简单文本，结构均匀 |
+| `RecursiveCharacterTextSplitter` | 按分隔符数组递归分割 | **首选**，通用场景 |
+| `TokenTextSplitter` | 按 token 数分割（基于 tiktoken） | 需精确控制 token 时 |
+| `MarkdownTextSplitter` | Markdown 语法感知分割 | Markdown 文档 |
+| `LatexTextSplitter` | LaTeX 语法感知分割 | LaTeX 文档 |
+
+#### RecursiveCharacterTextSplitter
+
+这是最常用的分割器，递归尝试分隔符数组，直到每个片段不超过目标大小。
+
+[示例代码](https://github.com/cjy1998/agent-practice/blob/master/langchain/src/section6/02-splitting.ts)
+
+##### 核心参数
+
+```ts
+import { RecursiveCharacterTextSplitter } from "@langchain/textsplitters";
+
+const splitter = new RecursiveCharacterTextSplitter({
+  chunkSize: 300,       // 每个块的目标大小（字符数）
+  chunkOverlap: 50,     // 块之间的重叠（字符数）
+  separators: ["\n\n", "\n", " ", ""],  // 分隔符优先级数组
+  keepSeparator: true,  // 是否在输出中保留分隔符
+  lengthFunction: (text) => text.length,  // 自定义长度计算函数
+});
+```
+
+| 参数 | 类型 | 默认值 | 说明 |
+|------|------|--------|------|
+| `chunkSize` | `number` | `1000` | 每个块的目标大小 |
+| `chunkOverlap` | `number` | `200` | 相邻块的重叠大小，用于保留上下文连续性 |
+| `separators` | `string[]` | `["\n\n", "\n", " ", ""]` | 分隔符数组，按优先级排列 |
+| `keepSeparator` | `boolean` | `true` | 是否在分割结果中保留分隔符 |
+| `lengthFunction` | `(text) => number` | `text.length` | 自定义长度计算，可用于按 token 计数 |
+
+> `chunkOverlap` 必须小于 `chunkSize`，否则抛出 `Error: Cannot have chunkOverlap >= chunkSize`。
+
+##### 递归分割算法原理
+
+1. 从 `separators[0]`（`\n\n`）开始，检查文本是否包含该分隔符
+2. 如果包含，按该分隔符拆分；如果不包含，尝试下一个
+3. 拆分后的每个片段如果仍大于 `chunkSize`，则用剩余分隔符递归处理
+4. 如果所有分隔符都用完仍超大，该片段原样保留（并输出警告）
+5. 小于 `chunkSize` 的片段通过 `mergeSplits` 按 `chunkOverlap` 重叠合并
+
+```ts
+// 简化示意
+split("\n\n") → ["段落1", "段落2", "段落3"]
+  ↓ 某段仍超大
+split("\n") → ["行1", "行2", "行3"]
+  ↓ 某行仍超大
+split(" ") → ["词1", "词2", "词3"]
+  ↓ 仍超大
+split("") → ["字1", "字2", "字3"]  // 逐字符分割
+```
+
+##### 如何确定最佳 chunkSize？
+
+没有固定规则，需综合考虑以下因素：
+
+| 因素 | 小 chunk（200-500） | 大 chunk（1000-2000） |
+|------|---------------------|----------------------|
+| **检索精度** | ✅ 更精确，匹配关键词更集中 | ❌ 可能包含无关内容 |
+| **上下文完整性** | ❌ 可能丢失上下文 | ✅ 保留更多上下文 |
+| **嵌入质量** | 语义信号更聚焦 | 语义信号可能被稀释 |
+| **存储成本** | 更多向量 | 更少向量 |
+| **适用场景** | FAQ、代码片段、精确问答 | 文章摘要、长文分析、叙事性内容 |
+
+**关键约束：chunkSize < 嵌入模型的 token 限制**
+
+| 嵌入模型 | 最大 token 数 | 建议 chunkSize（字符） |
+|----------|--------------|----------------------|
+| `text-embedding-3-small` | 8191 | ≤ 3000 |
+| `text-embedding-3-large` | 8191 | ≤ 3000 |
+| `text-embedding-ada-002` | 8191 | ≤ 3000 |
+
+> 1 个中文字符 ≈ 2 tokens，1 个英文单词 ≈ 1 token。粗略换算：3000 字符英文 ≈ 3000 tokens，3000 字符中文 ≈ 6000 tokens。
+
+**chunkOverlap 推荐比例**：
+
+| 比例 | 效果 |
+|------|------|
+| 5-10% | 轻微重叠，适合结构化内容（FAQ、代码） |
+| 10-20% | 适中重叠，**最常用**，保留上下文 |
+| 20-30% | 较大重叠，适合需要强连续性的长文 |
+
+**实际调优方法**：
+
+```ts
+// 1. 先用默认值跑一次
+const splitter = new RecursiveCharacterTextSplitter({ chunkSize: 500, chunkOverlap: 100 });
+const docs = await splitter.createDocuments([text]);
+
+// 2. 检查每个 chunk 的实际大小和内容
+docs.forEach((doc, i) => {
+  console.log(`Chunk ${i + 1}: ${doc.pageContent.length} chars`);
+  console.log(doc.pageContent.substring(0, 100) + "...\n");
+});
+
+// 3. 根据结果调整：
+//    - 检索结果不精确 → 减小 chunkSize
+//    - 回答不完整/丢失上下文 → 增大 chunkSize 或 chunkOverlap
+//    - 经常出现超大 chunk → 检查是否有无分隔符的长段落
+```
+
+##### 重叠机制深入理解
+
+`chunkOverlap` 不是按字符数精确重叠，而是按**分割单元**（split）粒度操作的。理解这一点至关重要，否则会出现"改了 overlap 但结果没变化"的困惑。
+
+**源码逻辑** (`mergeSplits` 方法)：
+
+```ts
+// 伪代码简化
+for (const split of splits) {
+  if (total + split.len > chunkSize) {
+    output(currentDoc);                   // 1. 输出当前 chunk
+    while (total > chunkOverlap) {        // 2. 从开头逐个移除分割单元
+      total -= currentDoc[0].len;         //    直到 total ≤ chunkOverlap
+      currentDoc.shift();
+    }
+  }
+  currentDoc.push(split);                 // 3. 加入新分割单元
+  total += split.len;
+}
+```
+
+关键：循环条件是 `total > chunkOverlap`，每次移除的是**整个分割单元**，不是截取部分字符。如果每个分割单元本身就大于 `chunkOverlap`，则**什么都保留不了**。
+
+**实际案例分析** — 以 `03-overlap.ts` 中的《小石潭记》文本为例：
+
+```
+chunkSize: 100,  分隔符: \n
+分割单元长度: [84, 48, 30, 43, 35]（5个句子）
+```
+
+| `chunkOverlap` | 生成第3个chunk时的 while 循环 | 能保留什么？ | 最终结果 |
+|---|---|---|---|
+| **0** | total=78 > 0 → 移除48 → total=30 → 30>0 → 移除30 → total=0 | 无 | `[s0] [s1+s2] [s3+s4]` 共3块 |
+| **20** | total=78 > 20 → 移除48 → total=30 → 30>20 → 移除30 → total=0 | **无**（最小单元30 > 20） | `[s0] [s1+s2] [s3+s4]` ← 和0一模一样 |
+| **40** | total=78 > 40 → 移除48 → total=30 → 30≤40 ✅ 停止 | **保留 s2（30字符）** | `[s0] [s1+s2] [s2+s3] [s4]` ✅ 有重叠 |
+
+**结论**：
+
+| 情况 | 说明 |
+|------|------|
+| 分割单元 < `chunkOverlap` | 重叠**生效**，末尾单元被保留到下一个 chunk |
+| 分割单元 ≥ `chunkOverlap` | 重叠**失效**，行为和 `chunkOverlap: 0` 相同 |
+| 分割单元远小于 `chunkSize` | 重叠效果最显著，上下文连接平滑 |
+
+**实践建议**：
+
+- `chunkOverlap` 应 ≥ 典型分割单元的大小，否则等于没设
+- 如果文本按短句/短行分割（如代码、对话），小 overlap（10-20）就能生效
+- 如果文本按长段落分割（如文章），需要更大的 overlap（50-100）才能看到效果
+- 如果调整 overlap 后结果没变化 → 打印每个分割单元的长度，确认 `chunkOverlap` 是否大于最小单元
+
+#### 在特定分隔符上分开
+
+有 4 种方式可以控制拆分行为：
+
+##### 方式一：自定义 `separators` 数组
+
+`separators` 按优先级排列，分割器会先尝试第一个，如果该分隔符不存在则尝试下一个，如果分割后仍然太大则递归进入下一级。
+
+```ts
+// 优先按标题分割，然后是段落，最后是行
+const splitter = new RecursiveCharacterTextSplitter({
+  chunkSize: 500,
+  chunkOverlap: 50,
+  separators: ["\n## ", "\n### ", "\n\n", "\n", " ", ""],
+});
+```
+
+常见的自定义分隔符模式：
+
+| 场景 | 推荐 separators | 说明 |
+|------|-----------------|------|
+| **通用文本** | `["\n\n", "\n", " ", ""]` | 默认值，按段落 → 行 → 词 → 字符 |
+| **Markdown** | `["\n## ", "\n### ", "\n\n", "\n", " ", ""]` | 优先按标题拆分 |
+| **代码** | `["\nfunction ", "\nclass ", "\n\n", "\n", " ", ""]` | 按函数/类拆分 |
+| **对话记录** | `["\nUser:", "\nAssistant:", "\n\n", "\n"]` | 按对话轮次拆分 |
+| **HTML** | `["<p>", "<div>", "<br>", "\n", " ", ""]` | 按 HTML 标签拆分 |
+
+##### 方式二：MarkdownTextSplitter
+
+`MarkdownTextSplitter` 是 `RecursiveCharacterTextSplitter` 的子类，内置了 Markdown 感知的分隔符：
+
+```ts
+import { MarkdownTextSplitter } from "@langchain/textsplitters";
+
+const splitter = new MarkdownTextSplitter({
+  chunkSize: 500,
+  chunkOverlap: 50,
+});
+const docs = await splitter.createDocuments([markdownText]);
+```
+
+内置的 Markdown 分隔符（按优先级）：
+
+```ts
+[
+  "\n## ",      // 二级标题
+  "\n### ",     // 三级标题
+  "\n#### ",    // 四级标题
+  "\n##### ",   // 五级标题
+  "\n###### ",  // 六级标题
+  "```\n\n",    // 代码块
+  "\n\n***\n\n", // 水平线（星号）
+  "\n\n---\n\n", // 水平线（横线）
+  "\n\n___\n\n", // 水平线（下划线）
+  "\n\n",       // 段落
+  "\n",         // 行
+  " ",          // 词
+  ""            // 字符
+]
+```
+
+##### 方式三：LatexTextSplitter
+
+```ts
+import { LatexTextSplitter } from "@langchain/textsplitters";
+
+const splitter = new LatexTextSplitter({
+  chunkSize: 500,
+  chunkOverlap: 50,
+});
+const docs = await splitter.createDocuments([latexText]);
+```
+
+内置的 LaTeX 分隔符（按优先级）：
+
+```ts
+[
+  "\n\\chapter{",       // 章
+  "\n\\section{",       // 节
+  "\n\\subsection{",    // 小节
+  "\n\\subsubsection{", // 子小节
+  "\n\\begin{enumerate}", // 枚举列表
+  "\n\\begin{itemize}",   // 无序列表
+  "\n\\begin{align}",     // 公式对齐
+  "$$",                   // 行间公式
+  "$",                    // 行内公式
+  "\n\n", "\n", " ", ""   // 通用分隔符
+]
+```
+
+##### 方式四：`fromLanguage()` 工厂方法
+
+`RecursiveCharacterTextSplitter` 提供 `fromLanguage()` 静态方法，为 16 种编程语言和标记语言内置了语法感知的分隔符：
+
+```ts
+import { RecursiveCharacterTextSplitter } from "@langchain/textsplitters";
+
+// Python 代码：按 class / def / 缩进分割
+const splitter = RecursiveCharacterTextSplitter.fromLanguage("python", {
+  chunkSize: 500,
+  chunkOverlap: 50,
+});
+const docs = await splitter.createDocuments([pythonCode]);
+```
+
+支持的语言：
+
+```ts
+type SupportedTextSplitterLanguage =
+  | "cpp" | "go" | "java" | "js" | "php" | "proto" | "python" | "rst"
+  | "ruby" | "rust" | "scala" | "swift" | "markdown" | "latex" | "html" | "sol";
+```
+
+各语言主要分隔符模式：
+
+| 语言 | 主要分隔符 | 说明 |
+|------|-----------|------|
+| `python` | `\nclass `, `\ndef `, `\n\tdef ` | 按类、方法、嵌套方法 |
+| `js` | `\nfunction `, `\nconst `, `\nlet `, `\nclass ` | 按函数、变量声明、类 |
+| `java` | `\nclass `, `\npublic `, `\nprotected `, `\nprivate ` | 按类、访问修饰符 |
+| `rust` | `\nfn `, `\nconst `, `\nlet `, `\nmatch ` | 按函数、绑定、匹配 |
+| `go` | `\nfunc `, `\nvar `, `\nconst `, `\ntype ` | 按函数、声明、类型 |
+| `cpp` | `\nclass `, `\nvoid `, `\nint `, `\nif ` | 按类、类型、控制流 |
+| `html` | `<body>`, `<div>`, `<p>`, `<h1>` ~ `<h6>` | 按 HTML 标签 |
+| `markdown` | `\n## ` ~ `\n###### `, ` ```\n\n ` | 按标题、代码块 |
+| `latex` | `\n\\chapter{`, `\n\\section{`, `$$`, `$` | 按章节、公式 |
+| `ruby` | `\ndef `, `\nclass `, `\nif `, `\nunless ` | 按方法、类、条件 |
+| `swift` | `\nfunc `, `\nclass `, `\nstruct `, `\nenum ` | 按函数、类型定义 |
+| `scala` | `\nclass `, `\nobject `, `\ndef `, `\nval ` | 按类、对象、方法 |
+| `php` | `\nfunction `, `\nclass `, `\nforeach ` | 按函数、类、循环 |
+| `proto` | `\nmessage `, `\nservice `, `\nenum ` | 按消息、服务、枚举 |
+| `rst` | `\n===\n`, `\n---\n`, `\n***\n`, `\n.. ` | 按 RST 标题、指令 |
+| `sol` | `\ncontract `, `\nfunction `, `\nmodifier ` | 按合约、函数、修饰符 |
+
+#### 进阶参数
+
+##### `keepSeparator` — 控制分隔符是否保留
+
+```ts
+// keepSeparator: true（默认） → 分隔符保留在结果中
+// 例如按 "\n\n" 分割 "Hello\n\nWorld"
+// → ["Hello\n\n", "World"]  （分隔符保留）
+
+// keepSeparator: false → 分隔符被移除
+// → ["Hello", "World"]      （分隔符丢弃）
+```
+
+默认为 `true`，对于 `RecursiveCharacterTextSplitter` 通常推荐保留，因为分隔符本身包含语义信息（如段落间距、标题层级）。
+
+##### `lengthFunction` — 自定义长度计算
+
+默认按字符数计算长度，但有时需要按 token 计算：
+
+```ts
+import { encodingForModel } from "js-tiktoken";
+
+const encoding = encodingForModel("gpt-4o");
+
+const splitter = new RecursiveCharacterTextSplitter({
+  chunkSize: 500,        // 按 token 而非字符
+  chunkOverlap: 50,
+  lengthFunction: (text) => encoding.encode(text).length,
+});
+```
+
+> 使用 token 计算更精确，但性能稍差（需要编码每个片段）。对于大多数场景，按字符数即可。
+
+#### TokenTextSplitter — 按 token 分割
+
+`TokenTextSplitter` 直接按 token 数分割，不使用分隔符，适合需要精确控制 token 的场景：
+
+```ts
+import { TokenTextSplitter } from "@langchain/textsplitters";
+
+const splitter = new TokenTextSplitter({
+  chunkSize: 200,           // 每块 200 tokens
+  chunkOverlap: 20,         // 重叠 20 tokens
+  encodingName: "gpt2",     // 使用 GPT-2 的 tokenizer（默认）
+});
+
+const docs = await splitter.createDocuments([text]);
+```
+
+| 参数 | 默认值 | 说明 |
+|------|--------|------|
+| `chunkSize` | `1000` | 每块 token 数 |
+| `chunkOverlap` | `200` | 重叠 token 数 |
+| `encodingName` | `"gpt2"` | tokenizer 编码名称，可选 `"gpt2"`, `"r50k_base"`, `"p50k_base"`, `"cl100k_base"` 等 |
+
+> `TokenTextSplitter` 没有分隔符概念，纯粹按 token 索引切割，可能导致语句被截断。一般推荐使用 `RecursiveCharacterTextSplitter` + `lengthFunction` 的组合来实现按 token 分割。
+
+#### 代码示例
+
+```ts
+// src/section6/02-splitting.ts
+import { RecursiveCharacterTextSplitter } from "@langchain/textsplitters";
+
+const text = `
+[Long article about AI and machine learning...]
+`;
+
+const splitter = new RecursiveCharacterTextSplitter({
+  chunkSize: 300, // Target size in characters
+  chunkOverlap: 50, // Overlap between chunks (preserves context)
+});
+
+const docs = await splitter.createDocuments([text]);
+
+console.log(`Split into ${docs.length} chunks`);
+
+docs.forEach((doc, i) => {
+  console.log(`\nChunk ${i + 1}:`);
+  console.log(doc.pageContent);
+  console.log(`Length: ${doc.pageContent.length} characters`);
+});
+```
+
+### 元数据
+
+元数据是文档的"标签"，在 RAG 管道中有两大核心作用：
+
+```mermaid
+graph LR
+    A[加载文档] --> B[附加元数据]
+    B --> C[拆分]
+    C --> D[创建嵌入]
+    D --> E[存储到矢量数据库]
+    E --> F[语义搜索 + 元数据过滤]
+    F --> G[按来源/类别/日期筛选结果]
+```
+
+| 作用 | 说明 |
+|------|------|
+| **来源追踪** | 检索后可知每个 chunk 来自哪个文件、哪一页、哪一行 |
+| **检索过滤** | 在向量搜索时按类别、日期、作者等条件缩小范围 |
+
+#### 元数据与分割
+
+`Document` 的结构：`{ pageContent: string, metadata: Record<string, any> }`
+
+`RecursiveCharacterTextSplitter.splitDocuments()` **自动将元数据继承**到所有分块：
+
+```ts
+// 分割前：1 个文档，带 metadata
+const doc = new Document({
+  pageContent: "长文本...",
+  metadata: { source: "guide.md", category: "tutorial" },
+});
+
+// 分割后：N 个分块，每个都继承了原始的 metadata
+const chunks = await splitter.splitDocuments([doc]);
+chunks.forEach((c) => console.log(c.metadata));
+// { source: "guide.md", category: "tutorial" }
+// { source: "guide.md", category: "tutorial" }
+// ...
+```
+
+#### 如何通过元数据过滤搜索结果？
+
+过滤功能由**向量存储**提供，需要在安装对应的向量数据库包后使用。以下是常用向量存储的过滤方式：
+
+| 向量存储 | 包名 | 过滤语法 | 示例 |
+|----------|------|---------|------|
+| **Chroma** | `@langchain/community` | 对象语法 | `{ category: "tutorial" }` |
+| **Pinecone** | `@langchain/pinecone` | 对象语法 + 操作符 | `{ date: { $gte: "2024-01-01" } }` |
+| **PGVector** | `@langchain/community` | SQL WHERE 语法 | `metadata->>'category' = 'tutorial'` |
+| **Qdrant** | `@langchain/qdrant` | `must` / `must_not` 结构 | `{ must: [{ key: "category", match: { value: "tutorial" } }] }` |
+| **Weaviate** | `@langchain/weaviate` | GraphQL `where` 语法 | `{ operator: "Equal", path: ["category"], valueText: "tutorial" }` |
+
+**通用模式**：所有向量存储都支持在 `similaritySearch()` 中传入 `filter` 参数：
+
+```ts
+import { Chroma } from "@langchain/community/vectorstores/chroma";
+
+// 1. 加载 + 分割 + 附带元数据
+const docs = [
+  new Document({
+    pageContent: "LangChain.js is a framework...",
+    metadata: { source: "guide.md", category: "tutorial", date: "2024-01-15" },
+  }),
+  new Document({
+    pageContent: "RAG systems combine retrieval with generation...",
+    metadata: { source: "rag.md", category: "extended", date: "2024-02-20" },
+  }),
+];
+
+// 2. 创建嵌入 → 存入向量数据库
+const store = await Chroma.fromDocuments(docs, embeddings, {
+  collectionName: "my-docs",
+});
+
+// 3. 语义搜索 + 元数据过滤
+const results = await store.similaritySearch("What is LangChain?", 5, {
+  category: "tutorial",              // 只搜索教程类别
+});
+
+// 4. 按日期范围过滤（Pinecone 示例）
+import { PineconeStore } from "@langchain/pinecone";
+const results = await pineconeStore.similaritySearch("What is LangChain?", 5, {
+  date: { $gte: "2024-01-01", $lte: "2024-12-31" }, // 日期范围
+  category: { $in: ["tutorial", "extended"] },        // 多类别
+});
+```
+
+**常用过滤操作符**（以 Pinecone / Chroma 为例）：
+
+| 操作符 | 示例 | 说明 |
+|--------|------|------|
+| `$eq` / 直接值 | `{ category: "tutorial" }` | 等于 |
+| `$ne` | `{ category: { $ne: "tutorial" } }` | 不等于 |
+| `$in` | `{ category: { $in: ["a", "b"] } }` | 在集合中 |
+| `$gte` / `$lte` | `{ date: { $gte: "2024-01-01" } }` | 大于等于 / 小于等于 |
+| `$exists` | `{ author: { $exists: true } }` | 字段存在 |
+
+#### 文档加载后可以添加自定义元数据吗？
+
+可以。`Document.metadata` 是普通的 `Record<string, any>` 对象，**随时可读写**：
+
+**方式一：加载后统一添加**
+
+```ts
+import { TextLoader } from "@langchain/classic/document_loaders/fs/text";
+
+const loader = new TextLoader("data/sample.txt");
+const docs = await loader.load();
+
+// 加载后添加自定义元数据
+docs.forEach((doc) => {
+  doc.metadata.loadedAt = new Date().toISOString();  // 加载时间戳
+  doc.metadata.language = "zh-CN";                     // 语言标注
+  doc.metadata.tags = ["tutorial", "beginner"];       // 自定义标签
+});
+```
+
+**方式二：分割后按分块差异化添加**
+
+```ts
+const chunks = await splitter.splitDocuments(docs);
+
+// 给不同分块添加不同元数据
+chunks.forEach((chunk, i) => {
+  chunk.metadata.chunkIndex = i;              // 分块序号
+  chunk.metadata.isFirst = i === 0;            // 是否第一个分块
+  chunk.metadata.isLast = i === chunks.length - 1;  // 是否最后一个分块
+});
+```
+
+**方式三：加载器自带元数据 + 追加自定义字段**
+
+```ts
+const pdfLoader = new PDFLoader("report.pdf");
+const docs = await pdfLoader.load();
+
+// PDFLoader 自动添加了 { source, pdf, loc: { pageNumber } }
+// 可以在此基础上追加自定义字段
+docs.forEach((doc) => {
+  doc.metadata.documentType = "report";          // 文档类型
+  doc.metadata.confidentiality = "internal";     // 保密级别
+  doc.metadata.ingestedBy = "pipeline-v2";       // 处理管道标识
+});
+```
+
+> **注意**：元数据在后续存储为向量时会影响索引大小。只存储真正需要过滤的字段，避免冗余。
+
+#### 代码示例
+
+[示例代码](https://github.com/cjy1998/agent-practice/blob/master/langchain/src/section6/04-metadata.ts)
+
+```ts
+// src/section6/04-metadata.ts
+import { Document } from "@langchain/core/documents";
+import { RecursiveCharacterTextSplitter } from "@langchain/textsplitters";
+
+// Create documents with metadata
+const docs = [
+  new Document({
+    pageContent: "LangChain.js is a framework for building AI apps...",
+    metadata: {
+      source: "langchain-guide.md",
+      category: "tutorial",
+      date: "2024-01-15",
+      author: "Tech Team",
+    },
+  }),
+  new Document({
+    pageContent: "RAG systems combine retrieval with generation...",
+    metadata: {
+      source: "rag-explained.md",
+      category: "extended",
+      date: "2024-02-20",
+    },
+  }),
+];
+
+// Metadata is preserved when splitting
+const splitter = new RecursiveCharacterTextSplitter({
+  chunkSize: 200,
+  chunkOverlap: 20,
+});
+
+const splitDocs = await splitter.splitDocuments(docs);
+
+splitDocs.forEach((doc, i) => {
+  console.log(`\nChunk ${i + 1}:`);
+  console.log("Content:", doc.pageContent.substring(0, 50) + "...");
+  console.log("Metadata:", doc.metadata);
+});
+```
