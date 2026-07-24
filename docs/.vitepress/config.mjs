@@ -70,6 +70,12 @@ export default defineConfig({
               { text: "fastapi", link: "/server/python/fastapi/base.md" },
             ],
           },
+          {
+            text: "java",
+            items: [
+              { text: "springboot", link: "/server/java/springboot/base.md" },
+            ],
+          },
         ],
       },
       {
@@ -212,6 +218,19 @@ export default defineConfig({
         {
           text: "vps",
           items: [{ text: "常用命令", link: "/vps/sys.md" }],
+        },
+      ],
+      "/server/java/springboot/": [
+        {
+          text: "springboot",
+          items: [
+            { text: "注解总结", link: "/server/java/springboot/base.md" },
+            {
+              text: "集成参数校验",
+              link: "/server/java/springboot/validation.md",
+            },
+            { text: "集成swagger", link: "/server/java/springboot/Swagger.md" },
+          ],
         },
       ],
     },
