@@ -56,6 +56,7 @@ export default defineConfig({
           {
             text: "数据库",
             items: [
+              { text: "MySQL", link: "/server/database/mysql/base.md" },
               { text: "Prisma", link: "/server/database/prisma/base.md" },
             ],
           },
@@ -230,6 +231,7 @@ export default defineConfig({
               link: "/server/java/springboot/validation.md",
             },
             { text: "集成swagger", link: "/server/java/springboot/Swagger.md" },
+            { text: "集成日志", link: "/server/java/springboot/log.md" },
           ],
         },
       ],
