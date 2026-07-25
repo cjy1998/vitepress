@@ -1,4 +1,168 @@
-# 注解
+# SpringBoot
+
+## 脚手架
+
+    官方：https://start.spring.io/
+    阿里巴巴: https://start.aliyun.com/
+
+## 项目结构
+
+SpringBoot 项目结构通常分为**单一模块**和**多模块**两种形式，根据项目规模和团队协作需求选择。
+
+### 单一模块
+
+适用于小型项目或个人项目，所有代码集中在一个模块中，结构简单、易于维护。
+
+```text
+demo/
+├── pom.xml                                # 项目依赖及构建配置
+└── src
+    ├── main
+    │   ├── java
+    │   │   └── com
+    │   │       └── example
+    │   │           └── demo
+    │   │               ├── controller/    # 控制器层：接收请求、返回响应
+    │   │               ├── service/       # 业务逻辑层：核心业务处理
+    │   │               ├── mapper/        # 数据访问层：数据库操作
+    │   │               ├── entity/        # 实体类：数据库表映射
+    │   │               ├── config/        # 配置类：Bean 定义、拦截器等
+    │   │               └── DemoApplication.java  # 启动类
+    │   └── resources
+    │       ├── application.yml            # 应用配置
+    │       ├── mapper/                    # MyBatis 映射文件（XML）
+    │       └── log4j2.xml                 # 日志配置
+    └── test
+        └── java
+            └── com
+                └── example
+                    └── demo
+                        └── DemoApplicationTests.java
+```
+
+### 多模块
+
+适用于中大型项目或团队协作场景，按职责将项目拆分为多个子模块，降低耦合度，便于并行开发和复用。
+
+#### 目录结构
+
+```text
+my-project/
+├── pom.xml                          # 父 POM (packaging: pom)
+├── my-project-common/               # 通用工具模块
+│   ├── pom.xml
+│   └── src/main/java/com/example/common
+├── my-project-domain/               # 实体/领域模块
+│   ├── pom.xml
+│   └── src/main/java/com/example/domain
+├── my-project-service/              # 业务逻辑模块
+│   ├── pom.xml
+│   └── src/main/java/com/example/service
+└── my-project-web/                  # Web 启动模块
+    ├── pom.xml
+    └── src
+        ├── main
+        │   ├── java/com/example/web
+        │   │   ├── controller/
+        │   │   └── WebApplication.java
+        │   └── resources
+        │       ├── application.yml
+        │       └── log4j2.xml
+        └── test
+            └── java/com/example/web
+```
+
+#### 模块职责
+
+| 模块      | 职责                                             | 依赖               |
+| --------- | ------------------------------------------------ | ------------------ |
+| `common`  | 通用工具类、常量、枚举、统一异常、统一返回结果等 | 无                 |
+| `domain`  | 实体类（Entity）、DTO、VO、数据库映射对象        | `common`           |
+| `service` | 业务逻辑实现、接口定义、外部服务调用             | `common`、`domain` |
+| `web`     | 控制器（Controller）、配置类、启动类、静态资源   | `service`          |
+
+#### 依赖关系
+
+```text
+web ──▶ service ──▶ domain ──▶ common
+```
+
+依赖方向自上而下，上层模块依赖下层模块，**禁止反向依赖和循环依赖**。
+
+#### 父 POM 关键配置
+
+父 POM 负责聚合子模块并统一管理依赖版本，`packaging` 必须为 `pom`：
+
+```xml
+<groupId>com.example</groupId>
+<artifactId>my-project</artifactId>
+<version>1.0.0</version>
+<packaging>pom</packaging>
+
+<!-- 聚合子模块 -->
+<modules>
+    <module>my-project-common</module>
+    <module>my-project-domain</module>
+    <module>my-project-service</module>
+    <module>my-project-web</module>
+</modules>
+
+<!-- 统一版本管理，子模块引用时无需指定版本号 -->
+<dependencyManagement>
+    <dependencies>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-dependencies</artifactId>
+            <version>${spring-boot.version}</version>
+            <type>pom</type>
+            <scope>import</scope>
+        </dependency>
+        <!-- 内部模块版本统一管理 -->
+        <dependency>
+            <groupId>com.example</groupId>
+            <artifactId>my-project-common</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+    </dependencies>
+</dependencyManagement>
+```
+
+#### 子模块 POM 示例
+
+以 `web` 模块为例，继承父 POM 并声明对 `service` 的依赖（版本由父 POM 管理，无需指定）：
+
+```xml
+<parent>
+    <groupId>com.example</groupId>
+    <artifactId>my-project</artifactId>
+    <version>1.0.0</version>
+</parent>
+
+<artifactId>my-project-web</artifactId>
+
+<dependencies>
+    <!-- 依赖业务模块 -->
+    <dependency>
+        <groupId>com.example</groupId>
+        <artifactId>my-project-service</artifactId>
+    </dependency>
+    <!-- Web Starter -->
+    <dependency>
+        <groupId>org.springframework.boot</groupId>
+        <artifactId>spring-boot-starter-web</artifactId>
+    </dependency>
+</dependencies>
+
+<build>
+    <plugins>
+        <!-- 打包为可执行 jar -->
+        <plugin>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-maven-plugin</artifactId>
+        </plugin>
+    </plugins>
+</build>
+```
 
 ## 一、核心注解
 
