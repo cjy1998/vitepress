@@ -230,6 +230,10 @@ export default defineConfig({
               text: "集成参数校验",
               link: "/server/java/springboot/validation.md",
             },
+            {
+              text: "集成MyBatis",
+              link: "/server/java/springboot/mybatis.md",
+            },
             { text: "集成swagger", link: "/server/java/springboot/Swagger.md" },
             { text: "集成日志", link: "/server/java/springboot/log.md" },
           ],
