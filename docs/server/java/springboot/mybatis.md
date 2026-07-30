@@ -367,3 +367,38 @@ private LocalDate begin;
 | `<choose>/<when>/<otherwise>` | 多条件分支，相当于 `switch-case-default`                               |
 | `<trim>`                      | 更灵活的字符串裁剪（补充/去除前后缀），`<where>` 和 `<set>` 的底层实现 |
 | `<sql>/<include>`             | SQL 片段复用                                                           |
+
+### Mapper：主键回显 `useGeneratedKeys`
+
+```xml
+<insert id="save" useGeneratedKeys="true" keyProperty="id">
+    insert into emp(username, name, gender, phone, job, salary, image, entry_date, dept_id)
+    values (#{userName},#{name},#{gender},#{phone},#{job},#{salary},#{image},#{entryTime},#{deptId})
+</insert>
+```
+
+| 属性                      | 说明                                                        |
+| ------------------------- | ----------------------------------------------------------- |
+| `useGeneratedKeys="true"` | 启用 JDBC 的 `getGeneratedKeys()`，获取数据库自动生成的主键 |
+| `keyProperty="id"`        | 将获取到的主键值回填到**参数对象**的 `id` 字段              |
+
+### `<foreach>` 批量插入
+
+```xml
+<insert id="saveList">
+    insert into emp_expr(begin, end, company, job, emp_id) VALUES
+    <foreach collection="exprList" item="expr" separator=",">
+        (#{expr.begin},#{expr.end},#{expr.company},#{expr.job},#{expr.empId})
+    </foreach>
+</insert>
+```
+
+| 属性                    | 说明                                 |
+| ----------------------- | ------------------------------------ |
+| `collection="exprList"` | 要遍历的集合，对应 Mapper 方法参数名 |
+| `item="expr"`           | 每次遍历的元素别名                   |
+| `separator=","`         | 每次迭代之间的分隔符                 |
+| `open`                  | 遍历开始前拼接的片段（如 `(`）       |
+| `close`                 | 遍历结束后拼接的片段（如 `)`）       |
+
+> **注意**：MySQL 默认 `max_allowed_packet` 为 4MB，批量插入数据量过大时需注意，一般建议每批 500~1000 条。
