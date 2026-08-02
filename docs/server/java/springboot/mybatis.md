@@ -402,3 +402,130 @@ private LocalDate begin;
 | `close`                 | 遍历结束后拼接的片段（如 `)`）       |
 
 > **注意**：MySQL 默认 `max_allowed_packet` 为 4MB，批量插入数据量过大时需注意，一般建议每批 500~1000 条。
+
+## resultMap 映射
+
+resultMap 用于解决"数据库列名"与"Java 实体属性名"不一致、多表关联查询时的嵌套结果映射问题，尤其是**一对多**场景（如员工 → 工作经历）。
+
+### 一、resultType 与 resultMap 的区别
+
+| 属性 | 值 | 用途 |
+| --- | --- | --- |
+| `resultType` | Java 类型（全限定类名或别名） | 自动映射到指定类型，列名与属性名按规则对应（配合驼峰映射） |
+| `resultMap` | resultMap 的 **id** | 手动指定映射规则，支持嵌套对象、集合等复杂映射 |
+
+
+### 二、resultMap 基本结构
+
+```xml
+<resultMap id="empResultMap" type="com.cjy.pojo.Emp">
+    <!-- <id>：主键映射，MyBatis 用它判断两条记录是不是同一个对象 -->
+    <id column="id" property="id"/>
+    <!-- <result>：普通字段映射 -->
+    <result column="username" property="userName"/>
+    <result column="entry_date" property="entryTime"/>
+</resultMap>
+```
+
+| 标签/属性 | 说明 |
+| --- | --- |
+| `<resultMap id>` | 映射规则的唯一标识，被 `resultMap="..."` 引用 |
+| `<resultMap type>` | 要映射到的实体类（全限定类名） |
+| `<id>` | 主键映射。**判断对象唯一性靠它**，集合去重也靠它 |
+| `<result>` | 普通列与属性的映射 |
+| `column` | 数据库列名 |
+| `property` | 实体属性名 |
+
+### 三、一对多 collection 映射
+
+查询员工时同时查出他的多条工作经历（`emp` 1 对 `emp_expr` 多）：
+
+```xml
+<resultMap id="empResultMap" type="com.cjy.pojo.Emp">
+    <id column="id" property="id"/>
+    <result column="username" property="userName"/>
+    <!-- 省略其他字段 -->
+
+    <collection property="exprList" ofType="com.cjy.pojo.EmpExpr">
+        <id column="expr_id" property="id"/>
+        <result column="expr_company" property="company"/>
+        <result column="expr_job" property="job"/>
+        <result column="expr_begin" property="begin"/>
+        <result column="expr_end" property="end"/>
+        <result column="emp_id" property="empId"/>
+    </collection>
+</resultMap>
+
+<select id="getById" resultMap="empResultMap">
+    select e.id, e.username, e.name, e.gender, e.phone, e.job, e.salary, e.image,
+           e.entry_date, e.dept_id,
+           ee.id as expr_id, ee.company as expr_company, ee.job as expr_job,
+           ee.`begin` as expr_begin, ee.`end` as expr_end, ee.emp_id
+    from emp e
+    left join emp_expr ee on e.id = ee.emp_id
+    where e.id = #{id}
+</select>
+```
+
+| 标签/属性 | 说明 |
+| --- | --- |
+| `<collection property>` | 实体中的集合属性名（如 `exprList`） |
+| `<collection ofType>` | 集合元素类型（全限定类名） |
+| `<collection id>` | 子对象的**唯一主键**，用于判断元素是否重复 |
+
+### 四、经典坑：`select *` + 联表导致集合只剩一条
+
+#### 症状
+
+控制台 SQL 日志明明查到了 2 行，但接口返回的 `exprList` 只有 1 条工作经历。
+
+```
+Columns: id, username, password, name, gender, phone, job, salary, image,
+         entry_date, dept_id, create_time, update_time,
+         id, begin, end, company, job, emp_id
+Row: 1, zhangsan, ..., 1, 15000, ..., 1, 2018-07-01, ..., 阿里巴巴, Java开发, 1
+Row: 1, zhangsan, ..., 1, 15000, ..., 2, 2020-07-01, ..., 字节跳动, 后端工程师, 1
+```
+
+#### 原因
+
+两张表都有 `id` 和 `job` 列，`select *` 导致列名重复：
+
+1. MyBatis 按**列名**取值，子表的 `id`、`job` 取到的是员工的 id 和岗位；
+2. `<id>` 标签判断集合元素唯一性，两条经历的 `id` 都变成了 1，被认为是"同一个对象"；
+3. 结果：**集合去重，只剩一条**，且经历里的字段值也是错的。
+
+#### 修复
+
+1. 放弃 `select *`，改为**显式列 + 别名**，给子表列起 `expr_` 前缀；
+2. resultMap 中集合部分改用别名；
+3. `begin`、`end` 是 MySQL 保留字，起别名时用反引号包裹。
+
+修复后的完整示例见上文"一对多 collection 映射"。
+
+### 五、其他常见坑
+
+#### 1. resultMap 列名写错不报错，只是字段为 null
+
+```xml
+<!-- 错误：表里实际列名是 entry_date，结果 entryTime 一直是 null -->
+<result column="entry_time" property="entryTime"/>
+
+<!-- 正确 -->
+<result column="entry_date" property="entryTime"/>
+```
+
+列名映射错误不会抛异常，只会在接口里静默返回 null，排查时可以对照 MyBatis 打印的 SQL 日志中的 `Columns` 列表核对。
+
+#### 2. 不需要返回的敏感字段不要映射
+
+`password` 等字段即使查询出来了，不在 resultMap 中映射就不会返回给前端。
+
+### 六、最佳实践
+
+1. **少用 `select *`**，显式写出列名，可读性好且避免隐患；
+2. 联表查询遇到重名列（`id`、`job` 等）必须起别名，且别名要有语义（如 `expr_id`）；
+3. collection 的子对象 `<id>` 必须能唯一区分每条记录，否则集合会被去重；
+4. 数据库保留字（`begin`、`end`、`order` 等）作为列名/别名时用反引号包裹；
+5. 列名与属性名差异不大时，开启驼峰映射 `map-underscore-to-camel-case: true` 可少写很多 `<result>`；
+6. 复杂映射统一用 XML + resultMap，注解方式（`@Results`）在多表关联时可读性差。

@@ -236,6 +236,8 @@ export default defineConfig({
             },
             { text: "集成swagger", link: "/server/java/springboot/Swagger.md" },
             { text: "集成日志", link: "/server/java/springboot/log.md" },
+            { text: "事务管理", link: "/server/java/springboot/transaction.md" },
+            { text: "集成OSS上传", link: "/server/java/springboot/oss.md" },
           ],
         },
       ],
