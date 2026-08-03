@@ -165,6 +165,24 @@ SELECT name,
 FROM emp;
 ```
 
+```sql
+-- CASE 简单形式 + GROUP BY：把 job 编码翻译成职位名，并统计各职位人数
+SELECT CASE job
+         WHEN 1 THEN '班主任'
+         WHEN 2 THEN '讲师'
+         WHEN 3 THEN '学工主管'
+         WHEN 4 THEN '教研主管'
+         ELSE '其他'
+       END AS pos,
+       COUNT(*) AS num
+FROM emp
+GROUP BY job;
+```
+
+> `CASE` 有两种写法：`CASE 表达式 WHEN 值 THEN ...`（简单形式，判断相等）与 `CASE WHEN 条件 THEN ...`（搜索形式，判断布尔条件），上例可改写为 `CASE WHEN job = 1 THEN '班主任' ...`。
+>
+> `GROUP BY job` 分组后 `COUNT(*)` 统计每组人数；SELECT 中除了聚合函数外，只能出现分组列（job 经 CASE 转换后别名 pos）。
+
 ### 练习示例
 
 ```sql
@@ -183,4 +201,3 @@ WHERE salary > (SELECT AVG(salary) FROM emp);
 ```
 
 **记忆点**：`SUM/AVG/COUNT/MAX/MIN` = 聚合；`ROUND/CEIL/FLOOR` = 单行计算；`GROUP BY` 后才能 `SELECT` 非聚合列。
-
