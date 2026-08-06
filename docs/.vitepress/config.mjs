@@ -238,6 +238,7 @@ export default defineConfig({
             { text: "集成日志", link: "/server/java/springboot/log.md" },
             { text: "事务管理", link: "/server/java/springboot/transaction.md" },
             { text: "集成OSS上传", link: "/server/java/springboot/oss.md" },
+            { text: "会话技术", link: "/server/java/springboot/session.md" },
           ],
         },
       ],
