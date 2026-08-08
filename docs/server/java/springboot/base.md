@@ -535,3 +535,328 @@ public class GlobalExceptionHandler {
 <ArticleCard to="/server/java/springboot/Swagger" category="Spring Boot" desc="集成Swagger：常用注解与集成" :tags="['Swagger', 'OpenAPI']">
   <template #title>集成Swagger</template>
 </ArticleCard>
+
+## 十六、过滤器 Filter
+
+### 基础概念与作用
+
+过滤器（Filter）是传统 Java Web 开发三大组件之一，其余两个为 **Servlet** 和 **Listener**。Servlet 与 Listener 在现代企业项目中基本已弃用，仅 Filter 仍被广泛使用。
+
+**核心作用**：拦截对资源的所有请求，在访问目标资源前执行通用操作，如**登录校验**、**统一编码处理**、**敏感字符过滤**等。
+
+> 若无 Filter，需在每个功能接口前重复编写登录校验逻辑（if 判断），导致代码冗余、维护困难；Filter 可将该通用逻辑集中统一处理。
+
+### 生命周期方法详解
+
+| 方法        | 调用时机                               | 执行次数 | 用途                     |
+| ----------- | -------------------------------------- | -------- | ------------------------ |
+| `init()`    | Web 服务器启动、Filter 实例化完毕后    | 仅一次   | 资源准备与环境初始化     |
+| `doFilter()`| 每次请求被拦截时                       | 多次     | 请求处理逻辑及放行操作   |
+| `destroy()` | Web 服务器关闭时                       | 仅一次   | 资源释放与环境清理       |
+
+> `init()` 和 `destroy()` 各执行一次；`doFilter()` 执行频次等于被拦截请求次数。
+
+### 开发步骤
+
+#### 第一步：定义 Filter 类
+
+创建一个 Java 类，并实现标准 `javax.servlet.Filter` 接口（注意导入包，非 Spring 或第三方 Filter）。
+
+必须重写三个核心方法：
+
+- `init(FilterConfig filterConfig)`
+- `doFilter(ServletRequest request, ServletResponse response, FilterChain chain)`
+- `destroy()`
+
+> `init()` 与 `destroy()` 在 Filter 接口中已提供空实现，实际开发中可选择性重写；`doFilter()` 无默认实现，**必须重写**。
+
+#### 第二步：配置 Filter
+
+**配置方式一：`@WebFilter` 注解**：在 Filter 类上添加 `@WebFilter` 注解，并通过 `urlPatterns` 属性指定拦截路径。
+
+- `urlPatterns`：声明该 Filter 拦截的请求 URL 模式；入门示例中配置为 `"/*"`，表示拦截所有请求。
+
+**配置方式二：`@ServletComponentScan` 注解**：在 Spring Boot 启动类（引导类）上添加 `@ServletComponentScan` 注解，开启对 Servlet 规范组件（包括 Filter）的支持。
+
+> Spring Boot 默认不扫描 Servlet 组件，必须显式启用 `@ServletComponentScan` 才能使 `@WebFilter` 生效。
+
+### 放行操作（关键！）
+
+`doFilter()` 方法内**必须**调用 `chain.doFilter(request, response)` 实现放行；否则请求被拦截后无法访问后端资源，导致无响应数据返回。`chain.doFilter()` 需传入当前 `ServletRequest` 与 `ServletResponse` 对象，即方法形参 `request` 和 `response`。
+
+### request / response 可获取的信息
+
+`doFilter()` 中的 `request`、`response` 形参类型为 `ServletRequest`、`ServletResponse`，实际是 Tomcat 封装的 `HttpServletRequest`、`HttpServletResponse` 对象，可向下转型后使用。
+
+> `ServletRequest` 基接口中只有 `getParameter()`、`getInputStream()` 等基础方法，**没有** `getHeader()`、`getCookies()`、`getSession()`、`getMethod()` 等 HTTP 相关方法；这些方法定义在 `HttpServletRequest` 中，必须先向下转型才能调用。
+
+**向下转型**：父类引用指向子类对象，强转回子类类型即可：
+
+```java
+HttpServletRequest httpRequest = (HttpServletRequest) request;
+HttpServletResponse httpResponse = (HttpServletResponse) response;
+```
+
+向下转型后可调用子类特有方法：
+
+```java
+String method = httpRequest.getMethod();              // GET / POST ...
+String token = httpRequest.getHeader("Authorization"); // 请求头
+String ip = httpRequest.getRemoteAddr();               // 客户端 IP
+httpResponse.setStatus(401);                           // 响应状态码
+```
+
+> 实际运行时 request 就是 `HttpServletRequest` 的实现类（Tomcat 的 `RequestFacade`），所以强转不会报错，也无需判断 `instanceof`。
+
+#### request 常用信息（HttpServletRequest）
+
+| 类别       | 方法                       | 说明                             |
+| ---------- | -------------------------- | -------------------------------- |
+| 请求方式   | `getMethod()`              | GET / POST / PUT / DELETE 等     |
+| 请求路径   | `getRequestURI()`          | 如 `/api/user/login`（不含域名） |
+| 请求参数   | `getParameter(name)`       | 获取单个参数（GET / POST 均可）  |
+| 请求参数   | `getParameterMap()`        | 获取全部参数（Map 形式）         |
+| 请求头     | `getHeader(name)`          | 如 `User-Agent`、`Referer` 等    |
+| 请求头     | `getHeaderNames()`         | 获取所有请求头名称               |
+| 请求头     | `getContentType()`         | 请求体类型，如 `application/json`|
+| 请求体     | `getInputStream()`         | 读取请求体字节流（JSON 等）      |
+| 协议信息   | `getProtocol()`            | HTTP/1.1 等协议版本              |
+| 客户端信息 | `getRemoteAddr()`          | 客户端 IP 地址                   |
+| 会话信息   | `getSession()`             | 获取 HttpSession 会话对象        |
+| Cookie     | `getCookies()`             | 获取所有 Cookie                  |
+| 字符编码   | `getCharacterEncoding()`   | 获取请求字符编码                 |
+
+```java
+HttpServletRequest httpRequest = (HttpServletRequest) request;
+String method = httpRequest.getMethod();                 // GET
+String uri = httpRequest.getRequestURI();                // /api/user/login
+String name = httpRequest.getParameter("username");      // 请求参数
+String token = httpRequest.getHeader("Authorization");   // 请求头（常用于登录校验）
+String ip = httpRequest.getRemoteAddr();                 // 客户端 IP
+```
+
+#### response 常用信息（HttpServletResponse）
+
+| 类别     | 方法                     | 说明                               |
+| -------- | ------------------------ | ---------------------------------- |
+| 响应状态 | `setStatus(int)`         | 设置状态码，如 401、403、500       |
+| 响应头   | `setHeader(name, value)` | 设置响应头，如 `Content-Type`      |
+| 响应编码 | `setCharacterEncoding()` | 设置响应字符编码                   |
+| 响应体   | `getWriter()`            | 获取字符输出流（写 JSON 字符串）   |
+| 响应体   | `getOutputStream()`      | 获取字节输出流（写文件、图片等）   |
+| 重定向   | `sendRedirect(url)`      | 重定向到指定地址（302）            |
+| 会话信息 | `addCookie(cookie)`      | 向客户端添加 Cookie                |
+
+```java
+HttpServletResponse httpResponse = (HttpServletResponse) response;
+
+// 未登录时直接响应，不继续放行
+httpResponse.setStatus(401);
+httpResponse.setCharacterEncoding("UTF-8");
+httpResponse.setContentType("application/json;charset=UTF-8");
+httpResponse.getWriter().write("{\"code\":401,\"msg\":\"未登录\"}");
+return;
+```
+
+### 过滤器执行流程
+
+过滤器拦截前端发起的所有请求，在 `doFilter` 方法中执行通用操作，其中关键步骤是调用 `FilterChain.doFilter()` 方法实现**放行**。
+
+```text
+拦截请求 → 执行放行前逻辑 → 调用 chain.doFilter() 放行至资源
+         → 资源处理完毕 → 返回过滤器 → 执行放行后逻辑 → 响应前端数据
+```
+
+#### 放行前逻辑
+
+在调用 `FilterChain.doFilter()` **之前**执行的代码属于放行前逻辑，常用于登录校验、统一编码处理等。
+
+#### 放行后逻辑
+
+在 `FilterChain.doFilter()` 调用**之后**执行的代码属于放行后逻辑；资源访问完毕后请求会返回过滤器，继续执行该部分逻辑，常用于响应日志记录等。
+
+> 资源访问完毕后会**再次回到过滤器**，但返回后**仅执行放行后的逻辑**（非从头重新执行整个 doFilter）。
+
+```java
+@Override
+public void doFilter(ServletRequest request, ServletResponse response, FilterChain chain)
+        throws IOException, ServletException {
+    log.info("放行前逻辑：请求 {}", ((HttpServletRequest) request).getRequestURI());
+
+    chain.doFilter(request, response);  // 放行：交给资源处理
+
+    log.info("放行后逻辑：资源处理完毕，返回过滤器");
+}
+```
+
+### 拦截路径配置
+
+`@WebFilter` 的 `urlPatterns` 属性支持三种配置方式：
+
+| 配置方式   | 示例        | 说明                                   |
+| ---------- | ----------- | -------------------------------------- |
+| 精确路径   | `/login`    | 只拦截 `/login` 请求，其余路径不拦截   |
+| 目录前缀   | `/emps/*`   | 拦截所有以 `/emps/` 开头的路径，后续路径可有可无（如 `/emps`、`/emps/1`、`/emps/list`） |
+| 全局拦截   | `/*`        | 拦截所有请求路径                       |
+
+#### `/*` 与 `/**` 的区别
+
+| 模式 | 含义                                       | 可配置位置                                   | 示例                               |
+| ---- | ------------------------------------------ | -------------------------------------------- | ---------------------------------- |
+| `/*` | 只匹配**当前目录下的一级路径**，不匹配多级 | 过滤器的 `urlPatterns`、拦截器的 `addPathPatterns()` | `/emps/1` 匹配，`/emps/1/2` 不匹配 |
+| `/**`| 匹配**所有层级的路径**，任意深度           | 拦截器的 `addPathPatterns()`（**过滤器不支持 `/**`**） | `/emps/1/2/3` 也能匹配             |
+
+> 过滤器（Servlet 规范）的 `urlPatterns` 只支持 `/*`，**不支持 `/**`**（`/**` 按字面处理）；拦截器（Spring MVC）中 `/*`、`/**` 均支持。
+
+### 过滤器链（Filter Chain）机制
+
+#### 过滤器链定义
+
+当项目中配置**多个过滤器**时，它们按声明顺序构成一个**过滤器链**。
+
+#### 请求正向传递流程
+
+请求依次经过每个过滤器：第一个过滤器放行 → 进入第二个过滤器 → 第二个过滤器放行 → 若存在第三个则进入，否则放行至目标资源。
+
+```text
+请求 → FilterA → FilterB → FilterC → 目标资源
+```
+
+#### 响应反向回调流程
+
+资源响应完成后，沿过滤器链**逆序返回**：先执行最后一个过滤器的放行后逻辑，再执行倒数第二个过滤器的放行后逻辑……最终执行第一个过滤器的放行后逻辑，再响应浏览器。
+
+```text
+请求:  FilterA → FilterB → FilterC → 资源
+响应:  FilterA ← FilterB ← FilterC ← 资源
+```
+
+#### FilterChain 参数本质
+
+`doFilter()` 的第三个参数 `FilterChain` 即为**当前过滤器链对象**；调用其 `doFilter()` 方法即触发**向下一个过滤器或目标资源的流转**。
+
+#### 过滤器执行顺序控制
+
+在注解配置方式下，过滤器执行顺序**默认由类名的自然字母序决定**：
+
+- 类名字典序**靠前**者（如 `ABCFilter`）先执行放行前逻辑
+- 类名字典序**靠后**者（如 `XYZFilter`）后执行放行前逻辑
+- 放行后阶段执行顺序**相反**：`XYZFilter` 先于 `ABCFilter` 执行放行后逻辑
+
+### 拦截器（Interceptor）
+
+拦截器是 Spring MVC 提供的组件，运行在 **DispatcherServlet 内、Controller 之外**，用于在请求到达目标资源（Controller 方法）前后执行通用逻辑，如登录校验、权限校验、日志记录等。
+
+#### 核心方法
+
+实现 `HandlerInterceptor` 接口，可重写三个方法：
+
+| 方法               | 调用时机                       | 返回值作用                     |
+| ------------------ | ------------------------------ | ------------------------------ |
+| `preHandle()`      | 目标资源（Controller）**运行之前** | 返回 `true` 放行；返回 `false` 拦截（不再执行后续方法） |
+| `postHandle()`     | 目标资源**运行之后**           | 无                             |
+| `afterCompletion()`| **视图渲染完毕之后**           | 无（无论是否异常都会执行）     |
+
+```java
+@Slf4j
+@Component
+public class DemoInterceptor implements HandlerInterceptor {
+
+    // 在目标资源运行之前运行：true 放行，false 拦截
+    @Override
+    public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler) throws Exception {
+        String token = request.getHeader("Authorization");
+        // 1. token 不存在或为空 -> 未登录
+        if (token == null || token.isEmpty()) {
+            writeUnauthorized(response, "未登录，请先登录");
+            return false;
+        }
+        // 2. token 无效（过期/被篡改/格式错误）-> 登录失效
+        String pureToken = token.replace("Bearer ", "");
+        if (!JwtUtil.validateToken(pureToken)) {
+            writeUnauthorized(response, "用户登录已失效，请重新登录");
+            return false;
+        }
+        // 3. 校验通过 -> 放行
+        return true;
+    }
+
+    // 在目标资源运行之后运行
+    @Override
+    public void postHandle(HttpServletRequest request, HttpServletResponse response, Object handler, ModelAndView modelAndView) throws Exception {
+        log.info("postHandle....");
+    }
+
+    // 视图渲染完毕之后运行
+    @Override
+    public void afterCompletion(HttpServletRequest request, HttpServletResponse response, Object handler, Exception ex) throws Exception {
+        log.info("afterCompletion....");
+    }
+
+    private void writeUnauthorized(HttpServletResponse response, String msg) throws IOException {
+        response.setStatus(401);
+        response.setContentType("application/json;charset=UTF-8");
+        response.getWriter().write(OBJECT_MAPPER.writeValueAsString(Result.error(msg)));
+    }
+}
+```
+
+#### 拦截器链机制
+
+多个拦截器同样构成**拦截器链**，执行顺序与过滤器链类似：
+
+```text
+请求:  InterceptorA.preHandle → InterceptorB.preHandle → Controller
+后置:  Controller → InterceptorB.postHandle → InterceptorA.postHandle
+完成:  InterceptorB.afterCompletion → InterceptorA.afterCompletion（逆序）
+```
+
+> 若某个拦截器的 `preHandle` 返回 `false`，后续拦截器与 Controller 均不再执行，但已放行的拦截器的 `afterCompletion` 仍会执行。
+
+#### 注册与配置
+
+拦截器需实现 `WebMvcConfigurer` 注册，否则不生效：
+
+```java
+@Configuration
+public class WebConfig implements WebMvcConfigurer {
+
+    @Autowired
+    private DemoInterceptor demoInterceptor;
+
+    @Override
+    public void addInterceptors(InterceptorRegistry registry) {
+        registry.addInterceptor(demoInterceptor)
+                .addPathPatterns("/**")                 // 拦截所有请求
+                .excludePathPatterns("/login");         // 放行登录接口
+    }
+}
+```
+
+| 方法                  | 说明                                   |
+| --------------------- | -------------------------------------- |
+| `addInterceptor()`    | 注册拦截器                             |
+| `addPathPatterns()`   | 设置拦截路径（支持 `/**`、`/emps/*` 等）|
+| `excludePathPatterns()`| 设置放行路径（不拦截的请求）           |
+
+### 过滤器 vs 拦截器对比
+
+| 对比项       | 过滤器（Filter）                          | 拦截器（Interceptor）                    |
+| ------------ | ----------------------------------------- | ---------------------------------------- |
+| 所属体系     | Servlet 规范（Web 容器层面）              | Spring MVC 框架（Spring 层面）           |
+| 执行时机     | 在 `DispatcherServlet` **之前**执行       | 在 `DispatcherServlet` 之内、Controller **前后**执行 |
+| 依赖容器     | 不依赖 Spring，纯 Servlet 组件            | 依赖 Spring（由 Spring 容器管理，可 `@Autowired`） |
+| 配置方式     | `@WebFilter` + `@ServletComponentScan`    | 实现 `WebMvcConfigurer` 注册              |
+| 核心方法     | `init()` / `doFilter()` / `destroy()`     | `preHandle()` / `postHandle()` / `afterCompletion()` |
+| 拦截范围     | 拦截**所有请求**（静态资源、JSP 等）     | 只拦截 **Controller 请求**（静态资源默认不拦截） |
+| 放行方式     | 调用 `chain.doFilter(request, response)`  | `preHandle()` 返回 `true`                |
+| 拦截后响应   | 自行写 JSON（异常全局处理器捕获不到）    | 同上（同样在 Spring MVC 拦截链之外，`@RestControllerAdvice` 捕获不到） |
+| 执行顺序     | 先于拦截器执行                           | 后于过滤器执行                           |
+
+```text
+请求 → Filter.doFilter → DispatcherServlet → Interceptor.preHandle
+     → Controller → Interceptor.postHandle → Interceptor.afterCompletion
+     → Filter 放行后逻辑 → 响应浏览器
+```
+
+
