@@ -74,6 +74,7 @@ export default defineConfig({
           {
             text: "java",
             items: [
+              { text: "基础", link: "/server/java/base/reflection.md" },
               { text: "springboot", link: "/server/java/springboot/base.md" },
             ],
           },
@@ -219,6 +220,15 @@ export default defineConfig({
         {
           text: "vps",
           items: [{ text: "常用命令", link: "/vps/sys.md" }],
+        },
+      ],
+      "/server/java/base/": [
+        {
+          text: "java基础",
+          items: [
+            { text: "反射", link: "/server/java/base/reflection.md" },
+            { text: "自定义注解", link: "/server/java/base/annotation.md" },
+          ],
         },
       ],
       "/server/java/springboot/": [
