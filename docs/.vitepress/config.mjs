@@ -57,6 +57,7 @@ export default defineConfig({
             text: "数据库",
             items: [
               { text: "MySQL", link: "/server/database/mysql/base.md" },
+              { text: "Redis", link: "/server/database/redis/base.md" },
               { text: "Prisma", link: "/server/database/prisma/base.md" },
             ],
           },
@@ -216,6 +217,17 @@ export default defineConfig({
           ],
         },
       ],
+      "/server/database/redis/": [
+        {
+          text: "Redis",
+          items: [
+            {
+              text: "基础概念与数据类型",
+              link: "/server/database/redis/base.md",
+            },
+          ],
+        },
+      ],
       "/vps/": [
         {
           text: "vps",
@@ -248,6 +260,7 @@ export default defineConfig({
             { text: "集成日志", link: "/server/java/springboot/log.md" },
             { text: "事务管理", link: "/server/java/springboot/transaction.md" },
             { text: "集成OSS上传", link: "/server/java/springboot/oss.md" },
+            { text: "集成Redis", link: "/server/java/springboot/redis.md" },
             { text: "会话技术", link: "/server/java/springboot/session.md" },
           ],
         },
