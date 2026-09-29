@@ -257,6 +257,10 @@ export default defineConfig({
               text: "集成MyBatis",
               link: "/server/java/springboot/mybatis.md",
             },
+            {
+              text: "Flyway 数据库迁移",
+              link: "/server/java/springboot/flyway.md",
+            },
             { text: "集成swagger", link: "/server/java/springboot/Swagger.md" },
             { text: "集成日志", link: "/server/java/springboot/log.md" },
             { text: "事务管理", link: "/server/java/springboot/transaction.md" },
