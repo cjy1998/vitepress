@@ -859,4 +859,63 @@ public class WebConfig implements WebMvcConfigurer {
      → Filter 放行后逻辑 → 响应浏览器
 ```
 
+## 十七、ThreadLocal 与 BaseContext（上下文）
+
+### 解决什么问题
+
+登录成功后，很多业务操作需要知道"当前是哪个用户"（如新增员工时记录 `create_user`）。总不能每个 Controller 方法都手动传用户 id，于是把"当前登录用户 id"放到一个全局可访问的地方——**BaseContext**。
+
+### 核心代码（`context/BaseContext`）
+
+```java
+package com.sky.context;
+
+public class BaseContext {
+
+    public static ThreadLocal<Long> threadLocal = new ThreadLocal<>();
+
+    public static void setCurrentId(Long id) {
+        threadLocal.set(id);
+    }
+
+    public static Long getCurrentId() {
+        return threadLocal.get();
+    }
+
+    public static void removeCurrentId() {
+        threadLocal.remove();
+    }
+}
+```
+
+### 原理：ThreadLocal
+
+`ThreadLocal` 是每个线程独立存储的变量：**同一条请求链路（Tomcat 线程）内任何地方都能拿到，线程之间互不可见**。典型请求周期：
+
+```text
+JWT拦截器 preHandle：解析 token → BaseContext.setCurrentId(empId)   ← 存
+Controller / Service：BaseContext.getCurrentId()                    ← 取
+请求处理完：响应返回浏览器
+```
+
+### 为什么用静态方法
+
+Tomcat 每个请求由一个线程从头到尾处理，`static` 保证所有类通过 `BaseContext.getCurrentId()` 直接取，不用注入对象；`ThreadLocal` 保证不同请求（不同线程）的 id 不会串。
+
+### 使用链路（新增员工为例）
+
+1. 拦截器解析 JWT：`BaseContext.setCurrentId(empId)`（`JwtTokenAdminInterceptor.java:50`）
+2. Service 层设置审计字段：
+
+```java
+employee.setCreateUser(BaseContext.getCurrentId());
+employee.setUpdateUser(BaseContext.getCurrentId());
+```
+
+### 注意：内存泄漏
+
+- ThreadLocal 底层是 Thread 的 Map，key 是弱引用。**如果请求结束不 remove，长生命周期线程（如 Tomcat 线程池复用）会一直持有旧值**，下次请求可能拿到别人的 id 或内存泄漏
+- 规范做法：请求结束调用 `BaseContext.removeCurrentId()`（如拦截器 `afterCompletion` 中清理）
+- 上面的 BaseContext 提供了 `removeCurrentId()` 就是为此准备的
+
 

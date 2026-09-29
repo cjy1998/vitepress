@@ -77,6 +77,7 @@ export default defineConfig({
             items: [
               { text: "基础", link: "/server/java/base/reflection.md" },
               { text: "springboot", link: "/server/java/springboot/base.md" },
+              { text: "springcloud", link: "/server/java/springcloud/base.md" },
             ],
           },
         ],
@@ -262,6 +263,16 @@ export default defineConfig({
             { text: "集成OSS上传", link: "/server/java/springboot/oss.md" },
             { text: "集成Redis", link: "/server/java/springboot/redis.md" },
             { text: "会话技术", link: "/server/java/springboot/session.md" },
+            { text: "HttpClient", link: "/server/java/springboot/httpclient.md" },
+          ],
+        },
+      ],
+      "/server/java/springcloud/": [
+        {
+          text: "springcloud",
+          items: [
+            { text: "微服务入门", link: "/server/java/springcloud/base.md" },
+            { text: "DDD 架构", link: "/server/java/springcloud/ddd.md" },
           ],
         },
       ],

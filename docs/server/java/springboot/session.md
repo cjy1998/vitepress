@@ -88,7 +88,144 @@ public class JwtUtil {
 }
 ```
 
-## 三者对比
+## 四、登录后如何在业务中获取当前用户 ID（JWT + ThreadLocal）
+
+### 1. 需求场景
+
+业务中经常需要知道"当前操作的人是谁"，典型场景：
+
+- 新增数据时自动填充**创建人 / 修改人**（如 `create_user`、`update_user` 字段）；
+- 查询时只返回当前用户自己的数据（如"我的订单"、"我的地址"）。
+
+注意：**用户 id 不能由前端作为参数传过来**（任何人传个 id 就能伪造他人身份），必须由服务端从凭证中自行解析。
+
+### 2. 整体思路
+
+JWT 本身是无状态的，token 里已经存了用户 id，服务端每次请求解析 token 就能拿到。难点在于：从 Controller 到 Service 层层传递 id 太啰嗦，于是常用**拦截器 + ThreadLocal** 方案：
+
+```text
+① 登录成功 → 把用户 id 作为自定义声明放进 JWT payload
+② 后续请求 → 客户端在请求头携带 token
+③ 拦截器 preHandle → 解析 token、取出 userId → 存入 ThreadLocal
+④ 业务代码（任意层）→ BaseContext.getCurrentId() 取用
+⑤ 请求结束 → afterCompletion 中 remove 清理
+```
+
+### 3. 代码实现
+
+**(1) ThreadLocal 上下文工具类**
+
+```java
+public class BaseContext {
+    public static ThreadLocal<Long> threadLocal = new ThreadLocal<>();
+
+    public static void setCurrentId(Long id) {
+        threadLocal.set(id);
+    }
+
+    public static Long getCurrentId() {
+        return threadLocal.get();
+    }
+
+    public static void removeCurrentId() {
+        threadLocal.remove();
+    }
+}
+```
+
+**(2) 登录时把用户 id 放进 token**
+
+```java
+// 登录成功，签发 token 时携带用户 id
+Map<String, Object> claims = new HashMap<>();
+claims.put("userId", user.getId());
+String token = JwtUtil.createJWT(secretKey, ttl, claims);
+```
+
+**(3) 拦截器：解析 token 存入 ThreadLocal，请求结束清理**
+
+```java
+@Component
+public class JwtTokenInterceptor implements HandlerInterceptor {
+
+    public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler) throws Exception {
+        // 非 Controller 方法（静态资源等）直接放行
+        if (!(handler instanceof HandlerMethod)) {
+            return true;
+        }
+
+        // 1、从请求头获取令牌
+        String token = request.getHeader("token");
+
+        // 2、校验令牌
+        try {
+            Claims claims = JwtUtil.parseJWT(secretKey, token);
+            Long userId = Long.valueOf(claims.get("userId").toString());
+            BaseContext.setCurrentId(userId);   // 存入 ThreadLocal
+            return true;                        // 3、校验通过，放行
+        } catch (Exception ex) {
+            response.setStatus(401);            // 4、校验失败，返回 401
+            return false;
+        }
+    }
+
+    /**
+     * 请求处理完成后清理 ThreadLocal，防止内存泄漏和串号
+     */
+    @Override
+    public void afterCompletion(HttpServletRequest request, HttpServletResponse response, Object handler, Exception ex) {
+        BaseContext.removeCurrentId();
+    }
+}
+```
+
+**(4) 注册拦截器（登录、注册接口必须放行）**
+
+```java
+@Configuration
+public class WebMvcConfig implements WebMvcConfigurer {
+
+    @Override
+    public void addInterceptors(InterceptorRegistry registry) {
+        registry.addInterceptor(jwtTokenInterceptor)
+                .addPathPatterns("/**")                       // 拦截所有请求
+                .excludePathPatterns("/login", "/register");  // 放行无需登录的接口
+    }
+}
+```
+
+**(5) 业务代码中获取当前用户 id**
+
+```java
+// 新增用户/数据时，自动记录创建人
+User user = new User();
+BeanUtils.copyProperties(dto, user);
+user.setCreateTime(LocalDateTime.now());
+user.setUpdateTime(LocalDateTime.now());
+user.setCreateUser(BaseContext.getCurrentId());   // ← 获取当前登录用户 id
+user.setUpdateUser(BaseContext.getCurrentId());
+userMapper.insert(user);
+```
+
+### 4. 为什么用 ThreadLocal
+
+| 方案 | 问题 |
+| --- | --- |
+| 方法参数层层传递 | 所有接口签名都要加参数，侵入性强 |
+| 全局静态变量 | 多用户并发访问互相覆盖，线程不安全 |
+| **ThreadLocal** | 每个线程一份独立副本，天然隔离并发，且无需改方法签名 |
+
+Tomcat 中每个请求占用一个线程，`ThreadLocal` 正好把"当前请求的用户身份"绑定到该线程上，Service 层在任意深度的方法里都能取到。
+
+### 5. 注意事项
+
+- **登录/注册接口必须 excludePathPatterns**：这些接口还没有 token，被拦截会导致无法登录。
+- **请求结束必须 remove**：Tomcat 线程池会复用线程，不清理会导致下一个请求读到上一个请求的用户 id（串号），且 ThreadLocal 持有引用会造成内存泄漏。
+- **异步场景取不到**：`ThreadLocal` 只对当前线程生效，`@Async`、线程池、`CompletableFuture` 等子线程中取不到值，需显式传递或用 `TransmittableThreadLocal`。
+- **JWT 载荷不是加密**：payload 只是 Base64 编码，不要放密码等敏感信息。
+- **多端场景 key 区分**：管理端和用户端可分别使用不同 token 配置与声明 key（如 `empId` / `userId`），并各自注册独立拦截器。
+
+## 五、三者对比
 
 | | Cookie | Session | Token（JWT） |
 |---|---|---|---|
@@ -100,7 +237,7 @@ public class JwtUtil {
 | 可存放敏感信息 | 否 | 是 | 否（载荷可被解码） |
 | 典型场景 | 记住登录、小数据 | 传统单体项目 | 前后端分离、微服务 |
 
-## 关键点总结
+## 六、关键点总结
 
 - Cookie 是基础：Session 靠 Cookie 传递 JSESSIONID，Token 靠请求头传递，两者都建立在"客户端每次请求带上凭证"之上。
 - 跨域注意：浏览器对 Cookie 有 SameSite 同源限制、第三方 Cookie 默认被拦截，所以跨域场景（如前后端分离、不同域名间）Cookie/Session 会失效，JWT 放 `Authorization` 请求头则没有这个问题。
